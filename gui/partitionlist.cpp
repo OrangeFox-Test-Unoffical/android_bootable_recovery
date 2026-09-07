@@ -32,6 +32,7 @@ extern "C" {
 #include "../data.hpp"
 #include "../partitions.hpp"
 #include "../variables.h"
+#include "unit_conversion.hpp"
 
 GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
 {
@@ -254,7 +255,7 @@ void GUIPartitionList::NotifySelect(size_t item_selected)
 					partition.selected = false;
 
 				if (update_size) {
-					selected_partition.Display_Name = std::format("{} ({} MB)", Part->Storage_Name, Part->Free / (1024 * 1024));
+					selected_partition.Display_Name = std::format("{} ({})", Part->Storage_Name, UnitConversion::FormatBytes(Part->Free));
 				}
 				selected_partition.selected = true;
 				mUpdate = 1;

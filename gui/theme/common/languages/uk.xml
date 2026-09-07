@@ -611,7 +611,7 @@
 		<string name="split_thread">Розщеплення ID {1} в архіві {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu з %llu файлів, %i%%</string>
-		<string name="size_progress">%llu МБ з %llu МБ, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd">Спроба розшифрувати розділ data за допомогою командного рядка.</string>
 		<string name="base_pkg_err">Невдача при завантаженні базових пакетів.</string>
 		<string name="simulating">Імітування дій...</string>

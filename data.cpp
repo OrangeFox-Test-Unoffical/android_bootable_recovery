@@ -37,6 +37,7 @@
 #include "set_metadata.h"
 #include "gui/gui.hpp"
 #include "infomanager.hpp"
+#include "unit_conversion.hpp"
 
 extern "C"
 {
@@ -395,9 +396,7 @@ void DataManager::SetBackupFolder()
 	SetValue(TW_BACKUPS_FOLDER_VAR, str, 0);
 	if (partition != NULL) {
 		SetValue("tw_storage_display_name", partition->Storage_Name);
-		char free_space[255];
-		sprintf(free_space, "%llu", partition->Free / 1024 / 1024);
-		SetValue("tw_storage_free_size", free_space);
+		SetValue("tw_storage_free_size", UnitConversion::FormatBytes(partition->Free));
 		string zip_path, zip_root, storage_path;
 		GetValue(TW_ZIP_LOCATION_VAR, zip_path);
 		if (partition->Has_Data_Media && !partition->Symlink_Mount_Point.empty())

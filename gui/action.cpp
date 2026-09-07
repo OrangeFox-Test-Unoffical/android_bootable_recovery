@@ -62,6 +62,7 @@ extern "C" {
 #include "rapidxml.hpp"
 #include "objects.hpp"
 #include "pages.hpp"
+#include "unit_conversion.hpp"
 #include <cstring>
 #include <vector>
 #include <stdint.h>
@@ -939,15 +940,13 @@ int GUIAction::getpartitiondetails(std::string arg)
 		if (!part_path.empty()) {
 			TWPartition* Part = PartitionManager.Find_Partition_By_Path(part_path);
 			if (Part) {
-				unsigned long long mb = 1048576;
-
 				DataManager::SetValue("tw_partition_name", Part->Display_Name);
 				DataManager::SetValue("tw_partition_mount_point", Part->Mount_Point);
 				DataManager::SetValue("tw_partition_file_system", Part->Current_File_System);
-				DataManager::SetValue("tw_partition_size", Part->Size / mb);
-				DataManager::SetValue("tw_partition_used", Part->Used / mb);
-				DataManager::SetValue("tw_partition_free", Part->Free / mb);
-				DataManager::SetValue("tw_partition_backup_size", Part->Backup_Size / mb);
+				DataManager::SetValue("tw_partition_size", UnitConversion::FormatBytes(Part->Size));
+				DataManager::SetValue("tw_partition_used", UnitConversion::FormatBytes(Part->Used));
+				DataManager::SetValue("tw_partition_free", UnitConversion::FormatBytes(Part->Free));
+				DataManager::SetValue("tw_partition_backup_size", UnitConversion::FormatBytes(Part->Backup_Size));
 				DataManager::SetValue("tw_partition_removable", Part->Removable);
 				DataManager::SetValue("tw_partition_is_present", Part->Is_Present);
 

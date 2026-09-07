@@ -63,7 +63,7 @@
 		<string name="install_image_btn">Image installeren</string>
 		<string name="install_select_file_hdr">Bestand selecteren</string>
 		<string name="file_selector_folders_hdr">Mappen</string>
-		<string name="select_file_from_storage">Selecteer bestand in %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Selecteer bestand in %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB-sideload</string>
 		<string name="install_hdr">Installeren</string>
 		<string name="select_storage_hdr">Opslag selecteren</string>
@@ -164,10 +164,10 @@
 		<string name="part_present_no">Aanwezig: Nee</string>
 		<string name="part_removable_yes">Verwijderbaar: Ja</string>
 		<string name="part_removable_no">Verwijderbaar: Nee</string>
-		<string name="part_size">Grootte: % tw_partition_size % MB</string>
-		<string name="part_used">Gebruikt: % tw_partition_used % MB</string>
-		<string name="part_free">Vrij: % tw_partition_free % MB</string>
-		<string name="part_backup_size">Back-upgrootte: % tw_partition_backup_size % MB</string>
+		<string name="part_size">Grootte: %tw_partition_size%</string>
+		<string name="part_used">Gebruikt: %tw_partition_used%</string>
+		<string name="part_free">Vrij: %tw_partition_free%</string>
+		<string name="part_backup_size">Back-upgrootte: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Grootte bestandssysteem aanpassen</string>
 		<string name="resize_btn_s">Grootte aanpassen</string>
 		<string name="resize_confirm">Grootte van %tw_partition_name% aanpassen?</string>
@@ -197,7 +197,7 @@
 		<string name="wipe_enc_btn">Versleuteling verwijderen</string>
 		<string name="swipe_factory_reset">Veeg om herstel fabrieksinst.</string>
 		<string name="repair_change_btn">Bestandssysteem repareren of type ervan veranderen</string>
-		<string name="storage_hdr">Opslag: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Opslag: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Back-uppen</string>
 		<string name="backup_confirm_hdr">Back-up bevestigen</string>
 		<string name="encryption_tab">VERSLEUTELING</string>
@@ -231,7 +231,7 @@
 		<string name="backup_complete">Back-up voltooid</string>
 		<string name="restore_hdr">Herstellen</string>
 		<string name="sel_backup_hdr">Back-up selecteren</string>
-		<string name="restore_sel_store_hdr">Back-up selecteren van %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Back-up selecteren van %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Pakket selecteren om te herstellen:</string>
 		<string name="restore_enc_backup_hdr">Versleutelde back-up</string>
 		<string name="restore_dec_fail">Wachtwoord mislukt. Probeer opnieuw!</string>
@@ -516,16 +516,16 @@
 		<string name="unable_to_locate_partition">Kan partitie '{1}' niet vinden voor back-upberekeningen.</string>
 		<string name="no_partition_selected">Geen partities geselecteerd om te back-uppen.</string>
 		<string name="total_partitions_backup"> * Totaal aantal partities om te back-uppen: {1}</string>
-		<string name="total_backup_size"> * Totale grootte van alle gegevens: {1} MB</string>
-		<string name="available_space"> * Beschikbare ruimte: {1} MB</string>
+		<string name="total_backup_size"> * Totale grootte van alle gegevens: {1}</string>
+		<string name="available_space"> * Beschikbare ruimte: {1}</string>
 		<string name="unable_locate_storage">Kan opslagapparaat niet vinden.</string>
 		<string name="no_space">Er bestaat onvoldoende vrije ruimte op het opslagmedium.</string>
 		<string name="backup_started">[BACK-UP GESTART]</string>
 		<string name="backup_folder"> * Back-upmap: {1}</string>
 		<string name="fail_backup_folder">Het maken van de back-upmap is mislukt.</string>
-		<string name="avg_backup_fs">Gem. back-upsnelheid voor bestandssystemen: {1} MB/sec</string>
-		<string name="avg_backup_img">Gem. back-upsnelheid voor images: {1} MB/sec</string>
-		<string name="total_backed_size">[{1} MB IN TOTAAL GEBACK-UPT]</string>
+		<string name="avg_backup_fs">Gem. back-upsnelheid voor bestandssystemen: {1}</string>
+		<string name="avg_backup_img">Gem. back-upsnelheid voor images: {1}</string>
+		<string name="total_backed_size">[{1} IN TOTAAL GEBACK-UPT]</string>
 		<string name="backup_completed">[BACK-UP VOLTOOID IN {1} SECONDEN]</string>
 		<string name="restore_started">[HERSTELLEN GESTART]</string>
 		<string name="restore_folder">Herstelmap: {1}</string>
@@ -538,7 +538,7 @@
 		<string name="restore_unable_locate">Kan {1}-partitie niet vinden om te herstellen.</string>
 		<string name="no_part_restore">Geen partities geselecteerd om te herstellen.</string>
 		<string name="restore_part_count">Bezig {1} partitie(s) te herstellen...</string>
-		<string name="total_restore_size">[{1} MB IN TOTAAL HERSTELD]</string>
+		<string name="total_restore_size">[{1} IN TOTAAL HERSTELD]</string>
 		<string name="updating_system_details">System-gegevens worden bijgewerkt</string>
 		<string name="restore_completed">[HERSTELLEN VOLTOOID IN {1} SECONDEN]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -668,7 +668,7 @@
 		<string name="split_thread">Thread-ID {1} wordt gesplitst in archief {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu van %llu bestanden, %i%%</string>
-		<string name="size_progress">%llu MB van %llu MB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd" version="2">Er wordt geprobeerd de Data-partitie te ontsleutelen via de commandoregel.</string>
 		<string name="base_pkg_err">Fout bij het laden van de basispakketten.</string>
 		<string name="simulating">Acties worden gesimuleerd...</string>

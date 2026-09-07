@@ -65,7 +65,7 @@
 		<string name="install_image_btn">Instal Image</string>
 		<string name="install_select_file_hdr">Pilih File</string>
 		<string name="file_selector_folders_hdr">Folder</string>
-		<string name="select_file_from_storage">Pilih dari %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Pilih dari %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Instal</string>
 		<string name="select_storage_hdr">Pilih Penyimpanan</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">Ditampilkan: Tidak</string>
 		<string name="part_removable_yes">Dapat Dilepas: Yes</string>
 		<string name="part_removable_no">Dapat Dilepas: Tidak</string>
-		<string name="part_size">Ukuran: %tw_partition_size%MB</string>
-		<string name="part_used">Terpakai: %tw_partition_used%MB</string>
-		<string name="part_free">Tersedia: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Ukuran cadangan: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Ukuran: %tw_partition_size%</string>
+		<string name="part_used">Terpakai: %tw_partition_used%</string>
+		<string name="part_free">Tersedia: %tw_partition_free%</string>
+		<string name="part_backup_size">Ukuran cadangan: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Ubah Ukuran File</string>
 		<string name="resize_btn_s">Ubah Ukuran</string>
 		<string name="resize_confirm">Ubah ukuran %tw_partition_name%?</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">Hapus enkripsi</string>
 		<string name="swipe_factory_reset">Geser untuk Reset Pabrik</string>
 		<string name="repair_change_btn">Perbaiki atau ubah file sistem</string>
-		<string name="storage_hdr">Penyimpanan: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Penyimpanan: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Cadangan</string>
 		<string name="backup_confirm_hdr">Konfirmasi pencadangan</string>
 		<string name="encryption_tab">ENKRIPSI</string>
@@ -234,7 +234,7 @@
 		<string name="backup_complete">Pencadangan berhasil.</string>
 		<string name="restore_hdr">Pulihkan</string>
 		<string name="sel_backup_hdr">Pulihkan Cadangan</string>
-		<string name="restore_sel_store_hdr">Pilih dari %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Pilih dari %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Pilih paket untuk dipulihkan:</string>
 		<string name="restore_enc_backup_hdr">Cadangan terenkripsi</string>
 		<string name="restore_dec_fail">Sandi salah, coba lagi!</string>
@@ -518,16 +518,16 @@
 		<string name="unable_to_locate_partition">Tidak dapat menemukan partisi '{1}' untuk kalkulasi cadangan.</string>
 		<string name="no_partition_selected">Tidak ada partisi yang dipilih untuk cadangan.</string>
 		<string name="total_partitions_backup"> * Jumlah total partisi yang akan dicadangkan: {1}</string>
-		<string name="total_backup_size"> * Ukuran total semua data: {1}MB</string>
-		<string name="available_space"> * Ruang tersedia: {1}MB</string>
+		<string name="total_backup_size"> * Ukuran total semua data: {1}</string>
+		<string name="available_space"> * Ruang tersedia: {1}</string>
 		<string name="unable_locate_storage">Tidak dapat menemukan perangkat penyimpanan.</string>
 		<string name="no_space">Ruang penyimpanan tidak cukup.</string>
 		<string name="backup_started">[PENCADANGAN DIMULAI]</string>
 		<string name="backup_folder"> * Folder cadangan: {1}</string>
 		<string name="fail_backup_folder">Gagal membuat folder cadangan.</string>
-		<string name="avg_backup_fs">Kecepatan rata-rata mencadangkan file: {1} MB/det</string>
-		<string name="avg_backup_img">Kecepatan rata-rata mencadangkan Image: {1} MB/det</string>
-		<string name="total_backed_size">[{1} MB TOTAL DICADANGKAN]</string>
+		<string name="avg_backup_fs">Kecepatan rata-rata mencadangkan file: {1}</string>
+		<string name="avg_backup_img">Kecepatan rata-rata mencadangkan Image: {1}</string>
+		<string name="total_backed_size">[{1} TOTAL DICADANGKAN]</string>
 		<string name="backup_completed">[MENCADANGKAN SELESAI DALAM {1} DETIK]</string>
 		<string name="restore_started">[PEMULIHAN DIMULAI]</string>
 		<string name="restore_folder">Pulihkan folder: '{1}'</string>
@@ -540,7 +540,7 @@
 		<string name="restore_unable_locate">Tidak dapat menemukan partisi '{1}' untuk dipulihkan.</string>
 		<string name="no_part_restore">Tidak ada partisi yang dipilih untuk dipulihkan.</string>
 		<string name="restore_part_count">Memulihkan partisi {1}...</string>
-		<string name="total_restore_size">Ukuran total pemulihan {1}MB</string>
+		<string name="total_restore_size">Ukuran total pemulihan {1}</string>
 		<string name="updating_system_details">Memperbarui rincian sistem</string>
 		<string name="restore_completed">[PEMULIHAN SELESAI DALAM {1} DETIK]</string>
 		<!-- {1} adalah lokasi yang tidak bisa kami buka, {2} adalah keluaran strerror -->
@@ -670,7 +670,7 @@
 		<string name="split_thread">Memisah ID untaian {1} menjadi arsip {2}</string>
 		<!-- 2 item ini disimpan di pengelola data bukan pengelola sumber daya, jadi %llu, dll sesuai daripada {1} -->
 		<string name="file_progress">%llu dari file %llu, %i%%</string>
-		<string name="size_progress">%lluMB of %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd" version="2">Mencoba mendekripsi partisi data atau pengguna melalui baris perintah.</string>
 		<string name="base_pkg_err">Gagal memuat paket dasar.</string>
 		<string name="simulating">Mensimulasikan tindakan...</string>

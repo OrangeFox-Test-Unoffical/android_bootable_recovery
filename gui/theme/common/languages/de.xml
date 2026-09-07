@@ -65,7 +65,7 @@
 		<string name="install_image_btn">Image installieren</string>
 		<string name="install_select_file_hdr">Datei auswählen</string>
 		<string name="file_selector_folders_hdr">Ordner</string>
-		<string name="select_file_from_storage">Speicher: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Speicher: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Installieren</string>
 		<string name="select_storage_hdr">Speicher auswählen</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">Vorhanden: Nein</string>
 		<string name="part_removable_yes">Wechselbar: Ja</string>
 		<string name="part_removable_no">Wechselbar: Nein</string>
-		<string name="part_size">Größe: %tw_partition_size%MB</string>
-		<string name="part_used">Verwendet: %tw_partition_used%MB</string>
-		<string name="part_free">Frei: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Backup-Größe: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Größe: %tw_partition_size%</string>
+		<string name="part_used">Verwendet: %tw_partition_used%</string>
+		<string name="part_free">Frei: %tw_partition_free%</string>
+		<string name="part_backup_size">Backup-Größe: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Größe ändern</string>
 		<string name="resize_btn_s">Größe ändern</string>
 		<string name="resize_confirm">Größe von %tw_partition_name% ändern?</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">Verschlüsselung entfernen</string>
 		<string name="swipe_factory_reset">Werkseinstellungen herstellen</string>
 		<string name="repair_change_btn">Dateisystem reparieren oder ändern</string>
-		<string name="storage_hdr">Speicher: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Speicher: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Sicherung</string>
 		<string name="backup_confirm_hdr">Sicherung bestätigen</string>
 		<string name="encryption_tab">VERSCHLÜSSELUNG</string>
@@ -233,7 +233,7 @@
 		<string name="backup_complete">Sicherung abgeschlossen</string>
 		<string name="restore_hdr">Wiederherstellen</string>
 		<string name="sel_backup_hdr">Sicherung auswählen</string>
-		<string name="restore_sel_store_hdr">Speicher: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Speicher: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Wiederherzustellende Sicherung:</string>
 		<string name="restore_enc_backup_hdr">Verschlüsselte Sicherung</string>
 		<string name="restore_dec_fail">Passwort falsch, bitte erneut versuchen!</string>
@@ -512,16 +512,16 @@
 		<string name="unable_to_locate_partition">Kann '{1}' Partition für Sicherungsberechnungen nicht finden.</string>
 		<string name="no_partition_selected">Keine Partitionen für die Sicherung ausgewählt.</string>
 		<string name="total_partitions_backup"> * Anzahl der zu sichernden Partitionen: {1}</string>
-		<string name="total_backup_size"> * Gesamtgröße aller Daten: {1}MB</string>
-		<string name="available_space"> * Verfügbare Speicherplatz: {1}MB</string>
+		<string name="total_backup_size"> * Gesamtgröße aller Daten: {1}</string>
+		<string name="available_space"> * Verfügbare Speicherplatz: {1}</string>
 		<string name="unable_locate_storage">Kann Sicherungsgerät nicht finden.</string>
 		<string name="no_space">Zu wenig freier Speicherplatz.</string>
 		<string name="backup_started">[SICHERUNG GESTARTET]</string>
 		<string name="backup_folder"> * Ordner für Sicherung: {1}</string>
 		<string name="fail_backup_folder">Ordner für Sicherung konnte nicht erstellt werden.</string>
-		<string name="avg_backup_fs">Durchschnittliche Sicherungsgeschwindigkeit für Dateisysteme: {1} MB/sek</string>
-		<string name="avg_backup_img">Durchschnittliche Sicherungsgeschwindigkeit für abgebildete Laufwerke: {1} MB/sek</string>
-		<string name="total_backed_size">[INSGESAMT {1} MB GESICHERT]</string>
+		<string name="avg_backup_fs">Durchschnittliche Sicherungsgeschwindigkeit für Dateisysteme: {1}</string>
+		<string name="avg_backup_img">Durchschnittliche Sicherungsgeschwindigkeit für abgebildete Laufwerke: {1}</string>
+		<string name="total_backed_size">[INSGESAMT {1} GESICHERT]</string>
 		<string name="backup_completed">[SICHERUNG ABGESCHLOSSEN IN {1} SEKUNDEN]</string>
 		<string name="restore_started">[WIEDERHERSTELLEN GESTARTET]</string>
 		<string name="restore_folder">Wiederherstellen aus Ordner: '{1}'</string>
@@ -534,7 +534,7 @@
 		<string name="restore_unable_locate">Kann wiederherzustellende '{1}'-Partition nicht finden.</string>
 		<string name="no_part_restore">Keine Partitionen zur Wiederherstellung ausgewählt.</string>
 		<string name="restore_part_count">{1} Partitionen wiederherstellen...</string>
-		<string name="total_restore_size">Insgesamt wiederherzustellen: {1}MB</string>
+		<string name="total_restore_size">Insgesamt wiederherzustellen: {1}</string>
 		<string name="updating_system_details">Aktualisieren der System-Details</string>
 		<string name="restore_completed">[WIEDERHERSTELLEN ABGESCHLOSSEN IN {1} SEKUNDEN]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -664,7 +664,7 @@
 		<string name="split_thread">Teile Thread-ID {1} in Archiv {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu von %llu Dateien, %i%%</string>
-		<string name="size_progress">%lluMB von %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd">Versuche die Daten-Partition per Kommandozeile zu entschlüsseln.</string>
 		<string name="base_pkg_err">Basis-Pakete konnten nicht geladen werden.</string>
 		<string name="simulating">Simuliere Aktionen...</string>

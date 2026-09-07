@@ -460,6 +460,7 @@ cc_binary {
         "oaes/oaes.cpp",
         "BasePartition.cpp",
         "abx.cpp",
+        "unit_conversion.cpp",
     ] + select(soong_config_variable("twrpGlobalVars", "exclude_apex"), {
         false: [
             "twrpApex.cpp"

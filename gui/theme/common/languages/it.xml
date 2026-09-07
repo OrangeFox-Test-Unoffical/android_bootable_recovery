@@ -64,7 +64,7 @@
 		<string name="install_image_btn">Installa Immagine</string>
 		<string name="install_select_file_hdr">Seleziona il file</string>
 		<string name="file_selector_folders_hdr">Cartelle</string>
-		<string name="select_file_from_storage">Seleziona il file da %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Seleziona il file da %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Installa</string>
 		<string name="select_storage_hdr">Scegli archivio</string>
@@ -161,10 +161,10 @@
 		<string name="part_present_no">Presente: No</string>
 		<string name="part_removable_yes">Rimovibile: Sì</string>
 		<string name="part_removable_no">Rimovibile: No</string>
-		<string name="part_size">Dimensione: %tw_partition_size%MB</string>
-		<string name="part_used">Utilizzati: %tw_partition_used%MB</string>
-		<string name="part_free">Liberi: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Dimensione backup: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Dimensione: %tw_partition_size%</string>
+		<string name="part_used">Utilizzati: %tw_partition_used%</string>
+		<string name="part_free">Liberi: %tw_partition_free%</string>
+		<string name="part_backup_size">Dimensione backup: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Ridimensiona filesystem</string>
 		<string name="resize_btn_s">Ridimensiona</string>
 		<string name="resize_confirm">Ridimensionare %tw_partition_name%?</string>
@@ -194,7 +194,7 @@
 		<string name="wipe_enc_btn">Elimina crittografia</string>
 		<string name="swipe_factory_reset">Scorri per eseguire reset di fabbrica</string>
 		<string name="repair_change_btn">Ripara o Modifica filesystem</string>
-		<string name="storage_hdr">Archivio: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Archivio: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Backup</string>
 		<string name="backup_confirm_hdr">Conferma Backup</string>
 		<string name="encryption_tab">CRITTOGRAFIA</string>
@@ -228,7 +228,7 @@
 		<string name="backup_complete">Backup completato</string>
 		<string name="restore_hdr">Ripristina backup</string>
 		<string name="sel_backup_hdr">Scegli backup</string>
-		<string name="restore_sel_store_hdr">Seleziona un backup da %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Seleziona un backup da %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Scegli i contenuti da ripristinare:</string>
 		<string name="restore_enc_backup_hdr">Backup crittografato</string>
 		<string name="restore_dec_fail">Password errata! Riprova.</string>
@@ -474,16 +474,16 @@
 		<string name="unable_to_locate_partition">Impossibile localizzare la partizione '{1}' per il calcolo delle dimensioni del backup.</string>
 		<string name="no_partition_selected">Nessuna partizione selezionata.</string>
 		<string name="total_partitions_backup"> * Numero di partizioni di cui eseguire il backup: {1}</string>
-		<string name="total_backup_size"> * Dimensione complessiva: {1}MB</string>
-		<string name="available_space"> * Spazio disponibile: {1}MB</string>
+		<string name="total_backup_size"> * Dimensione complessiva: {1}</string>
+		<string name="available_space"> * Spazio disponibile: {1}</string>
 		<string name="unable_locate_storage">Impossibile localizzare l'archivio.</string>
 		<string name="no_space">Lo spazio libero dell'archivio scelto è insufficiente.</string>
 		<string name="backup_started">[INIZIO DEL BACKUP]</string>
 		<string name="backup_folder"> * Cartella dei backup: {1}</string>
 		<string name="fail_backup_folder">Creazione della cartella dei backup fallita.</string>
-		<string name="avg_backup_fs">Velocità media di backup del filesystem: {1} MB/sec</string>
-		<string name="avg_backup_img">Velocità media di backup del drive: {1} MB/sec</string>
-		<string name="total_backed_size">[DIMENSIONE TOTALE SALVATA: {1} MB]</string>
+		<string name="avg_backup_fs">Velocità media di backup del filesystem: {1}</string>
+		<string name="avg_backup_img">Velocità media di backup del drive: {1}</string>
+		<string name="total_backed_size">[DIMENSIONE TOTALE SALVATA: {1}]</string>
 		<string name="backup_completed">[BACKUP COMPLETATO IN {1} SECONDI]</string>
 		<string name="restore_started">[INIZIO DEL RIPRISTINO]</string>
 		<string name="restore_folder">Cartella da cui ripristinare: '{1}'</string>
@@ -496,7 +496,7 @@
 		<string name="restore_unable_locate">Impossibile localizzare la partizione '{1}' per il ripristino.</string>
 		<string name="no_part_restore">Nessuna partizione selezionata per il ripristino.</string>
 		<string name="restore_part_count">Ripristino di {1} partizioni in corso...</string>
-		<string name="total_restore_size">Dimensione complessiva da ripristinare: {1}MB</string>
+		<string name="total_restore_size">Dimensione complessiva da ripristinare: {1}</string>
 		<string name="updating_system_details">Aggiornamento dei dettagli di System...</string>
 		<string name="restore_completed">[RIPRISTINO COMPLETATO IN {1} SECONDI]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -625,7 +625,7 @@
 		<string name="split_thread">Divisione del thread {1} nell'archivio {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">File %llu di %llu, %i%%</string>
-		<string name="size_progress">%lluMB di %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd">Tentativo di decriptare Data da riga di comando.</string>
 		<string name="base_pkg_err">Errore nel caricamento dei pacchetti base.</string>
 		<string name="simulating">Simulazione azioni in corso...</string>

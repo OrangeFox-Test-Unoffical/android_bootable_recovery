@@ -65,7 +65,7 @@
 		<string name="install_image_btn">Install Image</string>
 		<string name="install_select_file_hdr">Select File</string>
 		<string name="file_selector_folders_hdr">Folders</string>
-		<string name="select_file_from_storage">Select File from %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Select File from %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Install</string>
 		<string name="select_storage_hdr">Select Storage</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">Present: No</string>
 		<string name="part_removable_yes">Removable: Yes</string>
 		<string name="part_removable_no">Removable: No</string>
-		<string name="part_size">Size: %tw_partition_size%MB</string>
-		<string name="part_used">Used: %tw_partition_used%MB</string>
-		<string name="part_free">Free: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Backup Size: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Size: %tw_partition_size%</string>
+		<string name="part_used">Used: %tw_partition_used%</string>
+		<string name="part_free">Free: %tw_partition_free%</string>
+		<string name="part_backup_size">Backup Size: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Resize File System</string>
 		<string name="resize_btn_s">Resize</string>
 		<string name="resize_confirm">Resize %tw_partition_name%?</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">Wipe Encryption</string>
 		<string name="swipe_factory_reset">Swipe to Factory Reset</string>
 		<string name="repair_change_btn">Repair or Change File System</string>
-		<string name="storage_hdr">Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Storage: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Backup</string>
 		<string name="backup_confirm_hdr">Confirm Backup</string>
 		<string name="encryption_tab">ENCRYPTION</string>
@@ -234,7 +234,7 @@
 		<string name="backup_complete">Backup Complete</string>
 		<string name="restore_hdr">Restore</string>
 		<string name="sel_backup_hdr">Select Backup</string>
-		<string name="restore_sel_store_hdr">Select Backup from %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Select Backup from %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Select Package to Restore:</string>
 		<string name="restore_enc_backup_hdr">Encrypted Backup</string>
 		<string name="restore_dec_fail">Password failed, please try again!</string>
@@ -527,16 +527,16 @@
 		<string name="unable_to_locate_partition">Unable to locate '{1}' partition for backup calculations.</string>
 		<string name="no_partition_selected">No partitions selected for backup.</string>
 		<string name="total_partitions_backup"> * Total number of partitions to back up: {1}</string>
-		<string name="total_backup_size"> * Total size of all data: {1}MB</string>
-		<string name="available_space"> * Available space: {1}MB</string>
+		<string name="total_backup_size"> * Total size of all data: {1}</string>
+		<string name="available_space"> * Available space: {1}</string>
 		<string name="unable_locate_storage">Unable to locate storage device.</string>
 		<string name="no_space">Not enough free space on storage.</string>
 		<string name="backup_started">[BACKUP STARTED]</string>
 		<string name="backup_folder"> * Backup Folder: {1}</string>
 		<string name="fail_backup_folder">Failed to make backup folder.</string>
-		<string name="avg_backup_fs">Average backup rate for file systems: {1} MB/sec</string>
-		<string name="avg_backup_img">Average backup rate for imaged drives: {1} MB/sec</string>
-		<string name="total_backed_size">[{1} MB TOTAL BACKED UP]</string>
+		<string name="avg_backup_fs">Average backup rate for file systems: {1}</string>
+		<string name="avg_backup_img">Average backup rate for imaged drives: {1}</string>
+		<string name="total_backed_size">[{1} TOTAL BACKED UP]</string>
 		<string name="backup_completed">[BACKUP COMPLETED IN {1} SECONDS]</string>
 		<string name="restore_started">[RESTORE STARTED]</string>
 		<string name="restore_folder">Restore folder: '{1}'</string>
@@ -549,7 +549,7 @@
 		<string name="restore_unable_locate">Unable to locate '{1}' partition for restoring.</string>
 		<string name="no_part_restore">No partitions selected for restore.</string>
 		<string name="restore_part_count">Restoring {1} partitions...</string>
-		<string name="total_restore_size">Total restore size is {1}MB</string>
+		<string name="total_restore_size">Total restore size is {1}</string>
 		<string name="updating_system_details">Updating System Details</string>
 		<string name="restore_completed">[RESTORE COMPLETED IN {1} SECONDS]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -679,7 +679,7 @@
 		<string name="split_thread">Splitting thread ID {1} into archive {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu of %llu files, %i%%</string>
-		<string name="size_progress">%lluMB of %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd" version="2">Attempting to decrypt data partition or user data via command line.</string>
 		<string name="base_pkg_err">Failed to load base packages.</string>
 		<string name="simulating">Simulating actions...</string>

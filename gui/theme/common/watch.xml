@@ -1703,22 +1703,22 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_left%" y="%row3a_y%"/>
-				<text>{@part_size=Size: %tw_partition_size%MB}</text>
+				<text>{@part_size=Size: %tw_partition_size%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col1_x_right%" y="%row3a_y%"/>
-				<text>{@part_used=Used: %tw_partition_used%MB}</text>
+				<text>{@part_used=Used: %tw_partition_used%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col1_x_left%" y="%row4a_y%"/>
-				<text>{@part_free=Free: %tw_partition_free%MB}</text>
+				<text>{@part_free=Free: %tw_partition_free%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col1_x_right%" y="%row4a_y%"/>
-				<text>{@part_backup_size=Backup Size: %tw_partition_backup_size%MB}</text>
+				<text>{@part_backup_size=Backup Size: %tw_partition_backup_size%}</text>
 			</text>
 
 			<button style="main_button">

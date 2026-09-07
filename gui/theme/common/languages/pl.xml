@@ -65,7 +65,7 @@
 		<string name="install_image_btn">Instaluj Obraz</string>
 		<string name="install_select_file_hdr">Wybierz Plik</string>
 		<string name="file_selector_folders_hdr">Foldery</string>
-		<string name="select_file_from_storage">Wybierz plik z %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Wybierz plik z %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Instaluj</string>
 		<string name="select_storage_hdr">Wybierz Pamięć</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">Obecna: Nie</string>
 		<string name="part_removable_yes">Przenośna: Tak</string>
 		<string name="part_removable_no">Przenośna: Nie</string>
-		<string name="part_size">Rozmiar: %tw_partition_size%MB</string>
-		<string name="part_used">Użyte: %tw_partition_used%MB</string>
-		<string name="part_free">Wolne: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Rozmiar kopii zapasowej: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Rozmiar: %tw_partition_size%</string>
+		<string name="part_used">Użyte: %tw_partition_used%</string>
+		<string name="part_free">Wolne: %tw_partition_free%</string>
+		<string name="part_backup_size">Rozmiar kopii zapasowej: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Zmiana rozmiaru systemu plików</string>
 		<string name="resize_btn_s">Zmień rozmiar</string>
 		<string name="resize_confirm">Zmienić rozmiar %tw_partition_name%?</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">Usuń szyfrowanie</string>
 		<string name="swipe_factory_reset">Przesuń, aby wykonać</string>
 		<string name="repair_change_btn">Napraw lub zmień system plików</string>
-		<string name="storage_hdr">Pamięć: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Pamięć: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Kopia zapasowa</string>
 		<string name="backup_confirm_hdr">Potwierdź kopię zapasową</string>
 		<string name="encryption_tab">SZYFROWANIE</string>
@@ -234,7 +234,7 @@
 		<string name="backup_complete">Kopia zapasowa wykonana</string>
 		<string name="restore_hdr">Przywróć</string>
 		<string name="sel_backup_hdr">Wybierz kopię zapasową</string>
-		<string name="restore_sel_store_hdr">Wybierz kopię zapasową z %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Wybierz kopię zapasową z %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Wybierz zestaw do przywrócenia:</string>
 		<string name="restore_enc_backup_hdr">Szyfrowana kopia</string>
 		<string name="restore_dec_fail">Hasło nieprawidłowe, spróbuj ponownie!</string>
@@ -527,16 +527,16 @@
 		<string name="unable_to_locate_partition">Nie można zlokalizować partycji '{1}' do obliczenia kopii zapasowej.</string>
 		<string name="no_partition_selected">Nie wybrano partycji do utworzenia kopii zapasowych.</string>
 		<string name="total_partitions_backup"> * Łączna liczba partycji do tworzenia kopii zapasowych: {1}</string>
-		<string name="total_backup_size"> * Łączna wielkość wszystkich danych: {1}MB</string>
-		<string name="available_space"> * Dostępne miejsce: {1}MB</string>
+		<string name="total_backup_size"> * Łączna wielkość wszystkich danych: {1}</string>
+		<string name="available_space"> * Dostępne miejsce: {1}</string>
 		<string name="unable_locate_storage">Nie można zlokalizować urządzenia magazynującego.</string>
 		<string name="no_space">Zbyt mało wolnego miejsca w pamięci urządzenia.</string>
 		<string name="backup_started">[KOPIA ROZPOCZĘTA]</string>
 		<string name="backup_folder"> * Folder kopii zapasowej: {1}</string>
 		<string name="fail_backup_folder">Nie udało się utworzyć folderu kopii zapasowej.</string>
-		<string name="avg_backup_fs">Średnie tempo tworzenia kopii zapasowych systemu plików: {1} MB/sek</string>
-		<string name="avg_backup_img">Średnie tempo tworzenia kopii zapasowych obrazu dysku: {1} MB/sek</string>
-		<string name="total_backed_size">[UTWORZONO KOPIĘ {1} MB]</string>
+		<string name="avg_backup_fs">Średnie tempo tworzenia kopii zapasowych systemu plików: {1}</string>
+		<string name="avg_backup_img">Średnie tempo tworzenia kopii zapasowych obrazu dysku: {1}</string>
+		<string name="total_backed_size">[UTWORZONO KOPIĘ {1}]</string>
 		<string name="backup_completed">[KOPIA ZAKOŃCZONA W {1} SEKUND]</string>
 		<string name="restore_started">[PRZYWRACANIE ROZPOCZĘTE]</string>
 		<string name="restore_folder">Folder przywracania: '{1}'</string>
@@ -549,7 +549,7 @@
 		<string name="restore_unable_locate">Nie można zlokalizować partycji '{1}' do przywrócenia.</string>
 		<string name="no_part_restore">Nie wybrano partycji do przywrócenia.</string>
 		<string name="restore_part_count">Przywracanie {1} partycji...</string>
-		<string name="total_restore_size">Całkowity rozmiar przywracania {1}MB</string>
+		<string name="total_restore_size">Całkowity rozmiar przywracania {1}</string>
 		<string name="updating_system_details">Aktualizowanie szczegółów systemu</string>
 		<string name="restore_completed">[PRZYWRACANIE ZAKOŃCZONE W {1} SEKUND]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -680,7 +680,7 @@
 		<string name="split_thread">Dzielenie {1} na {2} archiwa</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu z %llu plików, %i%%</string>
-		<string name="size_progress">%lluMB z %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd" version="2">Próba odszyfrowania partycji danych poprzez linię poleceń.</string>
 		<string name="base_pkg_err">Nie udało się załadować pakietów podstawowych.</string>
 		<string name="simulating">Symulowanie działań...</string>

@@ -65,7 +65,7 @@
 		<string name="install_image_btn">刷入映像</string>
 		<string name="install_select_file_hdr">選擇文件</string>
 		<string name="file_selector_folders_hdr">目錄</string>
-		<string name="select_file_from_storage">從 %tw_storage_display_name% (%tw_storage_free_size% MB) 中選擇文件</string>
+		<string name="select_file_from_storage">從 %tw_storage_display_name% (%tw_storage_free_size%) 中選擇文件</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">安裝</string>
 		<string name="select_storage_hdr">儲存位置</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">目前：否</string>
 		<string name="part_removable_yes">可移除：是</string>
 		<string name="part_removable_no">可移除：否</string>
-		<string name="part_size">大小: %tw_partition_size%MB</string>
-		<string name="part_used">已用: %tw_partition_used%MB</string>
-		<string name="part_free">可用: %tw_partition_free%MB</string>
-		<string name="part_backup_size">備份大小: %tw_partition_backup_size%MB</string>
+		<string name="part_size">大小: %tw_partition_size%</string>
+		<string name="part_used">已用: %tw_partition_used%</string>
+		<string name="part_free">可用: %tw_partition_free%</string>
+		<string name="part_backup_size">備份大小: %tw_partition_backup_size%</string>
 		<string name="resize_btn">調整文件系統</string>
 		<string name="resize_btn_s">調整</string>
 		<string name="resize_confirm">是否調整 %tw_partition_name%？</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">清除加密</string>
 		<string name="swipe_factory_reset">滑動滑塊確認復原出廠</string>
 		<string name="repair_change_btn">修復或更改文件系統</string>
-		<string name="storage_hdr">儲存位置: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">儲存位置: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">備份</string>
 		<string name="backup_confirm_hdr">確認備份</string>
 		<string name="encryption_tab">加密</string>
@@ -234,7 +234,7 @@
 		<string name="backup_complete">備份完成</string>
 		<string name="restore_hdr">復原</string>
 		<string name="sel_backup_hdr">選擇備份</string>
-		<string name="restore_sel_store_hdr">從 %tw_storage_display_name% (%tw_storage_free_size% MB) 中選擇備份</string>
+		<string name="restore_sel_store_hdr">從 %tw_storage_display_name% (%tw_storage_free_size%) 中選擇備份</string>
 		<string name="restore_sel_pack_fs">選擇要復原的備份包：</string>
 		<string name="restore_enc_backup_hdr">備份已被加密</string>
 		<string name="restore_dec_fail">密碼錯誤，請重試</string>
@@ -530,16 +530,16 @@
 		<string name="unable_to_locate_partition">未找到“{1}”分割區。</string>
 		<string name="no_partition_selected">未選擇備份分割區。</string>
 		<string name="total_partitions_backup"> * 備份分割區總數: {1}</string>
-		<string name="total_backup_size"> * 備份資料總計: {1}MB</string>
-		<string name="available_space"> * 可用空間: {1}MB</string>
+		<string name="total_backup_size"> * 備份資料總計: {1}</string>
+		<string name="available_space"> * 可用空間: {1}</string>
 		<string name="unable_locate_storage">未找到儲存裝置。</string>
 		<string name="no_space">儲存器上沒有足夠的空間。</string>
 		<string name="backup_started">[已開始備份]</string>
 		<string name="backup_folder"> * 備份資料夾: {1}</string>
 		<string name="fail_backup_folder">建立備份資料夾失敗。</string>
-		<string name="avg_backup_fs">文件平均備份速度: {1}MB/秒</string>
-		<string name="avg_backup_img">映像平均備份速度: {1}MB/秒</string>
-		<string name="total_backed_size">[總計備份 {1}MB]</string>
+		<string name="avg_backup_fs">文件平均備份速度: {1}</string>
+		<string name="avg_backup_img">映像平均備份速度: {1}</string>
+		<string name="total_backed_size">[總計備份 {1}]</string>
 		<string name="backup_completed">[備份已完成，耗時 {1} 秒]</string>
 		<string name="restore_started">[已開始還原]</string>
 		<string name="restore_folder">復原資料夾:“{1}”</string>
@@ -552,7 +552,7 @@
 		<string name="restore_unable_locate">未找到“{1}”分割區。</string>
 		<string name="no_part_restore">未選擇要復原的分割區。</string>
 		<string name="restore_part_count">正在復原 {1} 個分割區…</string>
-		<string name="total_restore_size">復原文件總計 {1}MB</string>
+		<string name="total_restore_size">復原文件總計 {1}</string>
 		<string name="updating_system_details">更新系統詳細資訊</string>
 		<string name="restore_completed">[復原完成，耗時 {1} 秒]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -682,7 +682,7 @@
 		<string name="split_thread">分割執行緒 ID {1} 到壓縮文件 {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">已完成 %llu 個，共 %llu 個文件，進度 %i%%</string>
-		<string name="size_progress">已完成 %lluMB，共 %lluMB，進度 %i%%</string>
+		<string name="size_progress">已完成 {} / {}，進度 {}%</string>
 		<string name="decrypt_cmd" version="2">正在嘗試通過命令列解密 Data 分割區或使用者資料。</string>
 		<string name="base_pkg_err">無法載入基本包。</string>
 		<string name="simulating">正在模擬操作…</string>

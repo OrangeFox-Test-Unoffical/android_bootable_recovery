@@ -65,7 +65,7 @@
 		<string name="install_image_btn">İmaj Yükle</string>
 		<string name="install_select_file_hdr">Dosya Seç</string>
 		<string name="file_selector_folders_hdr">Klasörler</string>
-		<string name="select_file_from_storage">%tw_storage_display_name% içinden dosya seç (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">%tw_storage_display_name% içinden dosya seç (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Yükle</string>
 		<string name="select_storage_hdr">Depolama Seç</string>
@@ -162,10 +162,10 @@
 		<string name="part_present_no">Mevcut: Hayır</string>
 		<string name="part_removable_yes">Çıkarılabilir: Evet</string>
 		<string name="part_removable_no">Çıkarılabilir: Hayır</string>
-		<string name="part_size">Boyut: %tw_partition_size%MB</string>
-		<string name="part_used">Kullanılan: %tw_partition_used%MB</string>
-		<string name="part_free">Boş: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Yedek Boyutu: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Boyut: %tw_partition_size%</string>
+		<string name="part_used">Kullanılan: %tw_partition_used%</string>
+		<string name="part_free">Boş: %tw_partition_free%</string>
+		<string name="part_backup_size">Yedek Boyutu: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Dosya Sistemini Yeniden Boyutlandır</string>
 		<string name="resize_btn_s">Yeniden Boyutlandır</string>
 		<string name="resize_confirm">%tw_partition_name% yeniden boyutlandırılsın mı?</string>
@@ -195,7 +195,7 @@
 		<string name="wipe_enc_btn">Şifrelemeyi Temizle</string>
 		<string name="swipe_factory_reset">Sıfırlamak için Kaydır</string>
 		<string name="repair_change_btn">Dosya Sistemini Onar veya Değiştir</string>
-		<string name="storage_hdr">Depolama: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Depolama: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Yedekle</string>
 		<string name="backup_confirm_hdr">Yedeklemeyi Onayla</string>
 		<string name="encryption_tab">ŞİFRELEME</string>
@@ -229,7 +229,7 @@
 		<string name="backup_complete">Yedekleme Tamamlandı</string>
 		<string name="restore_hdr">Geri Yükle</string>
 		<string name="sel_backup_hdr">Yedek Seç</string>
-		<string name="restore_sel_store_hdr">%tw_storage_display_name% içinden yedek seç (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">%tw_storage_display_name% içinden yedek seç (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Geri Yüklenecek Paketi Seçin:</string>
 		<string name="restore_enc_backup_hdr">Şifreli Yedek</string>
 		<string name="restore_dec_fail">Şifre yanlış, lütfen tekrar deneyin!</string>
@@ -477,16 +477,16 @@
 		<string name="unable_to_locate_partition">Yedekleme hesaplamaları için \'{1}\' bölümü bulunamıyor.</string>
 		<string name="no_partition_selected">Yedekleme için bölüm seçilmedi.</string>
 		<string name="total_partitions_backup"> * Toplam yedeklenecek bölüm sayısı: {1}</string>
-		<string name="total_backup_size"> * Toplam veri boyutu: {1}MB</string>
-		<string name="available_space"> * Kullanılabilir alan: {1}MB</string>
+		<string name="total_backup_size"> * Toplam veri boyutu: {1}</string>
+		<string name="available_space"> * Kullanılabilir alan: {1}</string>
 		<string name="unable_locate_storage">Depolama aygıtı bulunamıyor.</string>
 		<string name="no_space">Yeteri kadar boş alan yok.</string>
 		<string name="backup_started">[YEDEKLEME BAŞLATILDI]</string>
 		<string name="backup_folder"> * Yedekleme Klasörü: {1}</string>
 		<string name="fail_backup_folder">Yedekleme klasörü oluşturulamadı.</string>
-		<string name="avg_backup_fs">Dosya sistemleri için ortalama yedekleme hızı: {1} MB/sn</string>
-		<string name="avg_backup_img">Görüntülü sürücüler için ortalama yedekleme hızı: {1} MB/sn</string>
-		<string name="total_backed_size">[{1} MB YEDEKLENDİ]</string>
+		<string name="avg_backup_fs">Dosya sistemleri için ortalama yedekleme hızı: {1}</string>
+		<string name="avg_backup_img">Görüntülü sürücüler için ortalama yedekleme hızı: {1}</string>
+		<string name="total_backed_size">[{1} YEDEKLENDİ]</string>
 		<string name="backup_completed">[YEDEKLEME {1} SANİYEDE TAMAMLANDI]</string>
 		<string name="restore_started">[GERİ YÜKLEME BAŞLATILDI]</string>
 		<string name="restore_folder">Geri yükleme klasörü: \'{1}\'</string>
@@ -499,7 +499,7 @@
 		<string name="restore_unable_locate">Geri yüklemek için \'{1}\' bölümü bulunamıyor.</string>
 		<string name="no_part_restore">Geri yüklemek için bölüm seçilmedi.</string>
 		<string name="restore_part_count">{1} bölüm geri yükleniyor...</string>
-		<string name="total_restore_size">Toplam geri yükleme boyutu {1}MB</string>
+		<string name="total_restore_size">Toplam geri yükleme boyutu {1}</string>
 		<string name="updating_system_details">Sistem Ayrıntıları Güncelleniyor</string>
 		<string name="restore_completed">[GERİ YÜKLEME {1} SANİYEDE TAMAMLANDI]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -626,7 +626,7 @@
 		<string name="split_thread">{1} İş parçacığı kimliğini, {2} arşiv olarak bölüyor.</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu / %llu dosya, %i%%</string>
-		<string name="size_progress">%lluMB / %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd">Komut satırıyla veri bölümünün şifresi çözmeye çalışılıyor.</string>
 		<string name="base_pkg_err">Temel paketler yüklenemedi.</string>
 		<string name="simulating">Eylemler taklit ediliyor...</string>

@@ -62,7 +62,7 @@
 		<string name="install_image_btn">イメージのインストール</string>
 		<string name="install_select_file_hdr">ファイルの選択</string>
 		<string name="file_selector_folders_hdr">フォルダ</string>
-		<string name="select_file_from_storage">%tw_storage_display_name% (%tw_storage_free_size% MB) からファイルを選択</string>
+		<string name="select_file_from_storage">%tw_storage_display_name% (%tw_storage_free_size%) からファイルを選択</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">インストール</string>
 		<string name="select_storage_hdr">ストレージの選択</string>
@@ -159,10 +159,10 @@
 		<string name="part_present_no">現在利用可能: いいえ</string>
 		<string name="part_removable_yes">取り外し可能: はい</string>
 		<string name="part_removable_no">取り外し可能: いいえ</string>
-		<string name="part_size">サイズ: %tw_partition_size%MB</string>
-		<string name="part_used">使用中: %tw_partition_used%MB</string>
-		<string name="part_free">空き: %tw_partition_free%MB</string>
-		<string name="part_backup_size">バックアップサイズ: %tw_partition_backup_size%MB</string>
+		<string name="part_size">サイズ: %tw_partition_size%</string>
+		<string name="part_used">使用中: %tw_partition_used%</string>
+		<string name="part_free">空き: %tw_partition_free%</string>
+		<string name="part_backup_size">バックアップサイズ: %tw_partition_backup_size%</string>
 		<string name="resize_btn">ファイルシステムのリサイズ</string>
 		<string name="resize_btn_s">リサイズ</string>
 		<string name="resize_confirm">%tw_partition_name% をリサイズしますか?</string>
@@ -192,7 +192,7 @@
 		<string name="wipe_enc_btn">暗号化の消去</string>
 		<string name="swipe_factory_reset">スワイプでデータの初期化</string>
 		<string name="repair_change_btn">ファイルシステムの修復と変更</string>
-		<string name="storage_hdr">ストレージ: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">ストレージ: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">バックアップ</string>
 		<string name="backup_confirm_hdr">バックアップの確認</string>
 		<string name="encryption_tab">暗号化</string>
@@ -221,7 +221,7 @@
 		<string name="backup_complete">バックアップしました</string>
 		<string name="restore_hdr">リストア</string>
 		<string name="sel_backup_hdr">バックアップの選択</string>
-		<string name="restore_sel_store_hdr">%tw_storage_display_name% (%tw_storage_free_size% MB) からバックアップを選択</string>
+		<string name="restore_sel_store_hdr">%tw_storage_display_name% (%tw_storage_free_size%) からバックアップを選択</string>
 		<string name="restore_sel_pack_fs">リストアするパッケージの選択:</string>
 		<string name="restore_enc_backup_hdr">暗号化されたバックアップ</string>
 		<string name="restore_dec_fail">パスワードが間違っているので、入力し直してください!</string>
@@ -467,16 +467,16 @@
 		<string name="unable_to_locate_partition">バックアップの計算で \'{1}\' パーティションが見つかりません。</string>
 		<string name="no_partition_selected">バックアップするパーティションが選択されていません。</string>
 		<string name="total_partitions_backup"> * バックアップするパーティションの総数: {1}</string>
-		<string name="total_backup_size"> * すべてのデータの合計サイズ: {1}MB</string>
-		<string name="available_space"> * 空き容量: {1}MB</string>
+		<string name="total_backup_size"> * すべてのデータの合計サイズ: {1}</string>
+		<string name="available_space"> * 空き容量: {1}</string>
 		<string name="unable_locate_storage">ストレージデバイスを見つけられません。</string>
 		<string name="no_space">十分な空き容量がありません。</string>
 		<string name="backup_started">[バックアップ開始]</string>
 		<string name="backup_folder"> * バックアップフォルダ: {1}</string>
 		<string name="fail_backup_folder">バックアップフォルダの作成に失敗しました。</string>
-		<string name="avg_backup_fs">ファイルシステムの平均バックアップ速度: {1} MB/秒</string>
-		<string name="avg_backup_img">イメージドライブの平均バックアップ速度: {1} MB/秒</string>
-		<string name="total_backed_size">[合計 {1} MB バックアップ]</string>
+		<string name="avg_backup_fs">ファイルシステムの平均バックアップ速度: {1}</string>
+		<string name="avg_backup_img">イメージドライブの平均バックアップ速度: {1}</string>
+		<string name="total_backed_size">[合計 {1} バックアップ]</string>
 		<string name="backup_completed">[{1} 秒でバックアップしました]</string>
 		<string name="restore_started">[リストア開始]</string>
 		<string name="restore_folder">リストアフォルダ: \'{1}\'</string>
@@ -489,7 +489,7 @@
 		<string name="restore_unable_locate">リストアする \'{1}\' パーティションが見つかりません。</string>
 		<string name="no_part_restore">リストアするパーティションが選択されていません。</string>
 		<string name="restore_part_count">{1} パーティションをリストア中...</string>
-		<string name="total_restore_size">合計リストアサイズ: {1}MB</string>
+		<string name="total_restore_size">合計リストアサイズ: {1}</string>
 		<string name="updating_system_details">system の詳細を更新中</string>
 		<string name="restore_completed">[{1} 秒でリストアしました]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -616,7 +616,7 @@
 		<string name="split_thread">スレッド ID {1} を書庫 {2} に分割中</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu / %llu ファイル、%i%%</string>
-		<string name="size_progress">%lluMB / %lluMB、%i%%</string>
+		<string name="size_progress">{} / {}、{}%</string>
 		<string name="decrypt_cmd">コマンドラインで data パーティションの復号を試行中です。</string>
 		<string name="base_pkg_err">基本パッケージの読み込みに失敗しました。</string>
 		<string name="simulating">アクションのシミュレート中...</string>

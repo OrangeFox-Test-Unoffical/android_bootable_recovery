@@ -302,7 +302,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@select_file_from_storage=Select File from %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@select_file_from_storage=Select File from %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<template name="sort_options"/>
@@ -1397,22 +1397,22 @@
 
 			<text style="text_m">
 				<placement x="%col2_x_left%" y="%row7_y%"/>
-				<text>{@part_size=Size: %tw_partition_size%MB}</text>
+				<text>{@part_size=Size: %tw_partition_size%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col1_x_right%" y="%row7_y%"/>
-				<text>{@part_used=Used: %tw_partition_used%MB}</text>
+				<text>{@part_used=Used: %tw_partition_used%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col2_x_left%" y="%row9_y%"/>
-				<text>{@part_free=Free: %tw_partition_free%MB}</text>
+				<text>{@part_free=Free: %tw_partition_free%}</text>
 			</text>
 
 			<text style="text_m">
 				<placement x="%col1_x_right%" y="%row9_y%"/>
-				<text>{@part_backup_size=Backup Size: %tw_partition_backup_size%MB}</text>
+				<text>{@part_backup_size=Backup Size: %tw_partition_backup_size%}</text>
 			</text>
 
 			<button style="main_button_half_width">
@@ -1670,7 +1670,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<text style="text_m_accent">
@@ -1861,7 +1861,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<text style="text_m_accent">
@@ -1941,7 +1941,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<text style="text_m_accent">
@@ -2008,7 +2008,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<text style="text_m_accent">
@@ -2169,7 +2169,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@restore_sel_store_hdr=Select Backup from %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@restore_sel_store_hdr=Select Backup from %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<template name="sort_options"/>
@@ -2240,7 +2240,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@restore_sel_store_hdr=Select Backup from %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@restore_sel_store_hdr=Select Backup from %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<template name="sort_options"/>
@@ -2637,7 +2637,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<partitionlist>
@@ -3995,7 +3995,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@select_file_from_storage=Select File from %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@select_file_from_storage=Select File from %tw_storage_display_name% (%tw_storage_free_size%)}</text>
 			</text>
 
 			<template name="sort_options"/>

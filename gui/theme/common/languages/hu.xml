@@ -64,7 +64,7 @@
 		<string name="install_image_btn">Képfájl telepítése</string>
 		<string name="install_select_file_hdr">Fájl kiválasztása</string>
 		<string name="file_selector_folders_hdr">Mappák</string>
-		<string name="select_file_from_storage">Fájl kiválasztása innen: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="select_file_from_storage">Fájl kiválasztása innen: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Telepítés</string>
 		<string name="select_storage_hdr">Válasszon tárolót</string>
@@ -161,10 +161,10 @@
 		<string name="part_present_no">Jelen: nem</string>
 		<string name="part_removable_yes">Cserélhető: igen</string>
 		<string name="part_removable_no">Cserélhető: nem</string>
-		<string name="part_size">Méret: %tw_partition_size%MB</string>
-		<string name="part_used">Használt: %tw_partition_used%MB</string>
-		<string name="part_free">Szabad: %tw_partition_free%MB</string>
-		<string name="part_backup_size">Biztonsági mentés mérete: %tw_partition_backup_size%MB</string>
+		<string name="part_size">Méret: %tw_partition_size%</string>
+		<string name="part_used">Használt: %tw_partition_used%</string>
+		<string name="part_free">Szabad: %tw_partition_free%</string>
+		<string name="part_backup_size">Biztonsági mentés mérete: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Fájlrendszer átméretezése</string>
 		<string name="resize_btn_s">Átméretezés</string>
 		<string name="resize_confirm">Átméretezi: %tw_partition_name%?</string>
@@ -194,7 +194,7 @@
 		<string name="wipe_enc_btn">Titkosítás törlése</string>
 		<string name="swipe_factory_reset">Csúsztasson a gyári beállítások visszaállításához</string>
 		<string name="repair_change_btn">Fájlrendszer javítása vagy módosítása</string>
-		<string name="storage_hdr">Tároló: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr">Tároló: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Biztonsági mentés</string>
 		<string name="backup_confirm_hdr">Biztonsági mentés megerősítése</string>
 		<string name="encryption_tab">TITKOSÍTÁS</string>
@@ -228,7 +228,7 @@
 		<string name="backup_complete">Biztonsági mentés kész</string>
 		<string name="restore_hdr">Visszaállítás</string>
 		<string name="sel_backup_hdr">Biztonsági mentés kiválasztása</string>
-		<string name="restore_sel_store_hdr">Mentés kiválasztása innen: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="restore_sel_store_hdr">Mentés kiválasztása innen: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Válassza ki a visszaállítandó csomagot:</string>
 		<string name="restore_enc_backup_hdr">Titkosított biztonsági mentés</string>
 		<string name="restore_dec_fail">Jelszó hibás, próbálja meg újra!</string>
@@ -474,16 +474,16 @@
 		<string name="unable_to_locate_partition">'{1}' partíció nem található a biztonsági mentési számításokhoz.</string>
 		<string name="no_partition_selected">Nincs biztonsági mentésre kijelölt partíció.</string>
 		<string name="total_partitions_backup"> * A biztonsági mentésre jelölt partíciók teljes száma: {1}</string>
-		<string name="total_backup_size"> * Az összes adat teljes mérete: {1}MB</string>
-		<string name="available_space"> * A rendelkezésre álló terület: {1}MB</string>
+		<string name="total_backup_size"> * Az összes adat teljes mérete: {1}</string>
+		<string name="available_space"> * A rendelkezésre álló terület: {1}</string>
 		<string name="unable_locate_storage">Nem található tárolóeszköz.</string>
 		<string name="no_space">Nincs elég szabad hely a tárolón.</string>
 		<string name="backup_started">[BIZTONSÁGI MENTÉS ELINDÍTVA]</string>
 		<string name="backup_folder"> * Biztonsági mentés mappa: {1}</string>
 		<string name="fail_backup_folder">Nem sikerült biztonsági mentés mappát létrehozni.</string>
-		<string name="avg_backup_fs">Fájlrendszer átlagos mentési sebessége: {1} MB/mp</string>
-		<string name="avg_backup_img">Lemezképpel rendelkező meghajtók átlagos mentési sebessége: {1} MB/mp</string>
-		<string name="total_backed_size">[TELJES MENTÉSI MÉRET: {1} MB]</string>
+		<string name="avg_backup_fs">Fájlrendszer átlagos mentési sebessége: {1}</string>
+		<string name="avg_backup_img">Lemezképpel rendelkező meghajtók átlagos mentési sebessége: {1}</string>
+		<string name="total_backed_size">[TELJES MENTÉSI MÉRET: {1}]</string>
 		<string name="backup_completed">[BIZTONSÁGI MENTÉS KÉSZ {1} MÁSODPERC ALATT]</string>
 		<string name="restore_started">[VISSZAÁLLÍTÁS ELINDÍTVA]</string>
 		<string name="restore_folder">Mappa visszaállítása: '{1}'</string>
@@ -496,7 +496,7 @@
 		<string name="restore_unable_locate">Nem található a(z) '{1}' partíció a visszaállításhoz.</string>
 		<string name="no_part_restore">Nincs partíció kijelölve a visszaállításhoz.</string>
 		<string name="restore_part_count">{1} partíciók visszaállítása...</string>
-		<string name="total_restore_size">Teljes visszaállítás mérete: {1}MB</string>
+		<string name="total_restore_size">Teljes visszaállítás mérete: {1}</string>
 		<string name="updating_system_details">Rendszer részleteinek frissítése</string>
 		<string name="restore_completed">[VISSZAÁLLÍTÁS BEFEJEZŐDÖTT {1} MÁSODPERC ALATT]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -625,7 +625,7 @@
 		<string name="split_thread">{1} szálazonosító tördelése {2} archívumba</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu / %llu fájl, %i%%</string>
-		<string name="size_progress">%lluMB / %lluMB, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd">Adatpartíció visszafejtésének megpróbálása parancssor segítségével.</string>
 		<string name="base_pkg_err">Nem sikerült betölteni az alap csomagokat.</string>
 		<string name="simulating">Műveletek szimulálása...</string>

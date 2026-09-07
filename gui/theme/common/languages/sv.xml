@@ -181,7 +181,7 @@
 		<string name="digest_error" version="2"> * Digest-fel!</string>
 		<string name="current_date">(Dagens datum)</string>
 		<string name="auto_generate">(Auto-generera)</string>
-		<string name="available_space"> * Tillgängligt utrymme: {1}MB</string>
+		<string name="available_space"> * Tillgängligt utrymme: {1}</string>
 		<string name="verifying_digest" version="2">Verifierar Digest</string>
 		<string name="update_part_details_done">...klar</string>
 		<string name="done">Klar.</string>

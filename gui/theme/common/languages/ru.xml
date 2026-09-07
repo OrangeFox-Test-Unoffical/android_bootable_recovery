@@ -65,7 +65,7 @@
 		<string name="install_image_btn">Установка IMG</string>
 		<string name="install_select_file_hdr">Выбор файла</string>
 		<string name="file_selector_folders_hdr">Папки</string>
-		<string name="select_file_from_storage">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size% МБ)</string>
+		<string name="select_file_from_storage">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
 		<string name="install_hdr">Установка</string>
 		<string name="select_storage_hdr">Выберите накопитель</string>
@@ -166,10 +166,10 @@
 		<string name="part_present_no">Присутствует: нет</string>
 		<string name="part_removable_yes">Съёмное: да</string>
 		<string name="part_removable_no">Съёмное: нет</string>
-		<string name="part_size">Размер: %tw_partition_size% МБ</string>
-		<string name="part_used">Использовано: %tw_partition_used% МБ</string>
-		<string name="part_free">Свободно: %tw_partition_free% МБ</string>
-		<string name="part_backup_size">Размер резервных копий: %tw_partition_backup_size% МБ</string>
+		<string name="part_size">Размер: %tw_partition_size%</string>
+		<string name="part_used">Использовано: %tw_partition_used%</string>
+		<string name="part_free">Свободно: %tw_partition_free%</string>
+		<string name="part_backup_size">Размер резервных копий: %tw_partition_backup_size%</string>
 		<string name="resize_btn">Измен. размер</string>
 		<string name="resize_btn_s">Изм. размер</string>
 		<string name="resize_confirm">Изменить размер %tw_partition_name%?</string>
@@ -199,7 +199,7 @@
 		<string name="wipe_enc_btn">Стереть шифрование</string>
 		<string name="swipe_factory_reset">Свайп для подтверждения</string>
 		<string name="repair_change_btn">Восстановить или изменить файловую систему</string>
-		<string name="storage_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size% МБ)</string>
+		<string name="storage_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="backup_hdr">Резервное копирование</string>
 		<string name="backup_confirm_hdr">Подтверждение резервного копирования</string>
 		<string name="encryption_tab">ШИФРОВАНИЕ</string>
@@ -234,7 +234,7 @@
 		<string name="backup_complete">Резервное копирование завершено</string>
 		<string name="restore_hdr">Восстановление</string>
 		<string name="sel_backup_hdr">Выбор резервной копии</string>
-		<string name="restore_sel_store_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size% МБ)</string>
+		<string name="restore_sel_store_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
 		<string name="restore_sel_pack_fs">Выбор резервной копии для восстановления:</string>
 		<string name="restore_enc_backup_hdr">Зашифрованная резервная копия</string>
 		<string name="restore_dec_fail">Пароль неверный, попробуйте снова!</string>
@@ -521,16 +521,16 @@
 		<string name="unable_to_locate_partition">Не удаётся найти '{1}' раздел для расчёта копирования.</string>
 		<string name="no_partition_selected">Не выбраны разделы для резервного копирования.</string>
 		<string name="total_partitions_backup"> * Общее количество разделов для резервного копирования: {1}</string>
-		<string name="total_backup_size"> * Общий объём данных: {1} МБ</string>
-		<string name="available_space"> * Доступный объём: {1} МБ</string>
+		<string name="total_backup_size"> * Общий объём данных: {1}</string>
+		<string name="available_space"> * Доступный объём: {1}</string>
 		<string name="unable_locate_storage">Не удаётся найти накопитель для хранения.</string>
 		<string name="no_space">В накопителе для хранения недостаточно свободного места.</string>
 		<string name="backup_started">[РЕЗЕРВНОЕ КОПИРОВАНИЕ НАЧАТО]</string>
 		<string name="backup_folder"> * Папка для резервной копии: {1}</string>
 		<string name="fail_backup_folder">Не удаётся создать папку для резервной копии.</string>
-		<string name="avg_backup_fs">Средняя скорость копирования для файлов: {1} МБ/сек</string>
-		<string name="avg_backup_img">Средняя скорость копирования для образов: {1} МБ/сек</string>
-		<string name="total_backed_size">[ВСЕГО СКОПИРОВАНО {1} МБ]</string>
+		<string name="avg_backup_fs">Средняя скорость копирования для файлов: {1}</string>
+		<string name="avg_backup_img">Средняя скорость копирования для образов: {1}</string>
+		<string name="total_backed_size">[ВСЕГО СКОПИРОВАНО {1}]</string>
 		<string name="backup_completed">[КОПИРОВАНИЕ ЗАВЕРШЕНО ЗА {1} СЕКУНД(Ы)]</string>
 		<string name="restore_started">[ВОССТАНОВЛЕНИЕ НАЧАТО]</string>
 		<string name="restore_folder">Папка для восстановления: '{1}'</string>
@@ -543,7 +543,7 @@
 		<string name="restore_unable_locate">Не удаётся найти '{1}' раздел для восстановления.</string>
 		<string name="no_part_restore">Не выбраны разделы для восстановления.</string>
 		<string name="restore_part_count">Восстановление {1} разделов...</string>
-		<string name="total_restore_size">Общий размер для восстановления: {1} МБ</string>
+		<string name="total_restore_size">Общий размер для восстановления: {1}</string>
 		<string name="updating_system_details">Обновление информации о системе</string>
 		<string name="restore_completed">[ВОССТАНОВЛЕНИЕ ЗАВЕРШЕНО ЗА {1} СЕКУНД(Ы)]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -673,7 +673,7 @@
 		<string name="split_thread">Разделение идентификатора потока {1} в архив {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu из %llu файлов, %i%%</string>
-		<string name="size_progress">%llu МБ из %llu МБ, %i%%</string>
+		<string name="size_progress">{} / {}, {}%</string>
 		<string name="decrypt_cmd" version="2">Попытка расшифровать раздел данных или пользовательских данных с помощью командной строки.</string>
 		<string name="base_pkg_err">Неудача при загрузке базовых пакетов.</string>
 		<string name="simulating">Имитация действий...</string>

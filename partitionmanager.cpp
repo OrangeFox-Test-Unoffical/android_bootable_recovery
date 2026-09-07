@@ -69,6 +69,7 @@
 #include "twrpDigestDriver.hpp"
 #include "twrpRepacker.hpp"
 #include "twrpadbbu/libtwrpadbbu.hpp"
+#include "unit_conversion.hpp"
 
 #ifdef TW_LOAD_VENDOR_MODULES
 #include "kernel_module_loader.hpp"
@@ -666,13 +667,11 @@ void TWPartitionManager::Output_Partition_Logging() {
 }
 
 void TWPartitionManager::Output_Partition(TWPartition *Part) {
-    constexpr unsigned long long mb = 1048576;
-
-    printf("%s | %s | Size: %iMB", Part->Mount_Point.c_str(), Part->Actual_Block_Device.c_str(),
-           static_cast<int>(Part->Size / mb));
+    printf("%s | %s | Size: %s", Part->Mount_Point.c_str(), Part->Actual_Block_Device.c_str(),
+           UnitConversion::FormatBytes(Part->Size).c_str());
     if (Part->Can_Be_Mounted) {
-        printf(" Used: %iMB Free: %iMB Backup Size: %iMB", static_cast<int>(Part->Used / mb),
-               static_cast<int>(Part->Free / mb), static_cast<int>(Part->Backup_Size / mb));
+        printf(" Used: %s Free: %s Backup Size: %s", UnitConversion::FormatBytes(Part->Used).c_str(),
+               UnitConversion::FormatBytes(Part->Free).c_str(), UnitConversion::FormatBytes(Part->Backup_Size).c_str());
     }
     struct FlagEntry {
         bool TWPartition::*flag;
@@ -824,7 +823,7 @@ int TWPartitionManager::Mount_Current_Storage(bool Display_Error) {
     if (Mount_By_Path(current_storage_path, Display_Error)) {
         TWPartition *FreeStorage = Find_Partition_By_Path(current_storage_path);
         if (FreeStorage)
-            DataManager::SetValue(TW_STORAGE_FREE_SIZE, static_cast<int>(FreeStorage->Free / kMiB));
+            DataManager::SetValue(TW_STORAGE_FREE_SIZE, UnitConversion::FormatBytes(FreeStorage->Free));
         return true;
     }
     return false;
@@ -1126,11 +1125,11 @@ bool TWPartitionManager::Run_Backup(bool adbbackup) {
     part_settings.progress = &progress;
 
     gui_msg(Msg("total_partitions_backup= * Total number of partitions to back up: {1}")(partition_count));
-    gui_msg(Msg("total_backup_size= * Total size of all data: {1}MB")(total_bytes / 1024 / 1024));
+    gui_msg(Msg("total_backup_size= * Total size of all data: {1}")(UnitConversion::FormatBytes(total_bytes)));
     storage = Find_Partition_By_Path(DataManager::GetCurrentStoragePath());
     if (storage) {
         free_space = storage->Free;
-        gui_msg(Msg("available_space= * Available space: {1}MB")(free_space / 1024 / 1024));
+        gui_msg(Msg("available_space= * Available space: {1}")(UnitConversion::FormatBytes(free_space)));
     } else {
         gui_err("unable_locate_storage=Unable to locate storage device.");
         return false;
@@ -1208,9 +1207,9 @@ bool TWPartitionManager::Run_Backup(bool adbbackup) {
     unsigned long long file_bps = part_settings.file_bytes / static_cast<int>(part_settings.file_time);
 
     if (part_settings.file_bytes != 0)
-        gui_msg(Msg("avg_backup_fs=Average backup rate for file systems: {1} MB/sec")(file_bps / (1024 * 1024)));
+        gui_msg(Msg("avg_backup_fs=Average backup rate for file systems: {1}")(UnitConversion::FormatBytesPerSecond(file_bps)));
     if (part_settings.img_bytes != 0)
-        gui_msg(Msg("avg_backup_img=Average backup rate for imaged drives: {1} MB/sec")(img_bps / (1024 * 1024)));
+        gui_msg(Msg("avg_backup_img=Average backup rate for imaged drives: {1}")(UnitConversion::FormatBytesPerSecond(img_bps)));
 
     time(&total_stop);
     int total_time = static_cast<int>(difftime(total_stop, total_start));
@@ -1221,7 +1220,6 @@ bool TWPartitionManager::Run_Backup(bool adbbackup) {
         actual_backup_size = twe.Get_Folder_Size(part_settings.Backup_Folder);
     } else
         actual_backup_size = part_settings.file_bytes + part_settings.img_bytes;
-    actual_backup_size /= (1024LLU * 1024LLU);
 
     int prev_img_bps = 0, use_compression = 0;
     unsigned long long prev_file_bps = 0;
@@ -1243,7 +1241,7 @@ bool TWPartitionManager::Run_Backup(bool adbbackup) {
     else
         DataManager::SetValue(TW_BACKUP_AVG_FILE_RATE, file_bps);
 
-    gui_msg(Msg("total_backed_size=[{1} MB TOTAL BACKED UP]")(actual_backup_size));
+    gui_msg(Msg("total_backed_size=[{1} TOTAL BACKED UP]")(UnitConversion::FormatBytes(actual_backup_size)));
     Update_System_Details();
     UnMount_Main_Partitions();
     gui_msg(Msg(msg::kHighlight, "backup_completed=[BACKUP COMPLETED IN {1} SECONDS]")(total_time)); // the end
@@ -1389,7 +1387,7 @@ int TWPartitionManager::Run_Restore(const std::string &Restore_Name) {
     }
 
     gui_msg(Msg("restore_part_count=Restoring {1} partitions...")(part_settings.partition_count));
-    gui_msg(Msg("total_restore_size=Total restore size is {1}MB")(part_settings.total_restore_size / kMiB));
+    gui_msg(Msg("total_restore_size=Total restore size is {1}")(UnitConversion::FormatBytes(part_settings.total_restore_size)));
     DataManager::SetProgress(0.0);
     ProgressTracking progress(part_settings.total_restore_size);
     part_settings.progress = &progress;
@@ -1825,7 +1823,7 @@ int TWPartitionManager::Resize_By_Path(std::string Path, bool Display_Error) {
 }
 
 void TWPartitionManager::Update_System_Details(bool Defer_Data_Size, bool Display_Error) {
-    int data_size = 0;
+    uint64_t data_size = 0;
     TWPartition *Deferred = nullptr;
 
     gui_msg("update_part_details=Updating partition details...");
@@ -1837,32 +1835,27 @@ void TWPartitionManager::Update_System_Details(bool Defer_Data_Size, bool Displa
             Deferred = partition;
         if (partition->Can_Be_Mounted) {
             if (partition->Mount_Point == Get_Android_Root_Path()) {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_SYSTEM_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_SYSTEM_SIZE, partition->Backup_Size);
             } else if (partition->Mount_Point == "/data" || partition->Mount_Point == "/datadata") {
-                data_size += static_cast<int>(partition->Backup_Size / kMiB);
+                data_size += partition->Backup_Size;
             } else if (partition->Mount_Point == "/cache") {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_CACHE_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_CACHE_SIZE, partition->Backup_Size);
             } else if (partition->Mount_Point == "/sd-ext") {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_SDEXT_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_SDEXT_SIZE, partition->Backup_Size);
                 if (partition->Backup_Size == 0) {
                     DataManager::SetValue(TW_HAS_SDEXT_PARTITION, 0);
                     DataManager::SetValue(TW_BACKUP_SDEXT_VAR, 0);
                 } else
                     DataManager::SetValue(TW_HAS_SDEXT_PARTITION, 1);
             } else if (partition->Has_Android_Secure) {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_ANDSEC_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_ANDSEC_SIZE, partition->Backup_Size);
                 if (partition->Backup_Size == 0) {
                     DataManager::SetValue(TW_HAS_ANDROID_SECURE, 0);
                     DataManager::SetValue(TW_BACKUP_ANDSEC_VAR, 0);
                 } else
                     DataManager::SetValue(TW_HAS_ANDROID_SECURE, 1);
             } else if (partition->Mount_Point == "/boot") {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_BOOT_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_BOOT_SIZE, partition->Backup_Size);
                 if (partition->Backup_Size == 0) {
                     DataManager::SetValue("tw_has_boot_partition", 0);
                     DataManager::SetValue(TW_BACKUP_BOOT_VAR, 0);
@@ -1872,23 +1865,21 @@ void TWPartitionManager::Update_System_Details(bool Defer_Data_Size, bool Displa
         } else {
             // Handle unmountable partitions in case we reset defaults
             if (partition->Mount_Point == "/boot") {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_BOOT_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_BOOT_SIZE, partition->Backup_Size);
                 if (partition->Backup_Size == 0) {
                     DataManager::SetValue(TW_HAS_BOOT_PARTITION, 0);
                     DataManager::SetValue(TW_BACKUP_BOOT_VAR, 0);
                 } else
                     DataManager::SetValue(TW_HAS_BOOT_PARTITION, 1);
             } else if (partition->Mount_Point == "/recovery") {
-                int backup_display_size = static_cast<int>(partition->Backup_Size / kMiB);
-                DataManager::SetValue(TW_BACKUP_RECOVERY_SIZE, backup_display_size);
+                DataManager::SetValue(TW_BACKUP_RECOVERY_SIZE, partition->Backup_Size);
                 if (partition->Backup_Size == 0) {
                     DataManager::SetValue(TW_HAS_RECOVERY_PARTITION, 0);
                     DataManager::SetValue(TW_BACKUP_RECOVERY_VAR, 0);
                 } else
                     DataManager::SetValue(TW_HAS_RECOVERY_PARTITION, 1);
             } else if (partition->Mount_Point == "/data") {
-                data_size += static_cast<int>(partition->Backup_Size / kMiB);
+                data_size += partition->Backup_Size;
             }
         }
     }
@@ -1900,9 +1891,9 @@ void TWPartitionManager::Update_System_Details(bool Defer_Data_Size, bool Displa
         // Attempt to mount storage
         if (!FreeStorage->Mount(false)) {
             gui_msg(Msg(msg::kWarning, "unable_to_mount_storage=Unable to mount storage"));
-            DataManager::SetValue(TW_STORAGE_FREE_SIZE, 0);
+            DataManager::SetValue(TW_STORAGE_FREE_SIZE, UnitConversion::FormatBytes(0));
         } else {
-            DataManager::SetValue(TW_STORAGE_FREE_SIZE, static_cast<int>(FreeStorage->Free / kMiB));
+            DataManager::SetValue(TW_STORAGE_FREE_SIZE, UnitConversion::FormatBytes(FreeStorage->Free));
         }
     } else {
         LOGINFO("Unable to find storage partition '%s'.\n", current_storage_path.c_str());
@@ -2372,9 +2363,10 @@ int TWPartitionManager::Partition_SDCard() {
     DataManager::GetValue("tw_sdpart_file_system", ext_format);
     fat_size = total_size - ext - swap;
     LOGINFO(
-        "sd card mount point %s block device is '%s', sdcard size is: %iMB, fat size: %iMB, ext size: %iMB, ext system: '%s', swap size: %iMB\n",
-        DataManager::GetCurrentStoragePath().c_str(), Device.c_str(), total_size, fat_size, ext, ext_format.c_str(),
-        swap);
+        "sd card mount point %s block device is '%s', sdcard size is: %s, fat size: %s, ext size: %s, ext system: '%s', swap size: %s\n",
+        DataManager::GetCurrentStoragePath().c_str(), Device.c_str(), UnitConversion::FormatBytes(total_size).c_str(),
+        UnitConversion::FormatBytes(fat_size).c_str(), UnitConversion::FormatBytes(ext).c_str(), ext_format.c_str(),
+        UnitConversion::FormatBytes(swap).c_str());
 
     // Determine partition sizes
     if (swap == 0 && ext == 0) {
@@ -2496,7 +2488,7 @@ void TWPartitionManager::Get_Partition_List(std::string ListType, std::vector<Pa
             // device, not a place to put files.
             if (partition->Is_Storage && partition->Is_Present) {
                 Partition_List->push_back({
-                    .Display_Name = std::format("{} ({} MB)", partition->Storage_Name, partition->Free / (1024 * 1024)),
+                    .Display_Name = std::format("{} ({})", partition->Storage_Name, UnitConversion::FormatBytes(partition->Free)),
                     .Mount_Point = partition->Storage_Path,
                     .selected = partition->Storage_Path == Current_Storage,
                 });
@@ -2520,7 +2512,7 @@ void TWPartitionManager::Get_Partition_List(std::string ListType, std::vector<Pa
                     partition->Update_Data_Size_Async();
                     size_place = gui_lookup("calculating", "calculating");
                 } else {
-                    size_place = std::format("{} MB", Backup_Size / (1024 * 1024));
+                    size_place = UnitConversion::FormatBytes(Backup_Size);
                 }
                 Partition_List->push_back({
                     .Display_Name = std::format("{} ({})", partition->Backup_Display_Name, size_place),

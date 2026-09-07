@@ -66,6 +66,7 @@
 #include "set_metadata.h"
 #include "gui/gui.hpp"
 #include "twrpadbbu/libtwrpadbbu.hpp"
+#include "unit_conversion.hpp"
 
 #ifdef TW_INCLUDE_CRYPTO
 #include "cryptfs.h"
@@ -2794,9 +2795,8 @@ void TWPartition::Apply_Async_Data_Size() {
     Used = size;
     Backup_Size = size;
     Backup_Size_Provisional = false;
-    int bak = static_cast<int>(size / kMiB);
-    DataManager::SetValue(TW_BACKUP_DATA_SIZE, bak);
-    LOGINFO("Data backup size is %iMB.\n", bak);
+    DataManager::SetValue(TW_BACKUP_DATA_SIZE, size);
+    LOGINFO("Data backup size is %s.\n", UnitConversion::FormatBytes(size).c_str());
 }
 
 bool TWPartition::Update_Size(bool Display_Error, bool Defer_Folder_Size) {
@@ -2848,9 +2848,7 @@ bool TWPartition::Update_Size(bool Display_Error, bool Defer_Folder_Size) {
                 Used = backup_exclusions.Get_Folder_Size(Mount_Point);
                 Backup_Size = Used;
                 Backup_Size_Provisional = false;
-                int bak = static_cast<int>(Used / kMiB);
-                int fre = static_cast<int>(Free / kMiB);
-                LOGINFO("Data backup size is %iMB, free: %iMB.\n", bak, fre);
+                LOGINFO("Data backup size is %s, free: %s.\n", UnitConversion::FormatBytes(Used).c_str(), UnitConversion::FormatBytes(Free).c_str());
             }
         } else {
             if (!Was_Already_Mounted)
