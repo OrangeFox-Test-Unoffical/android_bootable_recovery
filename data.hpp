@@ -49,6 +49,7 @@ public:
 	static int SetValue(const string& varName, const int value, const int persist = 0);
 	static int SetValue(const string& varName, const float value, const int persist = 0);
 	static int SetValue(const string& varName, const unsigned long long& value, const int persist = 0);
+	static int SetValue(const string& varName, const uint64_t value, const int persist = 0);
 	static int SetProgress(const float Fraction);
 	static int _SetProgress(float Fraction);
 	static int ShowProgress(float Portion, const float Seconds);

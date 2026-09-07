@@ -313,6 +313,13 @@ int DataManager::SetValue(const string& varName, const unsigned long long& value
 	return SetValue(varName, valStr.str(), persist);
 }
 
+int DataManager::SetValue(const string& varName, const uint64_t value, const int persist /* = 0 */)
+{
+	ostringstream valStr;
+	valStr << value;
+	return SetValue(varName, valStr.str(), persist);
+}
+
 // For legacy code that doesn't set a scope
 int DataManager::SetProgress(const float Fraction) {
 	if (SetValue("ui_portion_size", 0) != 0)
