@@ -43,7 +43,6 @@ extern "C"
 {
 	#include "twcommon.h"
 	#include "gui/pages.h"
-	void gui_notifyVarChange(const char *name, const char* value);
 }
 #include "twrpminui/minui.h"
 

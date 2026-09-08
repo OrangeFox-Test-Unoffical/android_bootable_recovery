@@ -17,25 +17,22 @@
 */
 
 #include <linux/input.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../data.hpp"
 
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-#include "gui.h"
-}
+#include "data.hpp"
+#include "gui.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
 bool GUIKeyboard::CtrlActive = false;
 
-GUIKeyboard::GUIKeyboard(xml_node<>* node)
+GUIKeyboard::GUIKeyboard(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
 	int layoutindex, rowindex, keyindex, Xindex, Yindex, keyHeight = 0, keyWidth = 0;
@@ -43,10 +40,10 @@ GUIKeyboard::GUIKeyboard(xml_node<>* node)
 	highlightRenderCount = 0;
 	hasHighlight = hasCapsHighlight = hasCtrlHighlight = false;
 	char resource[10], layout[8], row[5], key[6], longpress[7];
-	xml_attribute<>* attr;
-	xml_node<>* child;
-	xml_node<>* keylayout;
-	xml_node<>* keyrow;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
+	rapidxml::xml_node<>* keylayout;
+	rapidxml::xml_node<>* keyrow;
 
 	for (layoutindex=0; layoutindex<MAX_KEYBOARD_LAYOUTS; layoutindex++) {
 		layouts[layoutindex].keyboardImg = NULL;
@@ -254,9 +251,9 @@ int GUIKeyboard::ParseKey(const char* keyinfo, Key& key, int& Xindex, int keyWid
 	return 0;
 }
 
-void GUIKeyboard::LoadKeyLabels(xml_node<>* parent, int layout)
+void GUIKeyboard::LoadKeyLabels(rapidxml::xml_node<>* parent, int layout)
 {
-	for (xml_node<>* child = parent->first_node(); child; child = child->next_sibling()) {
+	for (rapidxml::xml_node<>* child = parent->first_node(); child; child = child->next_sibling()) {
 		std::string name = child->name();
 		if (name == "keylabel") {
 			std::string keydef = LoadAttrString(child, "key", "");
@@ -294,7 +291,7 @@ void GUIKeyboard::DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH)
 
 	// key label
 	FontResource* labelFont = mFont;
-	string labelText;
+	std::string labelText;
 	ImageResource* labelImage = NULL;
 	if (keychar > 32 && keychar < 127) {
 		// TODO: this will eventually need UTF-8 support
@@ -346,7 +343,7 @@ void GUIKeyboard::DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH)
 	if (keychar > 32 && keychar < 127 && mLongpressFont && mLongpressFont->GetResource()) {
 		void* fontResource = mLongpressFont->GetResource();
 		gr_color(mLongpressFontColor.red, mLongpressFontColor.green, mLongpressFontColor.blue, mLongpressFontColor.alpha);
-		string text(1, keychar);
+		std::string text(1, keychar);
 		int textW = twrpTruetype::gr_ttf_measureEx(text.c_str(), fontResource);
 		int textX = keyX + keyW - longpressOffsetX - textW;
 		int textY = keyY + longpressOffsetY;

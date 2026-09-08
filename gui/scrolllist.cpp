@@ -16,24 +16,21 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
+#include <cstring>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "data.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
-
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "../data.hpp"
 
 const float SCROLLING_SPEED_DECREMENT = 0.9; // friction
 const int SCROLLING_FLOOR = 2; // minimum pixels for scrolling to stop
 
-GUIScrollList::GUIScrollList(xml_node<>* node) : GUIObject(node)
+GUIScrollList::GUIScrollList(rapidxml::xml_node<>* node) : GUIObject(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	firstDisplayedItem = mItemSpacing = mFontHeight = mSeparatorH = y_offset = scrollingSpeed = 0;
 	maxIconWidth = maxIconHeight =  mHeaderIconHeight = mHeaderIconWidth = 0;
@@ -647,8 +644,8 @@ bool GUIScrollList::AddLines(std::vector<std::string>* origText, std::vector<std
 	// Note, that multiple consoles on different GUI pages may be different widths or use different fonts, so the word wrapping
 	// may different in different console windows
 	for (size_t i = prevCount; i < *lastCount; i++) {
-		string curr_line = origText->at(i);
-		string curr_color;
+		std::string curr_line = origText->at(i);
+		std::string curr_color;
 		if (origColor)
 			curr_color = origColor->at(i);
 		for (;;) {
@@ -656,7 +653,7 @@ bool GUIScrollList::AddLines(std::vector<std::string>* origText, std::vector<std
 			if (line_char_width < curr_line.size()) {
 				//string left = curr_line.substr(0, line_char_width);
 				size_t wrap_pos = curr_line.find_last_of(" ,./:-_;", line_char_width - 1);
-				if (wrap_pos == string::npos)
+				if (wrap_pos == std::string::npos)
 					wrap_pos = line_char_width;
 				else if (wrap_pos < line_char_width - 1)
 					wrap_pos++;

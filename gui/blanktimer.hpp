@@ -21,7 +21,7 @@
 
 #include <sys/time.h>
 
-using namespace std;
+#include <string>
 
 class blanktimer
 {
@@ -46,14 +46,14 @@ public:
 
 private:
 	void setTimer(void);
-	string getBrightness(void);
+	std::string getBrightness(void);
 
 	pthread_mutex_t mutex;
 	enum State { kOn = 0, kDim = 1, kOff = 2, kBlanked = 3 };
 	State state;
 	timespec btimer;
 	long sleepTimer;
-	string orig_brightness;
+	std::string orig_brightness;
 };
 
 extern blanktimer blankTimer;

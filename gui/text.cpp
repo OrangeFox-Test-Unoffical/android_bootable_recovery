@@ -18,34 +18,26 @@
 
 // text.cpp - GUIText object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUIText::GUIText(xml_node<>* node)
+GUIText::GUIText(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
 	mFont = NULL;
@@ -75,7 +67,7 @@ GUIText::GUIText(xml_node<>* node)
 	// Load the placement
 	LoadPlacement(FindNode(node, "placement"), &mRenderX, &mRenderY, &mRenderW, &mRenderH, &mPlacement);
 
-	xml_node<>* child = FindNode(node, "text");
+	rapidxml::xml_node<>* child = FindNode(node, "text");
 	if (child)  mText = child->value();
 
 	child = FindNode(node, "noscaling");
@@ -222,7 +214,7 @@ int GUIText::SetMaxWidth(unsigned width)
 	return 0;
 }
 
-void GUIText::SetText(string newtext)
+void GUIText::SetText(std::string newtext)
 {
 	mText = newtext;
 }

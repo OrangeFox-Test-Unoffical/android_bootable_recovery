@@ -19,35 +19,27 @@
 // slider.cpp - GUISlider object
 // Pulled & ported from https://raw.github.com/agrabren/RecoverWin/master/gui/slider.cpp
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include "../data.hpp"
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "data.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUISlider::GUISlider(xml_node<>* node) : GUIObject(node)
+GUISlider::GUISlider(rapidxml::xml_node<>* node) : GUIObject(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	sAction = NULL;
 	sSliderLabel = NULL;

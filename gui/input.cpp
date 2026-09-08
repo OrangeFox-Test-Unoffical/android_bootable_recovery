@@ -18,42 +18,34 @@
 
 // input.cpp - GUIInput object
 
+#include <fcntl.h>
 #include <linux/input.h>
 #include <pthread.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "data.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "../data.hpp"
-
 #define TW_INPUT_NO_UPDATE -1000 // Magic value for HandleTextLocation when no change in scrolling has occurred
 
-GUIInput::GUIInput(xml_node<>* node)
+GUIInput::GUIInput(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mInputText = NULL;
 	mAction = NULL;
@@ -208,7 +200,7 @@ void GUIInput::UpdateDisplayText() {
 	DataManager::GetValue(mVariable, mValue);
 	if (HasMask) {
 		int index, string_size = mValue.size();
-		string maskedValue;
+		std::string maskedValue;
 		for (index=0; index<string_size; index++)
 			maskedValue += mMask;
 		displayValue = maskedValue;
@@ -234,7 +226,7 @@ void GUIInput::HandleCursorByTouch(int x) {
 		return;
 	}
 
-	string cursorString;
+	std::string cursorString;
 	unsigned index = 0, displaySize = displayValue.size();
 	int prevX = mRenderX + scrollingX;
 
@@ -279,7 +271,7 @@ void GUIInput::HandleCursorByText() {
 	int cursorTextWidth = textWidth; // width of text to the left of the cursor
 
 	if (mCursorLocation != -1) {
-		string cursorDisplay = displayValue;
+		std::string cursorDisplay = displayValue;
 		cursorDisplay.resize(mCursorLocation);
 		cursorTextWidth = twrpTruetype::gr_ttf_measureEx(cursorDisplay.c_str(), fontResource);
 	}
@@ -526,10 +518,10 @@ int GUIInput::NotifyCharInput(int key)
 			return 0;
 		} else if (key >= 32) {
 			// Regular key
-			if (HasAllowed && AllowedList.find((char)key) == string::npos) {
+			if (HasAllowed && AllowedList.find((char)key) == std::string::npos) {
 				return 0;
 			}
-			if (HasDisabled && DisabledList.find((char)key) != string::npos) {
+			if (HasDisabled && DisabledList.find((char)key) != std::string::npos) {
 				return 0;
 			}
 			if (MaxLen != 0 && mValue.size() >= MaxLen) {

@@ -21,13 +21,13 @@
 #ifndef _PAGES_HEADER_HPP
 #define _PAGES_HEADER_HPP
 
-#include <vector>
 #include <map>
 #include <string>
-#include "ziparchive/zip_archive.h"
-#include "rapidxml.hpp"
+#include <vector>
+
 #include "gui.hpp"
-using namespace rapidxml;
+#include "rapidxml.hpp"
+#include "ziparchive/zip_archive.h"
 
 enum TOUCH_STATE {
 	TOUCH_START = 0,
@@ -77,7 +77,7 @@ class HardwareKeyboard;
 class Page
 {
 public:
-	Page(xml_node<>* page, std::vector<xml_node<>*> *templates);
+	Page(rapidxml::xml_node<>* page, std::vector<rapidxml::xml_node<>*> *templates);
 	virtual ~Page();
 
 	std::string GetName(void)   { return mName; }
@@ -104,7 +104,7 @@ protected:
 	COLOR mBackground;
 
 protected:
-	bool ProcessNode(xml_node<>* page, std::vector<xml_node<>*> *templates, int depth);
+	bool ProcessNode(rapidxml::xml_node<>* page, std::vector<rapidxml::xml_node<>*> *templates, int depth);
 };
 
 struct LoadingContext;
@@ -142,9 +142,9 @@ public:
 	void AddStringResource(std::string resource_source, std::string resource_name, std::string value);
 
 protected:
-	int LoadDetails(LoadingContext& ctx, xml_node<>* root);
-	int LoadPages(LoadingContext& ctx, xml_node<>* pages);
-	int LoadVariables(xml_node<>* vars);
+	int LoadDetails(LoadingContext& ctx, rapidxml::xml_node<>* root);
+	int LoadPages(LoadingContext& ctx, rapidxml::xml_node<>* pages);
+	int LoadVariables(rapidxml::xml_node<>* vars);
 
 protected:
 	ResourceManager* mResources;
@@ -188,11 +188,11 @@ public:
 	static int NotifyVarChange(std::string varName, std::string value);
 
 	static MouseCursor *GetMouseCursor();
-	static void LoadCursorData(xml_node<>* node);
+	static void LoadCursorData(rapidxml::xml_node<>* node);
 
 	static HardwareKeyboard *GetHardwareKeyboard();
 
-	static xml_node<>* FindStyle(std::string name);
+	static rapidxml::xml_node<>* FindStyle(std::string name);
 	static void AddStringResource(std::string resource_source, std::string resource_name, std::string value);
 
 protected:

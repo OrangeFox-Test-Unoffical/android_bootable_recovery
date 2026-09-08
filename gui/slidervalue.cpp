@@ -18,36 +18,28 @@
 
 // slidervalue.cpp - GUISliderValue object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUISliderValue::GUISliderValue(xml_node<>* node) : GUIObject(node)
+GUISliderValue::GUISliderValue(rapidxml::xml_node<>* node) : GUIObject(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mMin = 0;
 	mMax = 100;
@@ -141,7 +133,7 @@ GUISliderValue::GUISliderValue(xml_node<>* node) : GUIObject(node)
 		attr = child->first_attribute("default");
 		if (attr)
 		{
-			string parsevalue = gui_parse_text(attr->value());
+			std::string parsevalue = gui_parse_text(attr->value());
 			int def = atoi(parsevalue.c_str());
 
 			if (def < mMin)

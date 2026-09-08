@@ -16,28 +16,27 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
-#include <sys/stat.h>
 #include <dirent.h>
+#include <sys/stat.h>
+
+#include <cstring>
 #include <format>
+
 #include <android-base/strings.h>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
+#include "data.hpp"
 #include "objects.hpp"
-#include "../data.hpp"
-#include "../partitions.hpp"
-#include "../variables.h"
+#include "partitions.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
 #include "unit_conversion.hpp"
+#include "variables.h"
 
-GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
+GUIPartitionList::GUIPartitionList(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mIconSelected = mIconUnselected = NULL;
 	mUpdate = 0;

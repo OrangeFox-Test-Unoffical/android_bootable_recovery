@@ -16,31 +16,27 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
-#include <string>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
+#include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-#include "../twrp-functions.hpp"
-#include "rapidxml.hpp"
 #include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrp-functions.hpp"
+#include "twrpminui/minui.h"
 
-GUIPatternPassword::GUIPatternPassword(xml_node<>* node)
+GUIPatternPassword::GUIPatternPassword(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	// 3x3 is the default.
 	mGridSize = 3;
@@ -433,7 +429,7 @@ int GUIPatternPassword::NotifyVarChange(const std::string& varName, const std::s
 
 static unsigned int getSDKVersion(void) {
 	unsigned int sdkver = 23;
-	string sdkverstr = TWFunc::System_Property_Get("ro.build.version.sdk");
+	std::string sdkverstr = TWFunc::System_Property_Get("ro.build.version.sdk");
 	if (!sdkverstr.empty()) {
 		sdkver = (unsigned int)strtoull(sdkverstr.c_str(), NULL, 10);
 		sdkver = (sdkver != 0) ? sdkver : 23;

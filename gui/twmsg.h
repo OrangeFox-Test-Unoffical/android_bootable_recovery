@@ -16,15 +16,15 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef twmsg_h
-#define twmsg_h
+#ifndef twmsg_hpp
+#define twmsg_hpp
 
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <errno.h>
 
 /*
 Abstract interface for something that can look up strings by name.

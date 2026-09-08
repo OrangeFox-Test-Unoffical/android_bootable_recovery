@@ -20,17 +20,14 @@
 
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUITextBox::GUITextBox(xml_node<>* node) : GUIScrollList(node)
+GUITextBox::GUITextBox(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	mLastCount = 0;
 	mIsStatic = true;
@@ -46,9 +43,9 @@ GUITextBox::GUITextBox(xml_node<>* node) : GUIScrollList(node)
 	}
 	child = FindNode(node, "text");
 	while (child) {
-		string txt = child->value();
+		std::string txt = child->value();
 		mText.push_back(txt);
-		string lookup = gui_parse_text(txt);
+		std::string lookup = gui_parse_text(txt);
 		if (lookup != txt)
 			mIsStatic = false;
 		mLastValue.push_back(lookup);
@@ -105,7 +102,7 @@ int GUITextBox::NotifyVarChange(const std::string& varName, const std::string& v
 
 	// Check to see if the variable exists in mText
 	for (size_t i = 0; i < mText.size(); i++) {
-		string lookup = gui_parse_text(mText.at(i));
+		std::string lookup = gui_parse_text(mText.at(i));
 		if (lookup != mText.at(i)) {
 			mLastValue.at(i) = lookup;
 			mUpdate = 1;

@@ -16,30 +16,22 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
 #include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
 
 MouseCursor::MouseCursor(int resX, int resY)
 {
@@ -66,10 +58,10 @@ void MouseCursor::ResetData(int resX, int resY)
 	m_prevY = mRenderY;
 }
 
-void MouseCursor::LoadData(xml_node<>* node)
+void MouseCursor::LoadData(rapidxml::xml_node<>* node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	child = FindNode(node, "placement");
 	if (child)

@@ -16,45 +16,43 @@
         along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <linux/input.h>
-#include <android-base/properties.h>
-#include <pthread.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <inttypes.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
+#include <linux/input.h>
+#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <atomic>
 
-extern "C"
-{
-#include "../twcommon.h"
+#include <atomic>
+#include <cerrno>
+#include <cinttypes>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+#include <android-base/properties.h>
+
 #include <pixelflinger/pixelflinger.h>
-}
+
+#include "blanktimer.hpp"
+#include "data.hpp"
+#include "gui.hpp"
+#include "objects.hpp"
+#include "openrecoveryscript.hpp"
+#include "orscmd/orscmd.h"
+#include "partitions.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrp-functions.hpp"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 #include "twrpperf/perf_manager.hpp"
-
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "../data.hpp"
-#include "../variables.h"
-#include "../partitions.hpp"
-#include "../twrp-functions.hpp"
-#include "../openrecoveryscript.hpp"
-#include "../orscmd/orscmd.h"
-#include "blanktimer.hpp"
+#include "variables.h"
 
 // Enable to print render time of each frame to the log file
 //#define PRINT_RENDER_TIME 1
@@ -64,8 +62,6 @@ extern "C"
 #else
 #define LOGEVENT(...) do {} while (0)
 #endif
-
-using namespace rapidxml;
 
 // Global values
 static int gGuiInitialized = 0;
@@ -187,7 +183,7 @@ int select_fd = 0;
 
 static int gRecorder = -1;
 
-extern "C" void gr_write_frame_to_file(int fd);
+void gr_write_frame_to_file(int fd);
 
 static void flip(void)
 {
@@ -226,7 +222,7 @@ public:
 
 #ifndef TW_NO_SCREEN_TIMEOUT
 		{
-			string seconds;
+			std::string seconds;
 			DataManager::GetValue("tw_screen_timeout_secs", seconds);
 			blankTimer.setTime(atoi(seconds.c_str()));
 			blankTimer.resetTimerAndUnblank();
@@ -924,7 +920,7 @@ std::string gui_lookup(const std::string& resource_name, const std::string& defa
 	return PageManager::GetResources()->FindString(resource_name, default_value);
 }
 
-extern "C" int gui_init(void)
+int gui_init()
 {
 	gr_init();
 	TWFunc::Set_Brightness(DataManager::GetStrValue("tw_brightness"));
@@ -953,7 +949,7 @@ extern "C" int gui_init(void)
 	return 0;
 }
 
-extern "C" int gui_loadResources(void)
+int gui_loadResources(void)
 {
 	int check = 0;
 	DataManager::GetValue(TW_IS_ENCRYPTED, check);
@@ -1011,7 +1007,7 @@ error:
 	return -1;
 }
 
-extern "C" int gui_loadCustomResources(void)
+int gui_loadCustomResources(void)
 {
 	if (!PartitionManager.Mount_Settings_Storage(false)) {
 		LOGINFO("Unable to mount settings storage during GUI startup.\n");
@@ -1041,12 +1037,12 @@ error:
 	return -1;
 }
 
-extern "C" int gui_start(void)
+int gui_start(void)
 {
 	return gui_startPage("main", 1, 0);
 }
 
-extern "C" int gui_startPage(const char *page_name, __attribute__((unused)) const int allow_commands, int stop_on_page_done)
+int gui_startPage(const char *page_name, __attribute__((unused)) const int allow_commands, int stop_on_page_done)
 {
 	if (!gGuiInitialized)
 		return -1;
@@ -1069,13 +1065,13 @@ extern "C" int gui_startPage(const char *page_name, __attribute__((unused)) cons
 }
 
 
-extern "C" void set_scale_values(float w, float h)
+void set_scale_values(float w, float h)
 {
 	scale_theme_w = w;
 	scale_theme_h = h;
 }
 
-extern "C" int scale_theme_x(int initial_x)
+int scale_theme_x(int initial_x)
 {
 	if (scale_theme_w != 1) {
 		int scaled = (float)initial_x * scale_theme_w;
@@ -1086,7 +1082,7 @@ extern "C" int scale_theme_x(int initial_x)
 	return initial_x;
 }
 
-extern "C" int scale_theme_y(int initial_y)
+int scale_theme_y(int initial_y)
 {
 	if (scale_theme_h != 1) {
 		int scaled = (float)initial_y * scale_theme_h;
@@ -1097,7 +1093,7 @@ extern "C" int scale_theme_y(int initial_y)
 	return initial_y;
 }
 
-extern "C" int scale_theme_min(int initial_value)
+int scale_theme_min(int initial_value)
 {
 	if (scale_theme_w != 1 || scale_theme_h != 1) {
 		if (scale_theme_w < scale_theme_h)
@@ -1108,12 +1104,12 @@ extern "C" int scale_theme_min(int initial_value)
 	return initial_value;
 }
 
-extern "C" float get_scale_w()
+float get_scale_w()
 {
 	return scale_theme_w;
 }
 
-extern "C" float get_scale_h()
+float get_scale_h()
 {
 	return scale_theme_h;
 }

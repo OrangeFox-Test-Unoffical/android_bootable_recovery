@@ -18,23 +18,20 @@
 
 // borderedlogbox.cpp - GUIBorderedLogBox object
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "data.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 #include "twrpminui/truetype.hpp"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "../data.hpp"
-
 extern int scale_theme_y(int y);
 
-GUIBorderedLogBox::GUIBorderedLogBox(xml_node<>* node) : GUIScrollList(node)
+GUIBorderedLogBox::GUIBorderedLogBox(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
 	mLastRenderedCount = 0;
 	mBorderWidth = 2;
@@ -54,7 +51,7 @@ GUIBorderedLogBox::GUIBorderedLogBox(xml_node<>* node) : GUIScrollList(node)
 	if (!node)
 		return;
 
-	xml_node<>* child = FindNode(node, "color");
+	rapidxml::xml_node<>* child = FindNode(node, "color");
 	if (child)
 		mBorderColor = LoadAttrColor(child, "border", mBorderColor);
 
@@ -65,7 +62,7 @@ GUIBorderedLogBox::GUIBorderedLogBox(xml_node<>* node) : GUIScrollList(node)
 	mLeftMargin = LoadAttrIntScaleX(node, "leftmargin");
 	mRightMargin = LoadAttrIntScaleX(node, "rightmargin");
 
-	xml_attribute<>* attr = node->first_attribute("toprow");
+	rapidxml::xml_attribute<>* attr = node->first_attribute("toprow");
 	if (attr) {
 		mTopRowVar = attr->value();
 		mTopRowValue = LoadAttrIntScaleY(node, "toprow");
@@ -77,7 +74,7 @@ GUIBorderedLogBox::GUIBorderedLogBox(xml_node<>* node) : GUIScrollList(node)
 		mBottomRowValue = LoadAttrIntScaleY(node, "bottomrow");
 	}
 
-	xml_node<>* placement = FindNode(node, "placement");
+	rapidxml::xml_node<>* placement = FindNode(node, "placement");
 	int tempX = 0, tempW = 0;
 	LoadPlacement(placement, &tempX, NULL, &tempW, NULL);
 	
@@ -110,7 +107,7 @@ void GUIBorderedLogBox::CalculateRenderPosition()
 	else
 	{
 		if (mXMLNode) {
-			xml_node<>* placement = FindNode(mXMLNode, "placement");
+			rapidxml::xml_node<>* placement = FindNode(mXMLNode, "placement");
 			if (placement)
 			{
 				int tempY = 0, tempH = 0;

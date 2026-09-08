@@ -21,20 +21,20 @@
 #ifndef _OBJECTS_HEADER
 #define _OBJECTS_HEADER
 
-#include "rapidxml.hpp"
-#include <vector>
-#include <string>
-#include <map>
-#include <set>
 #include <time.h>
 
-using namespace rapidxml;
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
-#include "../data.hpp"
-#include "resources.hpp"
-#include "pages.hpp"
-#include "../partitions.hpp"
+#include "rapidxml.hpp"
+
+#include "data.hpp"
+#include "partitions.hpp"
 #include "gui/placement.h"
+#include "pages.hpp"
+#include "resources.hpp"
 
 #ifndef TW_X_OFFSET
 #define TW_X_OFFSET 0
@@ -125,7 +125,7 @@ protected:
 class GUIObject
 {
 public:
-	GUIObject(xml_node<>* node);
+	GUIObject(rapidxml::xml_node<>* node);
 	virtual ~GUIObject();
 
 public:
@@ -155,7 +155,7 @@ protected:
 	std::vector<Condition> mConditions;
 
 protected:
-	static void LoadConditions(xml_node<>* node, std::vector<Condition>& conditions);
+	static void LoadConditions(rapidxml::xml_node<>* node, std::vector<Condition>& conditions);
 	static bool isMounted(std::string vol);
 	static bool isConditionTrue(Condition* condition);
 	static bool UpdateConditions(std::vector<Condition>& conditions, const std::string& varName);
@@ -186,7 +186,7 @@ class GUIText : public GUIObject, public RenderObject, public ActionObject
 {
 public:
 	// w and h may be ignored, in which case, no bounding box is applied
-	GUIText(xml_node<>* node);
+	GUIText(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -207,7 +207,7 @@ public:
 	// Set maximum width in pixels
 	virtual int SetMaxWidth(unsigned width);
 
-	void SetText(string newtext);
+	void SetText(std::string newtext);
 
 public:
 	bool isHighlighted;
@@ -230,7 +230,7 @@ protected:
 class GUIImage : public GUIObject, public RenderObject
 {
 public:
-	GUIImage(xml_node<>* node);
+	GUIImage(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -253,7 +253,7 @@ protected:
 class GUIFill : public GUIObject, public RenderObject
 {
 public:
-	GUIFill(xml_node<>* node);
+	GUIFill(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -270,7 +270,7 @@ class GUIAction : public GUIObject, public ActionObject
 	friend class ActionThread;
 
 public:
-	GUIAction(xml_node<>* node);
+	GUIAction(rapidxml::xml_node<>* node);
 
 public:
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
@@ -303,7 +303,7 @@ protected:
 	int ozip_decrypt(std::string zip_path);
 #endif
 
-	void operation_start(const string operation_name);
+	void operation_start(const std::string operation_name);
 	void operation_end(const int operation_status);
 	time_t Start;
 
@@ -341,7 +341,7 @@ protected:
 	int screenshot(std::string arg);
 	int setbrightness(std::string arg);
 	int unmapsuperdevices(std::string arg);
-	int removedynamicgroups(std:: string arg);
+	int removedynamicgroups(std::string arg);
 
 	// (originally) threaded actions
 	int fileexists(std::string arg);
@@ -402,7 +402,7 @@ protected:
 class GUIButton : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUIButton(xml_node<>* node);
+	GUIButton(rapidxml::xml_node<>* node);
 	virtual ~GUIButton();
 
 public:
@@ -441,7 +441,7 @@ protected:
 class GUICheckbox: public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUICheckbox(xml_node<>* node);
+	GUICheckbox(rapidxml::xml_node<>* node);
 	virtual ~GUICheckbox();
 
 public:
@@ -475,7 +475,7 @@ protected:
 class GUIScrollList : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUIScrollList(xml_node<>* node);
+	GUIScrollList(rapidxml::xml_node<>* node);
 	virtual ~GUIScrollList();
 
 public:
@@ -593,7 +593,7 @@ protected:
 class GUIFileSelector : public GUIScrollList
 {
 public:
-	GUIFileSelector(xml_node<>* node);
+	GUIFileSelector(rapidxml::xml_node<>* node);
 	virtual ~GUIFileSelector();
 
 public:
@@ -650,7 +650,7 @@ protected:
 class GUIListBox : public GUIScrollList
 {
 public:
-	GUIListBox(xml_node<>* node);
+	GUIListBox(rapidxml::xml_node<>* node);
 	virtual ~GUIListBox();
 
 public:
@@ -692,7 +692,7 @@ protected:
 class GUIPartitionList : public GUIScrollList
 {
 public:
-	GUIPartitionList(xml_node<>* node);
+	GUIPartitionList(rapidxml::xml_node<>* node);
 	virtual ~GUIPartitionList();
 
 public:
@@ -729,7 +729,7 @@ protected:
 class GUIWlanList : public GUIScrollList
 {
 public:
-	GUIWlanList(xml_node<>* node);
+	GUIWlanList(rapidxml::xml_node<>* node);
 	virtual ~GUIWlanList();
 
 public:
@@ -771,7 +771,7 @@ std::vector<GUIWlanList::WlanItem> GetWlanList();
 class GUITextBox : public GUIScrollList
 {
 public:
-	GUITextBox(xml_node<>* node);
+	GUITextBox(rapidxml::xml_node<>* node);
 
 public:
 	// Update - Update any UI component animations (called <= 30 FPS)
@@ -798,7 +798,7 @@ protected:
 class GUIConsole : public GUIScrollList
 {
 public:
-	GUIConsole(xml_node<>* node);
+	GUIConsole(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -851,7 +851,7 @@ protected:
 class GUIBorderedLogBox : public GUIScrollList
 {
 public:
-	GUIBorderedLogBox(xml_node<>* node);
+	GUIBorderedLogBox(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -895,7 +895,7 @@ protected:
 	std::vector<std::string> mLogLines;      // Log lines buffer
 	std::vector<std::string> mLogColors;     // Color for each line
 	size_t mLastRenderedCount;
-	xml_node<>* mXMLNode;        // Save XML node for recalculation
+	rapidxml::xml_node<>* mXMLNode;        // Save XML node for recalculation
 	bool scrollToEnd;            // Auto-scroll to end when new lines added
 };
 
@@ -903,7 +903,7 @@ class TerminalEngine;
 class GUITerminal : public GUIScrollList, public InputObject
 {
 public:
-	GUITerminal(xml_node<>* node);
+	GUITerminal(rapidxml::xml_node<>* node);
 
 public:
 	// Update - Update any UI component animations (called <= 30 FPS)
@@ -942,7 +942,7 @@ protected:
 class GUIAnimation : public GUIObject, public RenderObject
 {
 public:
-	GUIAnimation(xml_node<>* node);
+	GUIAnimation(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -965,7 +965,7 @@ protected:
 class GUIProgressBar : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUIProgressBar(xml_node<>* node);
+	GUIProgressBar(rapidxml::xml_node<>* node);
 
 public:
 	// Render - Render the full object to the GL surface
@@ -998,7 +998,7 @@ protected:
 class GUISlider : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUISlider(xml_node<>* node);
+	GUISlider(rapidxml::xml_node<>* node);
 	virtual ~GUISlider();
 
 public:
@@ -1036,7 +1036,7 @@ protected:
 class GUIKeyboard : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUIKeyboard(xml_node<>* node);
+	GUIKeyboard(rapidxml::xml_node<>* node);
 	virtual ~GUIKeyboard();
 
 public:
@@ -1055,7 +1055,7 @@ protected:
 		int layout;
 	};
 	int ParseKey(const char* keyinfo, Key& key, int& Xindex, int keyWidth, bool longpress);
-	void LoadKeyLabels(xml_node<>* parent, int layout);
+	void LoadKeyLabels(rapidxml::xml_node<>* parent, int layout);
 	void DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH);
 	int KeyCharToCtrlChar(int key);
 
@@ -1079,7 +1079,7 @@ protected:
 		int key; // same as in struct Key
 		int layout_from; // 1-based; 0 for labels that apply to all layouts
 		int layout_to; // same as Key.layout
-		string text; // key label text
+		std::string text; // key label text
 		ImageResource* image; // image (overrides text if defined)
 	};
 	std::vector<KeyLabel> mKeyLabels;
@@ -1115,7 +1115,7 @@ protected:
 class GUIInput : public GUIObject, public RenderObject, public ActionObject, public InputObject
 {
 public:
-	GUIInput(xml_node<>* node);
+	GUIInput(rapidxml::xml_node<>* node);
 	virtual ~GUIInput();
 
 public:
@@ -1206,7 +1206,7 @@ private:
 class GUISliderValue: public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUISliderValue(xml_node<>* node);
+	GUISliderValue(rapidxml::xml_node<>* node);
 	virtual ~GUISliderValue();
 
 public:
@@ -1285,7 +1285,7 @@ public:
 
 	void Move(int deltaX, int deltaY);
 	void GetPos(int& x, int& y);
-	void LoadData(xml_node<>* node);
+	void LoadData(rapidxml::xml_node<>* node);
 	void ResetData(int resX, int resY);
 
 private:
@@ -1303,7 +1303,7 @@ private:
 class GUIPatternPassword : public GUIObject, public RenderObject, public ActionObject
 {
 public:
-	GUIPatternPassword(xml_node<>* node);
+	GUIPatternPassword(rapidxml::xml_node<>* node);
 	virtual ~GUIPatternPassword();
 
 public:
@@ -1358,16 +1358,16 @@ protected:
 
 
 // Helper APIs
-xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth = 0);
-std::string LoadAttrString(xml_node<>* element, const char* attrname, const char* defaultvalue = "");
-int LoadAttrInt(xml_node<>* element, const char* attrname, int defaultvalue = 0);
-int LoadAttrIntScaleX(xml_node<>* element, const char* attrname, int defaultvalue = 0);
-int LoadAttrIntScaleY(xml_node<>* element, const char* attrname, int defaultvalue = 0);
-COLOR LoadAttrColor(xml_node<>* element, const char* attrname, bool* found_color, COLOR defaultvalue = COLOR(0,0,0,0));
-COLOR LoadAttrColor(xml_node<>* element, const char* attrname, COLOR defaultvalue = COLOR(0,0,0,0));
-FontResource* LoadAttrFont(xml_node<>* element, const char* attrname);
-ImageResource* LoadAttrImage(xml_node<>* element, const char* attrname);
-AnimationResource* LoadAttrAnimation(xml_node<>* element, const char* attrname);
-bool LoadPlacement(xml_node<>* node, int* x, int* y, int* w = NULL, int* h = NULL, Placement* placement = NULL);
+rapidxml::xml_node<>* FindNode(rapidxml::xml_node<>* parent, const char* nodename, int depth = 0);
+std::string LoadAttrString(rapidxml::xml_node<>* element, const char* attrname, const char* defaultvalue = "");
+int LoadAttrInt(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue = 0);
+int LoadAttrIntScaleX(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue = 0);
+int LoadAttrIntScaleY(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue = 0);
+COLOR LoadAttrColor(rapidxml::xml_node<>* element, const char* attrname, bool* found_color, COLOR defaultvalue = COLOR(0,0,0,0));
+COLOR LoadAttrColor(rapidxml::xml_node<>* element, const char* attrname, COLOR defaultvalue = COLOR(0,0,0,0));
+FontResource* LoadAttrFont(rapidxml::xml_node<>* element, const char* attrname);
+ImageResource* LoadAttrImage(rapidxml::xml_node<>* element, const char* attrname);
+AnimationResource* LoadAttrAnimation(rapidxml::xml_node<>* element, const char* attrname);
+bool LoadPlacement(rapidxml::xml_node<>* node, int* x, int* y, int* w = NULL, int* h = NULL, Placement* placement = NULL);
 
 #endif  // _OBJECTS_HEADER

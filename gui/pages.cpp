@@ -18,43 +18,41 @@
 
 // pages.cpp - Source to manage GUI base objects
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <dirent.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include "../twrp-functions.hpp"
-#include "../partitions.hpp"
 
-#include <string>
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
-
+#include <android-base/properties.h>
 #include <ziparchive/zip_archive.h>
+
+#include "blanktimer.hpp"
+#include "gui.hpp"
+#include "pages.h"
+#include "objects.hpp"
+#include "partitions.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrp-functions.hpp"
+#include "twrpminui/minui.h"
+#include "variables.h"
 #include "ziputil.h"
 
 extern "C" {
-#include "../twcommon.h"
 #include "gui.h"
 }
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "blanktimer.hpp"
-
-#include "../variables.h"
-#include <android-base/properties.h>
 
 #define TW_THEME_VER_ERR -2
 
@@ -112,7 +110,7 @@ int ConvertStrToColor(std::string str, COLOR* color)
 	int result;
 	if (str.size() >= 8) {
 		// We have alpha channel
-		string alpha = str.substr(6, 2);
+		std::string alpha = str.substr(6, 2);
 		result = strtol(alpha.c_str(), NULL, 16);
 		color->alpha = result & 0x000000FF;
 		str.resize(6);
@@ -130,12 +128,12 @@ int ConvertStrToColor(std::string str, COLOR* color)
 }
 
 // Helper APIs
-xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 */)
+rapidxml::xml_node<>* FindNode(rapidxml::xml_node<>* parent, const char* nodename, int depth /* = 0 */)
 {
 	if (!parent)
 		return NULL;
 
-	xml_node<>* child = parent->first_node(nodename);
+	rapidxml::xml_node<>* child = parent->first_node(nodename);
 	if (child)
 		return child;
 
@@ -144,7 +142,7 @@ xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 
 		return NULL;
 	}
 
-	xml_node<>* style = parent->first_node("style");
+	rapidxml::xml_node<>* style = parent->first_node("style");
 	if (style) {
 		while (style) {
 			if (!style->first_attribute("name")) {
@@ -152,11 +150,11 @@ xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 
 				continue;
 			} else {
 				std::string name = style->first_attribute("name")->value();
-				xml_node<>* node = PageManager::FindStyle(name);
+				rapidxml::xml_node<>* node = PageManager::FindStyle(name);
 
 				if (node) {
 					// We found the style that was named
-					xml_node<>* stylenode = FindNode(node, nodename, depth + 1);
+					rapidxml::xml_node<>* stylenode = FindNode(node, nodename, depth + 1);
 					if (stylenode)
 						return stylenode;
 				}
@@ -165,7 +163,7 @@ xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 
 		}
 	} else {
 		// Search for stylename in the parent node <object type="foo" style="foo2">
-		xml_attribute<>* attr = parent->first_attribute("style");
+		rapidxml::xml_attribute<>* attr = parent->first_attribute("style");
 		// If no style is found anywhere else and the node wasn't found in the object itself
 		// as a special case we will search for a style that uses the same style name as the
 		// object type, so <object type="button"> would search for a style named "button"
@@ -173,9 +171,9 @@ xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 
 			attr = parent->first_attribute("type");
 		// if there's no attribute type, the object type must be the element name
 		std::string stylename = attr ? attr->value() : parent->name();
-		xml_node<>* node = PageManager::FindStyle(stylename);
+		rapidxml::xml_node<>* node = PageManager::FindStyle(stylename);
 		if (node) {
-			xml_node<>* stylenode = FindNode(node, nodename, depth + 1);
+			rapidxml::xml_node<>* stylenode = FindNode(node, nodename, depth + 1);
 			if (stylenode)
 				return stylenode;
 		}
@@ -183,36 +181,36 @@ xml_node<>* FindNode(xml_node<>* parent, const char* nodename, int depth /* = 0 
 	return NULL;
 }
 
-std::string LoadAttrString(xml_node<>* element, const char* attrname, const char* defaultvalue)
+std::string LoadAttrString(rapidxml::xml_node<>* element, const char* attrname, const char* defaultvalue)
 {
 	if (!element)
 		return defaultvalue;
 
-	xml_attribute<>* attr = element->first_attribute(attrname);
+	rapidxml::xml_attribute<>* attr = element->first_attribute(attrname);
 	return attr ? attr->value() : defaultvalue;
 }
 
-int LoadAttrInt(xml_node<>* element, const char* attrname, int defaultvalue)
+int LoadAttrInt(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue)
 {
-	string value = LoadAttrString(element, attrname);
+	std::string value = LoadAttrString(element, attrname);
 	// resolve variables
 	DataManager::GetValue(value, value);
 	return value.empty() ? defaultvalue : atoi(value.c_str());
 }
 
-int LoadAttrIntScaleX(xml_node<>* element, const char* attrname, int defaultvalue)
+int LoadAttrIntScaleX(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue)
 {
 	return scale_theme_x(LoadAttrInt(element, attrname, defaultvalue));
 }
 
-int LoadAttrIntScaleY(xml_node<>* element, const char* attrname, int defaultvalue)
+int LoadAttrIntScaleY(rapidxml::xml_node<>* element, const char* attrname, int defaultvalue)
 {
 	return scale_theme_y(LoadAttrInt(element, attrname, defaultvalue));
 }
 
-COLOR LoadAttrColor(xml_node<>* element, const char* attrname, bool* found_color, COLOR defaultvalue)
+COLOR LoadAttrColor(rapidxml::xml_node<>* element, const char* attrname, bool* found_color, COLOR defaultvalue)
 {
-	string value = LoadAttrString(element, attrname);
+	std::string value = LoadAttrString(element, attrname);
 	*found_color = !value.empty();
 	// resolve variables
 	DataManager::GetValue(value, value);
@@ -223,13 +221,13 @@ COLOR LoadAttrColor(xml_node<>* element, const char* attrname, bool* found_color
 		return defaultvalue;
 }
 
-COLOR LoadAttrColor(xml_node<>* element, const char* attrname, COLOR defaultvalue)
+COLOR LoadAttrColor(rapidxml::xml_node<>* element, const char* attrname, COLOR defaultvalue)
 {
 	bool found_color = false;
 	return LoadAttrColor(element, attrname, &found_color, defaultvalue);
 }
 
-FontResource* LoadAttrFont(xml_node<>* element, const char* attrname)
+FontResource* LoadAttrFont(rapidxml::xml_node<>* element, const char* attrname)
 {
 	std::string name = LoadAttrString(element, attrname, "");
 	if (name.empty())
@@ -238,7 +236,7 @@ FontResource* LoadAttrFont(xml_node<>* element, const char* attrname)
 		return PageManager::GetResources()->FindFont(name);
 }
 
-ImageResource* LoadAttrImage(xml_node<>* element, const char* attrname)
+ImageResource* LoadAttrImage(rapidxml::xml_node<>* element, const char* attrname)
 {
 	std::string name = LoadAttrString(element, attrname, "");
 	if (name.empty())
@@ -247,7 +245,7 @@ ImageResource* LoadAttrImage(xml_node<>* element, const char* attrname)
 		return PageManager::GetResources()->FindImage(name);
 }
 
-AnimationResource* LoadAttrAnimation(xml_node<>* element, const char* attrname)
+AnimationResource* LoadAttrAnimation(rapidxml::xml_node<>* element, const char* attrname)
 {
 	std::string name = LoadAttrString(element, attrname, "");
 	if (name.empty())
@@ -256,7 +254,7 @@ AnimationResource* LoadAttrAnimation(xml_node<>* element, const char* attrname)
 		return PageManager::GetResources()->FindAnimation(name);
 }
 
-bool LoadPlacement(xml_node<>* node, int* x, int* y, int* w /* = NULL */, int* h /* = NULL */, Placement* placement /* = NULL */)
+bool LoadPlacement(rapidxml::xml_node<>* node, int* x, int* y, int* w /* = NULL */, int* h /* = NULL */, Placement* placement /* = NULL */)
 {
 	if (!node)
 		return false;
@@ -294,7 +292,7 @@ int ActionObject::SetActionPos(int x, int y, int w, int h)
 	return 0;
 }
 
-Page::Page(xml_node<>* page, std::vector<xml_node<>*> *templates)
+Page::Page(rapidxml::xml_node<>* page, std::vector<rapidxml::xml_node<>*> *templates)
 {
 	mTouchStart = NULL;
 
@@ -332,7 +330,7 @@ Page::~Page()
 		delete *itr;
 }
 
-bool Page::ProcessNode(xml_node<>* page, std::vector<xml_node<>*> *templates, int depth)
+bool Page::ProcessNode(rapidxml::xml_node<>* page, std::vector<rapidxml::xml_node<>*> *templates, int depth)
 {
 	if (depth == 10)
 	{
@@ -340,7 +338,7 @@ bool Page::ProcessNode(xml_node<>* page, std::vector<xml_node<>*> *templates, in
 		return false;
 	}
 
-	for (xml_node<>* child = page->first_node(); child; child = child->next_sibling())
+	for (rapidxml::xml_node<>* child = page->first_node(); child; child = child->next_sibling())
 	{
 		std::string type = child->name();
 
@@ -351,7 +349,7 @@ bool Page::ProcessNode(xml_node<>* page, std::vector<xml_node<>*> *templates, in
 
 		if (type == "object") {
 			// legacy format : <object type="...">
-			xml_attribute<>* attr = child->first_attribute("type");
+			rapidxml::xml_attribute<>* attr = child->first_attribute("type");
 			type = attr ? attr->value() : "*unspecified*";
 		}
 
@@ -518,11 +516,11 @@ bool Page::ProcessNode(xml_node<>* page, std::vector<xml_node<>*> *templates, in
 			else
 			{
 				std::string name = child->first_attribute("name")->value();
-				xml_node<>* node;
+				rapidxml::xml_node<>* node;
 				bool node_found = false;
 
 				// We need to find the correct template
-				for (std::vector<xml_node<>*>::iterator itr = templates->begin(); itr != templates->end(); itr++) {
+				for (std::vector<rapidxml::xml_node<>*>::iterator itr = templates->begin(); itr != templates->end(); itr++) {
 					node = (*itr)->first_node("template");
 
 					while (node)
@@ -735,10 +733,10 @@ struct LoadingContext
 	ZipArchiveHandle zip; // zip to load theme from, or NULL for the stock theme
 	std::set<std::string> filenames; // to detect cyclic includes
 	std::string basepath; // if zip is NULL, base path to load includes from with trailing slash, otherwise empty
-	std::vector<xml_document<>*> xmldocs; // all loaded xml docs
+	std::vector<rapidxml::xml_document<>*> xmldocs; // all loaded xml docs
 	std::vector<char*> xmlbuffers; // text buffers with xml content
-	std::vector<xml_node<>*> styles; // refer to <styles> nodes inside xmldocs
-	std::vector<xml_node<>*> templates; // refer to <templates> nodes inside xmldocs
+	std::vector<rapidxml::xml_node<>*> styles; // refer to <styles> nodes inside xmldocs
+	std::vector<rapidxml::xml_node<>*> templates; // refer to <templates> nodes inside xmldocs
 
 	LoadingContext()
 	{
@@ -790,11 +788,11 @@ int PageSet::Load(LoadingContext& ctx, const std::string& filename)
 	ctx.xmlbuffers.push_back(xmlbuffer);
 
 	// parse XML
-	xml_document<>* doc = new xml_document<>();
+	rapidxml::xml_document<>* doc = new rapidxml::xml_document<>();
 	doc->parse<0>(xmlbuffer);
 	ctx.xmldocs.push_back(doc);
 
-	xml_node<>* root = doc->first_node("recovery");
+	rapidxml::xml_node<>* root = doc->first_node("recovery");
 	if (!root)
 		root = doc->first_node("install");
 	if (!root) {
@@ -809,7 +807,7 @@ int PageSet::Load(LoadingContext& ctx, const std::string& filename)
 	}
 
 	LOGINFO("Loading resources...\n");
-	xml_node<>* child = root->first_node("resources");
+	rapidxml::xml_node<>* child = root->first_node("resources");
 	if (child)
 		mResources->LoadResources(child, ctx.zip, "theme");
 
@@ -844,15 +842,15 @@ int PageSet::Load(LoadingContext& ctx, const std::string& filename)
 	// process includes recursively
 	child = root->first_node("include");
 	if (child) {
-		xml_node<>* include = child->first_node("xmlfile");
+		rapidxml::xml_node<>* include = child->first_node("xmlfile");
 		while (include != NULL) {
-			xml_attribute<>* attr = include->first_attribute("name");
+			rapidxml::xml_attribute<>* attr = include->first_attribute("name");
 			if (!attr) {
 				LOGERR("Skipping include/xmlfile with no name\n");
 				continue;
 			}
 
-			string filename = ctx.basepath + attr->value();
+			std::string filename = ctx.basepath + attr->value();
 			LOGINFO("Including file: %s...\n", filename.c_str());
 			int rc = Load(ctx, filename);
 			if (rc != 0)
@@ -876,9 +874,9 @@ void PageSet::MakeEmergencyConsoleIfNeeded()
 
 int PageSet::LoadLanguage(char* languageFile, ZipArchiveHandle package)
 {
-	xml_document<> lang;
-	xml_node<>* parent;
-	xml_node<>* child;
+	rapidxml::xml_document<> lang;
+	rapidxml::xml_node<>* parent;
+	rapidxml::xml_node<>* child;
 	std::string resource_source;
 	int ret = 0;
 
@@ -917,12 +915,12 @@ int PageSet::LoadLanguage(char* languageFile, ZipArchiveHandle package)
 	return ret;
 }
 
-int PageSet::LoadDetails(LoadingContext& ctx, xml_node<>* root)
+int PageSet::LoadDetails(LoadingContext& ctx, rapidxml::xml_node<>* root)
 {
-	xml_node<>* child = root->first_node("details");
+	rapidxml::xml_node<>* child = root->first_node("details");
 	if (child) {
 		int theme_ver = 0;
-		xml_node<>* themeversion = child->first_node("themeversion");
+		rapidxml::xml_node<>* themeversion = child->first_node("themeversion");
 		if (themeversion && themeversion->value()) {
 			theme_ver = atoi(themeversion->value());
 		} else {
@@ -937,22 +935,22 @@ int PageSet::LoadDetails(LoadingContext& ctx, xml_node<>* root)
 				gui_print_color("warning", "Stock theme version does not match TWRP version.\n");
 			}
 		}
-		xml_node<>* resolution = child->first_node("resolution");
+		rapidxml::xml_node<>* resolution = child->first_node("resolution");
 		if (resolution) {
 			LOGINFO("Checking resolution...\n");
-			xml_attribute<>* width_attr = resolution->first_attribute("width");
-			xml_attribute<>* height_attr = resolution->first_attribute("height");
-			xml_attribute<>* noscale_attr = resolution->first_attribute("noscaling");
+			rapidxml::xml_attribute<>* width_attr = resolution->first_attribute("width");
+			rapidxml::xml_attribute<>* height_attr = resolution->first_attribute("height");
+			rapidxml::xml_attribute<>* noscale_attr = resolution->first_attribute("noscaling");
 			if (width_attr && height_attr && !noscale_attr) {
 				int width = atoi(width_attr->value());
 				int height = atoi(height_attr->value());
 				int offx = 0, offy = 0;
 #ifdef TW_ROUND_SCREEN
-				xml_node<>* roundscreen = child->first_node("roundscreen");
+				rapidxml::xml_node<>* roundscreen = child->first_node("roundscreen");
 				if (roundscreen) {
 					LOGINFO("TW_ROUND_SCREEN := true, using round screen XML settings.\n");
-					xml_attribute<>* offx_attr = roundscreen->first_attribute("offset_x");
-					xml_attribute<>* offy_attr = roundscreen->first_attribute("offset_y");
+					rapidxml::xml_attribute<>* offx_attr = roundscreen->first_attribute("offset_x");
+					rapidxml::xml_attribute<>* offy_attr = roundscreen->first_attribute("offset_y");
 					if (offx_attr) {
 						offx = atoi(offx_attr->value());
 					}
@@ -1062,10 +1060,10 @@ Page* PageSet::FindPage(std::string name)
 	return NULL;
 }
 
-int PageSet::LoadVariables(xml_node<>* vars)
+int PageSet::LoadVariables(rapidxml::xml_node<>* vars)
 {
-	xml_node<>* child;
-	xml_attribute<> *name, *value, *persist;
+	rapidxml::xml_node<>* child;
+	rapidxml::xml_attribute<> *name, *value, *persist;
 	int p;
 
 	child = vars->first_node("variable");
@@ -1097,24 +1095,24 @@ int PageSet::LoadVariables(xml_node<>* vars)
 				continue;
 			}
 			p = persist ? atoi(persist->value()) : 0;
-			string temp = value->value();
-			string valstr = gui_parse_text(temp);
+			std::string temp = value->value();
+			std::string valstr = gui_parse_text(temp);
 
-			if (valstr.find("+") != string::npos) {
-				string val1str = valstr;
+			if (valstr.find("+") != std::string::npos) {
+				std::string val1str = valstr;
 				val1str = val1str.substr(0, val1str.find('+'));
-				string val2str = valstr;
-				val2str = val2str.substr(val2str.find('+') + 1, string::npos);
+				std::string val2str = valstr;
+				val2str = val2str.substr(val2str.find('+') + 1, std::string::npos);
 				int val1 = atoi(val1str.c_str());
 				int val2 = atoi(val2str.c_str());
 				int val = val1 + val2;
 
 				DataManager::SetValue(name->value(), val, p);
-			} else if (valstr.find("-") != string::npos) {
-				string val1str = valstr;
+			} else if (valstr.find("-") != std::string::npos) {
+				std::string val1str = valstr;
 				val1str = val1str.substr(0, val1str.find('-'));
-				string val2str = valstr;
-				val2str = val2str.substr(val2str.find('-') + 1, string::npos);
+				std::string val2str = valstr;
+				val2str = val2str.substr(val2str.find('-') + 1, std::string::npos);
 				int val1 = atoi(val1str.c_str());
 				int val2 = atoi(val2str.c_str());
 				int val = val1 - val2;
@@ -1130,9 +1128,9 @@ int PageSet::LoadVariables(xml_node<>* vars)
 	return 0;
 }
 
-int PageSet::LoadPages(LoadingContext& ctx, xml_node<>* pages)
+int PageSet::LoadPages(LoadingContext& ctx, rapidxml::xml_node<>* pages)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	if (!pages)
 		return -1;
@@ -1319,7 +1317,7 @@ char* PageManager::LoadFileToBuffer(std::string filename, ZipArchiveHandle packa
 	return buffer;
 }
 
-void PageManager::LoadLanguageListDir(string dir) {
+void PageManager::LoadLanguageListDir(std::string dir) {
 	if (!TWFunc::Path_Exists(dir)) {
 		LOGERR("LoadLanguageListDir '%s' path not found\n", dir.c_str());
 		return;
@@ -1337,11 +1335,11 @@ void PageManager::LoadLanguageListDir(string dir) {
 		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..") || strlen(p->d_name) < 5)
 			continue;
 
-		string file = p->d_name;
+		std::string file = p->d_name;
 		if (file.substr(strlen(p->d_name) - 4) != ".xml")
 			continue;
-		string path = dir + p->d_name;
-		string file_no_extn = file.substr(0, strlen(p->d_name) - 4);
+		std::string path = dir + p->d_name;
+		std::string file_no_extn = file.substr(0, strlen(p->d_name) - 4);
 		struct language_struct language_entry;
 		language_entry.filename = file_no_extn;
 		char* xmlFile = PageManager::LoadFileToBuffer(dir + p->d_name, NULL);
@@ -1349,14 +1347,14 @@ void PageManager::LoadLanguageListDir(string dir) {
 			LOGERR("LoadLanguageListDir unable to load '%s'\n", language_entry.filename.c_str());
 			continue;
 		}
-		xml_document<> *doc = new xml_document<>();
+		rapidxml::xml_document<> *doc = new rapidxml::xml_document<>();
 		doc->parse<0>(xmlFile);
 
-		xml_node<>* parent = doc->first_node("language");
+		rapidxml::xml_node<>* parent = doc->first_node("language");
 		if (!parent) {
 			LOGERR("Invalid language XML file '%s'\n", language_entry.filename.c_str());
 		} else {
-			xml_node<>* child = parent->first_node("display");
+			rapidxml::xml_node<>* child = parent->first_node("display");
 			if (child) {
 				language_entry.displayvalue = child->value();
 			} else {
@@ -1389,8 +1387,8 @@ void PageManager::LoadLanguageList(ZipArchiveHandle package) {
 	std::sort(Language_List.begin(), Language_List.end());
 }
 
-void PageManager::LoadLanguage(string filename) {
-	string actual_filename;
+void PageManager::LoadLanguage(std::string filename) {
+	std::string actual_filename;
 	if (TWFunc::Path_Exists(TWRES "customlanguages/" + filename + ".xml"))
 		actual_filename = TWRES "customlanguages/" + filename + ".xml";
 	else
@@ -1671,7 +1669,7 @@ HardwareKeyboard *PageManager::GetHardwareKeyboard()
 	return mHardwareKeyboard;
 }
 
-xml_node<>* PageManager::FindStyle(std::string name)
+rapidxml::xml_node<>* PageManager::FindStyle(std::string name)
 {
 	if (!currentLoadingContext)
 	{
@@ -1679,8 +1677,8 @@ xml_node<>* PageManager::FindStyle(std::string name)
 		return NULL;
 	}
 
-	for (std::vector<xml_node<>*>::iterator itr = currentLoadingContext->styles.begin(); itr != currentLoadingContext->styles.end(); itr++) {
-		xml_node<>* node = (*itr)->first_node("style");
+	for (std::vector<rapidxml::xml_node<>*>::iterator itr = currentLoadingContext->styles.begin(); itr != currentLoadingContext->styles.end(); itr++) {
+		rapidxml::xml_node<>* node = (*itr)->first_node("style");
 
 		while (node) {
 			if (!node->first_attribute("name"))
@@ -1701,7 +1699,7 @@ MouseCursor *PageManager::GetMouseCursor()
 	return mMouseCursor;
 }
 
-void PageManager::LoadCursorData(xml_node<>* node)
+void PageManager::LoadCursorData(rapidxml::xml_node<>* node)
 {
 	if (!mMouseCursor)
 		mMouseCursor = new MouseCursor(gr_fb_width(), gr_fb_height());
@@ -1764,7 +1762,7 @@ void PageManager::AddStringResource(std::string resource_source, std::string res
 		mCurrentSet->AddStringResource(resource_source, resource_name, value);
 }
 
-extern "C" void gui_notifyVarChange(const char *name, const char* value)
+void gui_notifyVarChange(const char *name, const char* value)
 {
 	if (!gGuiRunning)
 		return;

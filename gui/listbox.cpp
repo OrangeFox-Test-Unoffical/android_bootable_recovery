@@ -16,25 +16,22 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
+#include <cstring>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
+#include "data.hpp"
 #include "objects.hpp"
-#include "../data.hpp"
-#include "../partitions.hpp"
 #include "pages.hpp"
+#include "partitions.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
 
 extern std::vector<language_struct> Language_List;
 
-GUIListBox::GUIListBox(xml_node<>* node) : GUIScrollList(node)
+GUIListBox::GUIListBox(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 	mIconSelected = mIconUnselected = NULL;
 	mUpdate = 0;
 	isCheckList = isTextParsed = false;
@@ -119,13 +116,13 @@ GUIListBox::GUIListBox(xml_node<>* node) : GUIScrollList(node)
 		item.variableValue = gui_parse_text(child->value());
 		item.selected = (child->value() == currentValue);
 		item.action = NULL;
-		xml_node<>* action = child->first_node("action");
+		rapidxml::xml_node<>* action = child->first_node("action");
 		if (!action) action = child->first_node("actions");
 		if (action) {
 			item.action = new GUIAction(child);
 			allowSelection = true;
 		}
-		xml_node<>* variable_name = child->first_node("data");
+		rapidxml::xml_node<>* variable_name = child->first_node("data");
 		if (variable_name) {
 			attr = variable_name->first_attribute("variable");
 			if (attr) {
@@ -291,7 +288,7 @@ void GUIListBox::NotifySelect(size_t item_selected)
 		DataManager::SetValue(item.variableName, selected ? "1" : "0");
 	} else {
 		item.selected = 1;
-		string str = item.variableValue;	// [check] should this set currentValue instead?
+		std::string str = item.variableValue;	// [check] should this set currentValue instead?
 		DataManager::SetValue(mVariable, str);
 	}
 	if (item.action)

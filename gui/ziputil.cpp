@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-#include "ziputil.h"
-
-#include <errno.h>
 #include <fcntl.h>
 #include <utime.h>
 
+#include <cerrno>
 #include <string>
+
 #include <android-base/logging.h>
 #include <android-base/unique_fd.h>
 #include <selinux/label.h>
@@ -28,6 +27,7 @@
 #include <ziparchive/zip_archive.h>
 
 #include "otautil/dirutil.h"
+#include "ziputil.h"
 
 static constexpr mode_t UNZIP_DIRMODE = 0755;
 static constexpr mode_t UNZIP_FILEMODE = 0644;

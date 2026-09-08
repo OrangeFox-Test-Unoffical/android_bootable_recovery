@@ -18,34 +18,30 @@
 
 // resource.cpp - Source to manage GUI resources
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 
-#include <string>
-#include <sstream>
-#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iomanip>
-#include <fcntl.h>
-#include <ziparchive/zip_archive.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include <android-base/unique_fd.h>
+#include <ziparchive/zip_archive.h>
 
-extern "C" {
-#include "../twcommon.h"
-#include "gui.h"
-}
-
-#include "twrpminui/truetype.hpp"
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
+#include "gui.hpp"
 #include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
+#include "twrpminui/truetype.hpp"
 
 #define TMP_RESOURCE_NAME   "/tmp/extract.bin"
 
-Resource::Resource(xml_node<>* node, ZipArchiveHandle pZip __unused)
+Resource::Resource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip __unused)
 {
 	if (node && node->first_attribute("name"))
 		mName = node->first_attribute("name")->value();
@@ -119,7 +115,7 @@ void Resource::CheckAndScaleImage(gr_surface source, gr_surface* destination, in
 	}
 }
 
-FontResource::FontResource(xml_node<>* node, ZipArchiveHandle pZip)
+FontResource::FontResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip)
  : Resource(node, pZip)
 {
 	origFontSize = 0;
@@ -127,10 +123,10 @@ FontResource::FontResource(xml_node<>* node, ZipArchiveHandle pZip)
 	LoadFont(node, pZip);
 }
 
-void FontResource::LoadFont(xml_node<>* node, ZipArchiveHandle pZip)
+void FontResource::LoadFont(rapidxml::xml_node<>* node, ZipArchiveHandle pZip)
 {
 	std::string file;
-	xml_attribute<>* attr;
+	rapidxml::xml_attribute<>* attr;
 
 	mFont = NULL;
 	if (!node)
@@ -194,7 +190,7 @@ void FontResource::DeleteFont() {
 	origFont = NULL;
 }
 
-void FontResource::Override(xml_node<>* node, ZipArchiveHandle pZip) {
+void FontResource::Override(rapidxml::xml_node<>* node, ZipArchiveHandle pZip) {
 	if (!origFont) {
 		origFont = mFont;
 	} else if (mFont) {
@@ -209,7 +205,7 @@ FontResource::~FontResource()
 	DeleteFont();
 }
 
-ImageResource::ImageResource(xml_node<>* node, ZipArchiveHandle pZip)
+ImageResource::ImageResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip)
  : Resource(node, pZip)
 {
 	std::string file;
@@ -240,7 +236,7 @@ ImageResource::~ImageResource()
 		res_free_surface(mSurface);
 }
 
-AnimationResource::AnimationResource(xml_node<>* node, ZipArchiveHandle pZip)
+AnimationResource::AnimationResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip)
  : Resource(node, pZip)
 {
 	std::string file;
@@ -362,17 +358,17 @@ void ResourceManager::AddStringResource(std::string resource_source, std::string
 	mStrings[resource_name] = res;
 }
 
-void ResourceManager::LoadResources(xml_node<>* resList, ZipArchiveHandle pZip, std::string resource_source)
+void ResourceManager::LoadResources(rapidxml::xml_node<>* resList, ZipArchiveHandle pZip, std::string resource_source)
 {
 	if (!resList)
 		return;
 
-	for (xml_node<>* child = resList->first_node(); child; child = child->next_sibling())
+	for (rapidxml::xml_node<>* child = resList->first_node(); child; child = child->next_sibling())
 	{
 		std::string type = child->name();
 		if (type == "resource") {
 			// legacy format : <resource type="...">
-			xml_attribute<>* attr = child->first_attribute("type");
+			rapidxml::xml_attribute<>* attr = child->first_attribute("type");
 			type = attr ? attr->value() : "*unspecified*";
 		}
 
@@ -390,7 +386,7 @@ void ResourceManager::LoadResources(xml_node<>* resList, ZipArchiveHandle pZip, 
 		else if (type == "fontoverride")
 		{
 			if (mFonts.size() != 0 && child && child->first_attribute("name")) {
-				string FontName = child->first_attribute("name")->value();
+				std::string FontName = child->first_attribute("name")->value();
 				size_t font_count = mFonts.size(), i;
 				bool found = false;
 
@@ -429,7 +425,7 @@ void ResourceManager::LoadResources(xml_node<>* resList, ZipArchiveHandle pZip, 
 		}
 		else if (type == "string")
 		{
-			if (xml_attribute<>* attr = child->first_attribute("name")) {
+			if (rapidxml::xml_attribute<>* attr = child->first_attribute("name")) {
 				string_resource_struct res;
 				res.source = resource_source;
 				res.value = child->value();

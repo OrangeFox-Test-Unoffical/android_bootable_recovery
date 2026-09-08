@@ -16,17 +16,15 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
 #include <pthread.h>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
+#include <cstring>
 
-#include "rapidxml.hpp"
+#include "data.hpp"
 #include "objects.hpp"
-#include "../data.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
 
 // Global WLAN list
 static std::vector<GUIWlanList::WlanItem> gWlanList;
@@ -45,10 +43,10 @@ std::vector<GUIWlanList::WlanItem> GetWlanList() {
 	return list;
 }
 
-GUIWlanList::GUIWlanList(xml_node<>* node) : GUIScrollList(node)
+GUIWlanList::GUIWlanList(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mIconSelected = mIconUnselected = NULL;
 	mUpdate = 0;

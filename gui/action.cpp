@@ -16,63 +16,51 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <dirent.h>
 #include <fcntl.h>
+#include <linux/input.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/mman.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
-#include <linux/input.h>
-#include <time.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <sys/wait.h>
-#include <dirent.h>
-#include <private/android_filesystem_config.h>
-#include <android-base/properties.h>
-#include <fstream>
+#include <unistd.h>
 
-#include <string>
-#include <sstream>
-#include "../partitions.hpp"
-#include "../twrp-functions.hpp"
-#include "../twrpRepacker.hpp"
-#include "../openrecoveryscript.hpp"
-
-#include "twinstall/adb_install.h"
-
-#include "fuse_sideload.h"
-#include "blanktimer.hpp"
-#include "twinstall.h"
-
-extern "C" {
-#include "../twcommon.h"
-#include "../variables.h"
-#include "cutils/properties.h"
-#include "twinstall/adb_install.h"
-};
-#include "set_metadata.h"
-#include "twrpminui/minui.h"
-#include "twrpperf/perf_manager.hpp"
-
-#include "rapidxml.hpp"
-#include "objects.hpp"
-#include "pages.hpp"
-#include "unit_conversion.hpp"
-#include <cstring>
-#include <vector>
-#include <stdint.h>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdint>
+#include <cstring>
+#include <ctime>
+#include <fstream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <android-base/properties.h>
+#include <cutils/properties.h>
+#include <private/android_filesystem_config.h>
+
+#include "blanktimer.hpp"
+#include "fuse_sideload.h"
+#include "objects.hpp"
+#include "openrecoveryscript.hpp"
+#include "pages.hpp"
+#include "partitions.hpp"
+#include "rapidxml.hpp"
+#include "set_metadata.h"
+#include "twcommon.h"
+#include "twinstall.h"
+#include "twinstall/adb_install.h"
+#include "twrp-functions.hpp"
+#include "twrpRepacker.hpp"
+#include "twrpminui/minui.h"
+#include "twrpperf/perf_manager.hpp"
+#include "unit_conversion.hpp"
+#include "variables.h"
 
 GUIAction::mapFunc GUIAction::mf;
-std::set<string> GUIAction::setActionsRunningInCallerThread;
-static string zip_queue[10];
+std::set<std::string> GUIAction::setActionsRunningInCallerThread;
+static std::string zip_queue[10];
 static int zip_queue_index;
 pid_t sideload_child_pid;
 extern std::vector<users_struct> Users_List;
@@ -159,12 +147,12 @@ void ActionThread::run(void *data)
 	delete d;
 }
 
-GUIAction::GUIAction(xml_node<>* node)
+GUIAction::GUIAction(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
-	xml_node<>* child;
-	xml_node<>* actions;
-	xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
+	rapidxml::xml_node<>* actions;
+	rapidxml::xml_attribute<>* attr;
 
 	if (!node)  return;
 
@@ -448,7 +436,7 @@ int GUIAction::flash_zip(std::string filename, int* wipe_cache)
 
 GUIAction::ThreadType GUIAction::getThreadType(const GUIAction::Action& action)
 {
-	string func = gui_parse_text(action.mFunction);
+	std::string func = gui_parse_text(action.mFunction);
 	bool needsThread = setActionsRunningInCallerThread.find(func) == setActionsRunningInCallerThread.end();
 	if (needsThread) {
 		if (func == "cancelbackup")
@@ -519,7 +507,7 @@ int GUIAction::doAction(Action action)
 	return -1;
 }
 
-void GUIAction::operation_start(const string operation_name)
+void GUIAction::operation_start(const std::string operation_name)
 {
 	twrp::TwrpPerfManager::Get().BeginWorkload();
 	LOGINFO("operation_start: '%s'\n", operation_name.c_str());
@@ -616,7 +604,7 @@ int GUIAction::reload(std::string arg __unused)
 
 int GUIAction::readBackup(std::string arg __unused)
 {
-	string Restore_Name;
+	std::string Restore_Name;
 
 	DataManager::GetValue("tw_restore", Restore_Name);
 	PartitionManager.Set_Restore_Files(Restore_Name);
@@ -625,10 +613,10 @@ int GUIAction::readBackup(std::string arg __unused)
 
 int GUIAction::set(std::string arg)
 {
-	if (arg.find('=') != string::npos)
+	if (arg.find('=') != std::string::npos)
 	{
-		string varName = arg.substr(0, arg.find('='));
-		string value = arg.substr(arg.find('=') + 1, string::npos);
+		std::string varName = arg.substr(0, arg.find('='));
+		std::string value = arg.substr(arg.find('=') + 1, std::string::npos);
 
 		DataManager::GetValue(value, value);
 		DataManager::SetValue(varName, value);
@@ -694,7 +682,7 @@ int GUIAction::copylog(std::string arg __unused)
 	operation_start("Copy Log");
 	if (!simulate)
 	{
-		string dst, curr_storage;
+		std::string dst, curr_storage;
 		int copy_kernel_log = 0;
 		int copy_logcat = 1;
 
@@ -720,10 +708,10 @@ int GUIAction::copylog(std::string arg __unused)
 
 int GUIAction::compute(std::string arg)
 {
-	if (arg.find("+") != string::npos)
+	if (arg.find("+") != std::string::npos)
 	{
-		string varName = arg.substr(0, arg.find('+'));
-		string string_to_add = arg.substr(arg.find('+') + 1, string::npos);
+		std::string varName = arg.substr(0, arg.find('+'));
+		std::string string_to_add = arg.substr(arg.find('+') + 1, std::string::npos);
 		int amount_to_add = atoi(string_to_add.c_str());
 		int value;
 
@@ -731,10 +719,10 @@ int GUIAction::compute(std::string arg)
 		DataManager::SetValue(varName, value + amount_to_add);
 		return 0;
 	}
-	if (arg.find("-") != string::npos)
+	if (arg.find("-") != std::string::npos)
 	{
-		string varName = arg.substr(0, arg.find('-'));
-		string string_to_subtract = arg.substr(arg.find('-') + 1, string::npos);
+		std::string varName = arg.substr(0, arg.find('-'));
+		std::string string_to_subtract = arg.substr(arg.find('-') + 1, std::string::npos);
 		int amount_to_subtract = atoi(string_to_subtract.c_str());
 		int value;
 
@@ -745,10 +733,10 @@ int GUIAction::compute(std::string arg)
 		DataManager::SetValue(varName, value);
 		return 0;
 	}
-	if (arg.find("*") != string::npos)
+	if (arg.find("*") != std::string::npos)
 	{
-		string varName = arg.substr(0, arg.find('*'));
-		string multiply_by_str = gui_parse_text(arg.substr(arg.find('*') + 1, string::npos));
+		std::string varName = arg.substr(0, arg.find('*'));
+		std::string multiply_by_str = gui_parse_text(arg.substr(arg.find('*') + 1, std::string::npos));
 		int multiply_by = atoi(multiply_by_str.c_str());
 		int value;
 
@@ -756,10 +744,10 @@ int GUIAction::compute(std::string arg)
 		DataManager::SetValue(varName, value*multiply_by);
 		return 0;
 	}
-	if (arg.find("/") != string::npos)
+	if (arg.find("/") != std::string::npos)
 	{
-		string varName = arg.substr(0, arg.find('/'));
-		string divide_by_str = gui_parse_text(arg.substr(arg.find('/') + 1, string::npos));
+		std::string varName = arg.substr(0, arg.find('/'));
+		std::string divide_by_str = gui_parse_text(arg.substr(arg.find('/') + 1, std::string::npos));
 		int divide_by = atoi(divide_by_str.c_str());
 		int value;
 
@@ -776,18 +764,18 @@ int GUIAction::compute(std::string arg)
 
 int GUIAction::setguitimezone(std::string arg __unused)
 {
-	string SelectedZone;
+	std::string SelectedZone;
 	DataManager::GetValue(TW_TIME_ZONE_GUISEL, SelectedZone); // read the selected time zone into SelectedZone
-	string Zone = SelectedZone.substr(0, SelectedZone.find(';')); // parse to get time zone
-	string DSTZone = SelectedZone.substr(SelectedZone.find(';') + 1, string::npos); // parse to get DST component
+	std::string Zone = SelectedZone.substr(0, SelectedZone.find(';')); // parse to get time zone
+	std::string DSTZone = SelectedZone.substr(SelectedZone.find(';') + 1, std::string::npos); // parse to get DST component
 
 	int dst;
 	DataManager::GetValue(TW_TIME_ZONE_GUIDST, dst); // check wether user chose to use DST
 
-	string offset;
+	std::string offset;
 	DataManager::GetValue(TW_TIME_ZONE_GUIOFFSET, offset); // pull in offset
 
-	string NewTimeZone = Zone;
+	std::string NewTimeZone = Zone;
 	if (offset != "0")
 		NewTimeZone += ":" + offset;
 
@@ -865,7 +853,7 @@ int GUIAction::sleepcounter(std::string arg)
 int GUIAction::appenddatetobackupname(std::string arg __unused)
 {
 	operation_start("AppendDateToBackupName");
-	string Backup_Name;
+	std::string Backup_Name;
 	DataManager::GetValue(TW_BACKUP_NAME, Backup_Name);
 	Backup_Name += TWFunc::Get_Current_Date();
 	if (Backup_Name.size() > MAX_BACKUP_NAME_LEN)
@@ -887,7 +875,7 @@ int GUIAction::generatebackupname(std::string arg __unused)
 
 int GUIAction::checkpartitionlist(std::string arg)
 {
-	string List, part_path;
+	std::string List, part_path;
 	int count = 0;
 
 	if (arg.empty())
@@ -896,7 +884,7 @@ int GUIAction::checkpartitionlist(std::string arg)
 	LOGINFO("checkpartitionlist list '%s'\n", List.c_str());
 	if (!List.empty()) {
 		size_t start_pos = 0, end_pos = List.find(";", start_pos);
-		while (end_pos != string::npos && start_pos < List.size()) {
+		while (end_pos != std::string::npos && start_pos < List.size()) {
 			part_path = List.substr(start_pos, end_pos - start_pos);
 			LOGINFO("checkpartitionlist part_path '%s'\n", part_path.c_str());
 			if (part_path == "/and-sec" || part_path == "DALVIK" || part_path == "INTERNAL") {
@@ -916,7 +904,7 @@ int GUIAction::checkpartitionlist(std::string arg)
 
 int GUIAction::getpartitiondetails(std::string arg)
 {
-	string List, part_path;
+	std::string List, part_path;
 
 	if (arg.empty())
 		arg = "tw_wipe_list";
@@ -925,7 +913,7 @@ int GUIAction::getpartitiondetails(std::string arg)
 	if (!List.empty()) {
 		size_t start_pos = 0, end_pos = List.find(";", start_pos);
 		part_path = List;
-		while (end_pos != string::npos && start_pos < List.size()) {
+		while (end_pos != std::string::npos && start_pos < List.size()) {
 			part_path = List.substr(start_pos, end_pos - start_pos);
 			LOGINFO("getpartitiondetails part_path '%s'\n", part_path.c_str());
 			if (part_path == "/and-sec" || part_path == "DALVIK" || part_path == "INTERNAL") {
@@ -1037,7 +1025,7 @@ int GUIAction::setbrightness(std::string arg)
 int GUIAction::fileexists(std::string arg)
 {
 	struct stat st;
-	string newpath = arg + "/.";
+	std::string newpath = arg + "/.";
 
 	operation_start("FileExists");
 	if (stat(arg.c_str(), &st) == 0 || stat(newpath.c_str(), &st) == 0)
@@ -1048,13 +1036,13 @@ int GUIAction::fileexists(std::string arg)
 }
 
 #ifdef TW_OZIP_DECRYPT_KEY
-int GUIAction::ozip_decrypt(string zip_path)
+int GUIAction::ozip_decrypt(std::string zip_path)
 {
 	if (!TWFunc::Path_Exists("/system/bin/ozip_decrypt")) {
 		return 1;
 	}
 	gui_msg("ozip_decrypt_decryption=Starting Ozip Decryption...");
-	TWFunc::Exec_Cmd("ozip_decrypt " + (string)TW_OZIP_DECRYPT_KEY + " '" + zip_path + "'");
+	TWFunc::Exec_Cmd("ozip_decrypt " + (std::string)TW_OZIP_DECRYPT_KEY + " '" + zip_path + "'");
 	gui_msg("ozip_decrypt_finish=Ozip Decryption Finished!");
 	return 0;
 }
@@ -1066,9 +1054,9 @@ int GUIAction::flash(std::string arg)
 	// We're going to jump to this page first, like a loading page
 	gui_changePage(arg);
 	for (i=0; i<zip_queue_index; i++) {
-		string zip_path = zip_queue[i];
+		std::string zip_path = zip_queue[i];
 		size_t slashpos = zip_path.find_last_of('/');
-		string zip_filename = (slashpos == string::npos) ? zip_path : zip_path.substr(slashpos + 1);
+		std::string zip_filename = (slashpos == std::string::npos) ? zip_path : zip_path.substr(slashpos + 1);
 		operation_start("Flashing");
 #ifdef TW_OZIP_DECRYPT_KEY
 		if((zip_path.substr(zip_path.size() - 4, 4)) == "ozip")
@@ -1142,14 +1130,14 @@ int GUIAction::wipe(std::string arg)
 				ret_val = PartitionManager.Wipe_By_Path(DataManager::GetCurrentStoragePath());
 			}
 		} else if (arg == "EXTERNAL") {
-			string External_Path;
+			std::string External_Path;
 
 			DataManager::GetValue(TW_EXTERNAL_PATH, External_Path);
 			ret_val = PartitionManager.Wipe_By_Path(External_Path);
 		} else if (arg == "ANDROIDSECURE") {
 			ret_val = PartitionManager.Wipe_Android_Secure();
 		} else if (arg == "LIST") {
-			string Wipe_List, wipe_path;
+			std::string Wipe_List, wipe_path;
 			bool skip = false;
 			ret_val = true;
 
@@ -1157,7 +1145,7 @@ int GUIAction::wipe(std::string arg)
 			LOGINFO("wipe list '%s'\n", Wipe_List.c_str());
 			if (!Wipe_List.empty()) {
 				size_t start_pos = 0, end_pos = Wipe_List.find(";", start_pos);
-				while (end_pos != string::npos && start_pos < Wipe_List.size()) {
+				while (end_pos != std::string::npos && start_pos < Wipe_List.size()) {
 					wipe_path = Wipe_List.substr(start_pos, end_pos - start_pos);
 					LOGINFO("wipe_path '%s'\n", wipe_path.c_str());
 					if (wipe_path == "/and-sec") {
@@ -1234,9 +1222,9 @@ int GUIAction::nandroid(std::string arg)
 		int ret = 0;
 
 		if (arg == "backup") {
-			string Backup_Name;
+			std::string Backup_Name;
 			DataManager::GetValue(TW_BACKUP_NAME, Backup_Name);
-			string auto_gen = gui_lookup("auto_generate", "(Auto Generate)");
+			std::string auto_gen = gui_lookup("auto_generate", "(Auto Generate)");
 			if (Backup_Name == auto_gen || Backup_Name == gui_lookup("curr_date", "(Current Date)") || Backup_Name == "0" || Backup_Name == "(" || PartitionManager.Check_Backup_Name(Backup_Name, true, true) == 0) {
 				ret = PartitionManager.Run_Backup(false);
 				DataManager::SetValue("tw_encrypt_backup", 0); // reset value so we don't encrypt every subsequent backup
@@ -1257,7 +1245,7 @@ int GUIAction::nandroid(std::string arg)
 			}
 			DataManager::SetValue(TW_BACKUP_NAME, auto_gen);
 		} else if (arg == "restore") {
-			string Restore_Name;
+			std::string Restore_Name;
 			int gui_adb_backup;
 
 			DataManager::GetValue("tw_restore", Restore_Name);
@@ -1328,7 +1316,7 @@ int GUIAction::dd(std::string arg)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string cmd = "dd " + arg;
+		std::string cmd = "dd " + arg;
 		TWFunc::Exec_Cmd(cmd);
 	}
 	operation_end(0);
@@ -1378,7 +1366,7 @@ int GUIAction::cmd(std::string arg)
 int GUIAction::terminalcommand(std::string arg)
 {
 	int op_status = 0;
-	string cmdpath, command;
+	std::string cmdpath, command;
 
 	DataManager::GetValue("tw_terminal_location", cmdpath);
 	operation_start("CommandOutput");
@@ -1462,7 +1450,7 @@ int GUIAction::checkbackupname(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string Backup_Name;
+		std::string Backup_Name;
 		DataManager::GetValue(TW_BACKUP_NAME, Backup_Name);
 		op_status = PartitionManager.Check_Backup_Name(Backup_Name, true, true);
 		if (op_status != 0)
@@ -1481,8 +1469,8 @@ int GUIAction::decrypt(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string Password;
-		string userID;
+		std::string Password;
+		std::string userID;
 		DataManager::GetValue("tw_crypto_password", Password);
 
 		if (DataManager::GetIntValue(TW_IS_FBE)) {  // for FBE
@@ -1640,7 +1628,7 @@ int GUIAction::decrypt_backup(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string Restore_Path, Filename, Password;
+		std::string Restore_Path, Filename, Password;
 		DataManager::GetValue("tw_restore", Restore_Path);
 		Restore_Path += "/";
 		DataManager::GetValue("tw_restore_password", Password);
@@ -1664,7 +1652,7 @@ int GUIAction::repair(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string part_path;
+		std::string part_path;
 		DataManager::GetValue("tw_partition_mount_point", part_path);
 		if (PartitionManager.Repair_By_Path(part_path, true)) {
 			op_status = 0; // success
@@ -1685,7 +1673,7 @@ int GUIAction::resize(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string part_path;
+		std::string part_path;
 		DataManager::GetValue("tw_partition_mount_point", part_path);
 		if (PartitionManager.Resize_By_Path(part_path, true)) {
 			op_status = 0; // success
@@ -1706,7 +1694,7 @@ int GUIAction::changefilesystem(std::string arg __unused)
 	if (simulate) {
 		simulate_progress_bar();
 	} else {
-		string part_path, file_system;
+		std::string part_path, file_system;
 		DataManager::GetValue("tw_partition_mount_point", part_path);
 		DataManager::GetValue("tw_action_new_file_system", file_system);
 		if (PartitionManager.Wipe_By_Path(part_path, file_system)) {
@@ -1755,20 +1743,20 @@ int GUIAction::flashimage(std::string arg __unused)
 	bool flag = true;
 
 	operation_start("Flash Image");
-	string path, filename;
+	std::string path, filename;
 	DataManager::GetValue("tw_zip_location", path);
 	DataManager::GetValue("tw_file", filename);
 
 #ifdef AB_OTA_UPDATER
-	string target = DataManager::GetStrValue("tw_flash_partition");
+	std::string target = DataManager::GetStrValue("tw_flash_partition");
 	unsigned int pos = target.find_last_of(';');
-	string mount_point = pos != string::npos ? target.substr(0, pos) : "";
+	std::string mount_point = pos != std::string::npos ? target.substr(0, pos) : "";
 	TWPartition* t_part = PartitionManager.Find_Partition_By_Path(mount_point);
 	bool flash_in_both_slots = DataManager::GetIntValue("tw_flash_both_slots") ? true : false;
 
 	if (t_part != NULL && (flash_in_both_slots && t_part->SlotSelect)) 
 	{
-		string current_slot = PartitionManager.Get_Active_Slot_Display();
+		std::string current_slot = PartitionManager.Get_Active_Slot_Display();
 		bool pre_op_status = PartitionManager.Flash_Image(path, filename);
 
 		PartitionManager.Override_Active_Slot(current_slot == "A" ? "B" : "A");
@@ -2110,13 +2098,13 @@ int GUIAction::editfile(std::string arg) {
 }
 #endif
 
-int GUIAction::applycustomtwrpfolder(string arg __unused)
+int GUIAction::applycustomtwrpfolder(std::string arg __unused)
 {
 	operation_start("ChangingTWRPFolder");
-	string storageFolder = DataManager::GetCurrentStoragePath();
-	string newFolder = storageFolder + '/' + arg;
-	string newBackupFolder = newFolder + "/BACKUPS/" + DataManager::GetStrValue("device_id");
-	string prevFolder = storageFolder + DataManager::GetStrValue(TW_RECOVERY_FOLDER_VAR);
+	std::string storageFolder = DataManager::GetCurrentStoragePath();
+	std::string newFolder = storageFolder + '/' + arg;
+	std::string newBackupFolder = newFolder + "/BACKUPS/" + DataManager::GetStrValue("device_id");
+	std::string prevFolder = storageFolder + DataManager::GetStrValue(TW_RECOVERY_FOLDER_VAR);
 	bool ret = false;
 
 	if (TWFunc::Path_Exists(newFolder)) {
@@ -2141,7 +2129,7 @@ int GUIAction::applycustomtwrpfolder(string arg __unused)
 		DataManager::SetValue(TW_RECOVERY_FOLDER_VAR, '/' + arg);
 		DataManager::SetValue(TW_BACKUPS_FOLDER_VAR, newBackupFolder);
 		//Creates an empty file that marks which folder is TWRP with the renamed new name, after reboot.
-		string path= newFolder + "/.twrpcf";
+		std::string path= newFolder + "/.twrpcf";
 		std::ofstream twrpcf(path);
 		twrpcf.close();
 	}
@@ -2149,7 +2137,7 @@ int GUIAction::applycustomtwrpfolder(string arg __unused)
 	return 0;
 }
 
-int GUIAction::mergesnapshots(string arg __unused) {
+int GUIAction::mergesnapshots(std::string arg __unused) {
 	int op_status = 1;
 	if (PartitionManager.Check_Pending_Merges()) {
 		op_status = 0;
@@ -2158,7 +2146,7 @@ int GUIAction::mergesnapshots(string arg __unused) {
 	return 0;
 }
 
-int GUIAction::disableAVB2(string arg __unused) {
+int GUIAction::disableAVB2(std::string arg __unused) {
 	int op_status = 1;
 	operation_start("Disable AVB2.0");
 	gui_highlight("disabling_AVB2=Disabling AVB2.0...");
@@ -2182,7 +2170,7 @@ static GUIBorderedLogBox* FindWlanLogBox() {
 
 static std::string run_command_get_output(const std::string& cmd);
 
-int GUIAction::wlanstart(string arg __unused) {
+int GUIAction::wlanstart(std::string arg __unused) {
 	GUIBorderedLogBox* logBox = FindWlanLogBox();
 	if (logBox) {
 		logBox->AddLogLine("[INFO] Starting WLAN service...", "normal");
@@ -2207,7 +2195,7 @@ int GUIAction::wlanstart(string arg __unused) {
 	return 0;
 }
 
-int GUIAction::wlanstop(string arg __unused) {
+int GUIAction::wlanstop(std::string arg __unused) {
 	GUIBorderedLogBox* logBox = FindWlanLogBox();
 	if (logBox) {
 		logBox->AddLogLine("[INFO] Stopping WLAN service...", "normal");

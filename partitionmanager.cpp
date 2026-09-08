@@ -1998,13 +1998,13 @@ void TWPartitionManager::Parse_Users() {
             if (userFile == nullptr) {
                 user.userName = user_id_str;
             } else {
-                auto userXml = std::make_unique<xml_document<> >();
+                auto userXml = std::make_unique<rapidxml::xml_document<>>();
                 userXml->parse < 0 > (userFile.get());
-                xml_node<> *userNode = userXml->first_node("user");
+                rapidxml::xml_node<> *userNode = userXml->first_node("user");
                 if (userNode == nullptr) {
                     user.userName = user_id_str;
                 } else {
-                    xml_node<> *nameNode = userNode->first_node("name");
+                    rapidxml::xml_node<> *nameNode = userNode->first_node("name");
                     if (nameNode == nullptr)
                         user.userName = user_id_str;
                     else {
