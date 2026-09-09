@@ -83,6 +83,7 @@ protected:
 
 private:
 	static void get_device_id();
+	static void HandleBrightnessConfig();
 
 	static pthread_mutex_t m_valuesLock;
 };

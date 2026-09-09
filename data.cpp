@@ -20,8 +20,10 @@
 #include <time.h>
 #include <string>
 #include <sstream>
-#include <fstream>
 #include <cctype>
+#include <filesystem>
+#include <system_error>
+#include <unordered_set>
 #include <cutils/properties.h>
 #include <fstab/fstab.h>
 #include <unistd.h>
@@ -33,7 +35,6 @@
 #ifndef TW_NO_SCREEN_TIMEOUT
 #include "gui/blanktimer.hpp"
 #endif
-#include "find_file.hpp"
 #include "set_metadata.h"
 #include "gui/gui.hpp"
 #include "infomanager.hpp"
@@ -419,6 +420,37 @@ void DataManager::SetBackupFolder()
 	}
 }
 
+// Recursively search root for a regular file named name, returning the first
+// match (empty string if none). Symlinked directories are followed -- sysfs
+// /sys/class/* entries are typically symlinks into /sys/devices -- with
+// canonical-path de-dup to guard against sysfs symlink loops.
+static string find_first_named_file(const string& name, const string& root) {
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  std::unordered_set<fs::path> visited;
+  constexpr auto opts = fs::directory_options::follow_directory_symlink
+                        | fs::directory_options::skip_permission_denied;
+  for (auto it = fs::recursive_directory_iterator(root, opts, ec);
+       it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    if (ec) {
+      ec.clear();
+      continue;
+    }
+    const auto& entry = *it;
+    if (entry.is_symlink()) {
+      if (auto can = fs::canonical(entry.path(), ec); !ec && !visited.insert(can).second) {
+        it.disable_recursion_pending(); // break a symlink loop
+        continue;
+      }
+      ec.clear(); // reset after canonical(); dangling -> carry on
+    }
+    if (!entry.is_symlink() && entry.is_regular_file()
+        && entry.path().filename() == name)
+      return entry.path();
+  }
+  return "";
+}
+
 void DataManager::SetDefaultValues()
 {
 	string str, path;
@@ -696,82 +728,8 @@ void DataManager::SetDefaultValues()
 		mConst.SetValue(TW_VIRTUAL_AB_ENABLED, "1");
 	else
 		mConst.SetValue(TW_VIRTUAL_AB_ENABLED, "0");
-	// Brightness handling
-	string findbright;
-#ifdef TW_BRIGHTNESS_PATH
-	findbright = EXPAND(TW_BRIGHTNESS_PATH);
-	LOGINFO("TW_BRIGHTNESS_PATH := %s\n", findbright.c_str());
-	if (!TWFunc::Path_Exists(findbright)) {
-		LOGINFO("Specified brightness file '%s' not found.\n", findbright.c_str());
-		findbright = "";
-	}
-#endif
-	if (findbright.empty()) {
-		// Attempt to locate the brightness file
-		findbright = Find_File::Find("brightness", "/sys/class/backlight");
-		if (findbright.empty()) findbright = Find_File::Find("brightness", "/sys/class/leds/lcd-backlight");
-	}
-	if (findbright.empty()) {
-		LOGINFO("Unable to locate brightness file\n");
-		mConst.SetValue("tw_has_brightnesss_file", "0");
-	} else {
-		LOGINFO("Found brightness file at '%s'\n", findbright.c_str());
-		mConst.SetValue("tw_has_brightnesss_file", "1");
-		mConst.SetValue("tw_brightness_file", findbright);
-		string maxBrightness;
-#ifdef TW_MAX_BRIGHTNESS
-		ostringstream maxVal;
-		maxVal << TW_MAX_BRIGHTNESS;
-		maxBrightness = maxVal.str();
-#else
-		// Attempt to locate the max_brightness file
-		string maxbrightpath = findbright.insert(findbright.rfind('/') + 1, "max_");
-		if (TWFunc::Path_Exists(maxbrightpath)) {
-			ifstream maxVal(maxbrightpath.c_str());
-			if (maxVal >> maxBrightness) {
-				LOGINFO("Got max brightness %s from '%s'\n", maxBrightness.c_str(), maxbrightpath.c_str());
-			} else {
-				// Something went wrong, set that to indicate error
-				maxBrightness = "-1";
-			}
-		}
-		if (atoi(maxBrightness.c_str()) <= 0)
-		{
-			// Fallback into default
-			ostringstream maxVal;
-			maxVal << 255;
-			maxBrightness = maxVal.str();
-		}
-#endif
-		mConst.SetValue("tw_brightness_max", maxBrightness);
-		mPersist.SetValue("tw_brightness", maxBrightness);
-		mPersist.SetValue("tw_brightness_pct", "100");
-#ifdef TW_SECONDARY_BRIGHTNESS_PATH
-		string secondfindbright = EXPAND(TW_SECONDARY_BRIGHTNESS_PATH);
-		if (secondfindbright != "" && TWFunc::Path_Exists(secondfindbright)) {
-			LOGINFO("Will use a second brightness file at '%s'\n", secondfindbright.c_str());
-			mConst.SetValue("tw_secondary_brightness_file", secondfindbright);
-		} else {
-			LOGINFO("Specified secondary brightness file '%s' not found.\n", secondfindbright.c_str());
-		}
-#endif
-#ifdef TW_DEFAULT_BRIGHTNESS
-		int defValInt = TW_DEFAULT_BRIGHTNESS;
-		int maxValInt = atoi(maxBrightness.c_str());
-		// Deliberately int so the % is always a whole number
-		int defPctInt = ( ( (double)defValInt / maxValInt ) * 100 );
-		ostringstream defPct;
-		defPct << defPctInt;
-		mPersist.SetValue("tw_brightness_pct", defPct.str());
 
-		ostringstream defVal;
-		defVal << TW_DEFAULT_BRIGHTNESS;
-		mPersist.SetValue("tw_brightness", defVal.str());
-		TWFunc::Set_Brightness(defVal.str());
-#else
-		TWFunc::Set_Brightness(maxBrightness);
-#endif
-	}
+	HandleBrightnessConfig();
 
 #ifdef TW_HAS_MTP
 	mConst.SetValue("tw_has_mtp", "1");
@@ -819,6 +777,75 @@ void DataManager::SetDefaultValues()
 		mConst.SetValue("tw_has_repack_tools", "0");
 
 	pthread_mutex_unlock(&m_valuesLock);
+}
+
+void DataManager::HandleBrightnessConfig() {
+	std::string brightness_path;
+#ifdef TW_BRIGHTNESS_PATH
+	brightness_path = TW_BRIGHTNESS_PATH;
+	LOGINFO("TW_BRIGHTNESS_PATH := %s\n", TW_BRIGHTNESS_PATH);
+	if (!TWFunc::Path_Exists(TW_BRIGHTNESS_PATH)) {
+		LOGINFO("Specified brightness file '%s' not found.\n", TW_BRIGHTNESS_PATH);
+		brightness_path.clear();
+	}
+#endif
+
+	// Attempt to locate the brightness file
+	if (brightness_path.empty()) {
+		brightness_path = find_first_named_file("brightness", "/sys/class/backlight");
+		if (brightness_path.empty())
+			brightness_path = find_first_named_file("brightness", "/sys/class/leds/lcd-backlight");
+	}
+	if (brightness_path.empty()) {
+		LOGINFO("Unable to locate brightness file\n");
+		mConst.SetValue("tw_has_brightnesss_file", "0");
+		return;
+	}
+
+	LOGINFO("Found brightness file at '%s'\n", brightness_path.c_str());
+	mConst.SetValue("tw_has_brightnesss_file", "1");
+	mConst.SetValue("tw_brightness_file", brightness_path);
+
+	int max_brightness;
+#ifdef TW_MAX_BRIGHTNESS
+	max_brightness = TW_MAX_BRIGHTNESS;
+#else
+	// Derive the sibling max_brightness path without mutating brightness_path.
+	const std::filesystem::path bpath(brightness_path);
+	const std::string max_brightness_path = bpath.parent_path() / std::format("max_{}", bpath.filename());
+	if (TWFunc::Path_Exists(max_brightness_path)) {
+		if (android::base::ReadFileToString(max_brightness_path, &max_brightness)) {
+			LOGINFO("Got max brightness %s from '%s'\n", max_brightness.c_str(), max_brightness_path.c_str());
+		} else {
+			// Something went wrong, set that to indicate error
+			max_brightness = -1;
+		}
+	}
+	// Fallback into default
+	if (max_brightness <= 0) max_brightness = 255;
+#endif
+	mConst.SetValue("tw_brightness_max", max_brightness);
+	mPersist.SetValue("tw_brightness", max_brightness / 5);
+	mPersist.SetValue("tw_brightness_pct", "20");
+
+#ifdef TW_SECONDARY_BRIGHTNESS_PATH
+	std::string second_brightness_path = EXPAND(TW_SECONDARY_BRIGHTNESS_PATH);
+	if (!second_brightness_path.empty() && TWFunc::Path_Exists(second_brightness_path)) {
+		LOGINFO("Will use a second brightness file at '%s'\n", second_brightness_path.c_str());
+		mConst.SetValue("tw_secondary_brightness_file", second_brightness_path);
+	} else {
+		LOGINFO("Specified secondary brightness file '%s' not found.\n", second_brightness_path.c_str());
+	}
+#endif
+
+#ifdef TW_DEFAULT_BRIGHTNESS
+	const int defPctInt = static_cast<double>(TW_DEFAULT_BRIGHTNESS) / max_brightness * 100;
+	mPersist.SetValue("tw_brightness_pct", std::to_string(defPctInt));
+	mPersist.SetValue("tw_brightness", TW_DEFAULT_BRIGHTNESS);
+	TWFunc::Set_Brightness(std::to_string(TW_DEFAULT_BRIGHTNESS));
+#else
+	TWFunc::Set_Brightness(std::to_string(max_brightness / 5));
+#endif
 }
 
 // Magic Values

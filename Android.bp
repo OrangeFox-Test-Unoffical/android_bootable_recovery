@@ -444,7 +444,6 @@ cc_binary {
         "fixContexts.cpp",
         "twrpTar.cpp",
         "exclude.cpp",
-        "find_file.cpp",
         "infomanager.cpp",
         "data.cpp",
         "partition.cpp",
