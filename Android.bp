@@ -476,7 +476,8 @@ cc_binary {
     ],
 
     header_libs: [
-        "libvold_headers"
+        "libupdate_engine_headers",
+        "libvold_headers",
     ] + select(soong_config_variable("twrpGlobalVars", "include_libresetprop"), {
         true: [
             "resetprop_headers",
