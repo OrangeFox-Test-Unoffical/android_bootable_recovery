@@ -1824,7 +1824,7 @@ int TWPartitionManager::Resize_By_Path(std::string Path, bool Display_Error) {
     return false;
 }
 
-void TWPartitionManager::Update_System_Details(bool Defer_Data_Size) {
+void TWPartitionManager::Update_System_Details(bool Defer_Data_Size, bool Display_Error) {
     int data_size = 0;
     TWPartition *Deferred = nullptr;
 
@@ -1832,7 +1832,7 @@ void TWPartitionManager::Update_System_Details(bool Defer_Data_Size) {
     for (TWPartition *partition: Partitions) {
         // Only /data feeds TW_BACKUP_DATA_SIZE, so only /data is worth deferring.
         bool defer = Defer_Data_Size && partition->Has_Data_Media && partition->Mount_Point == "/data";
-        partition->Update_Size(true, defer);
+        partition->Update_Size(Display_Error, defer);
         if (defer)
             Deferred = partition;
         if (partition->Can_Be_Mounted) {
@@ -3366,7 +3366,9 @@ bool TWPartitionManager::Prepare_Super_Volume(TWPartition *twrpPart) {
     }
 
     twrpPart->Set_Block_Device(fstabEntry.blk_device);
-    twrpPart->Update_Size(true);
+    // The inactive slot was just updated. Its filesystems may not be mountable
+    // until recovery is restarted, so do not report this expected probe failure.
+    twrpPart->Update_Size(false);
     twrpPart->Set_Can_Be_Backed_Up(false);
     twrpPart->Set_Can_Be_Wiped(false);
     std::string bare_partition = std::format("/dev/block/bootdevice/by-name/{}", bare_partition_name);
@@ -3396,7 +3398,7 @@ bool TWPartitionManager::Prepare_All_Super_Volumes() {
         }
     }
 
-    Update_System_Details();
+    Update_System_Details(false, false);
     return status;
 }
 

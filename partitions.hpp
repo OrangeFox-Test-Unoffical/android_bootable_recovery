@@ -407,7 +407,7 @@ public:
     int Wipe_Media_From_Data(); // Removes and recreates the media folder on /data/media devices
     int Repair_By_Path(std::string Path, bool Display_Error); // Repairs a partition based on path
     int Resize_By_Path(std::string Path, bool Display_Error); // Resizes a partition based on path
-    void Update_System_Details(bool Defer_Data_Size = false); // Updates fstab, file systems, sizes, etc.
+    void Update_System_Details(bool Defer_Data_Size = false, bool Display_Error = true); // Updates fstab, file systems, sizes, etc.
     void Process_Async_Data_Size(); // Applies a completed background data-size calculation
     int Decrypt_Device(std::string Password, int user_id = 0); // Attempt to decrypt any encrypted partitions
     void Mark_Data_Locked(); // Data was unmounted, so its fscrypt keys went with it
