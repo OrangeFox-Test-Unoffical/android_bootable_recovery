@@ -510,7 +510,9 @@ private:
     bool Prepare_Empty_Folder(const std::string &Folder);
 
     // Creates an empty folder at Folder. If the folder already exists, the folder is deleted, then created
+#ifdef TW_HAS_MTP
     pid_t mtppid;
+#endif
     bool mtp_was_enabled;
     int mtp_write_fd;
     pid_t tar_fork_pid; // PID of twrpTar fork
