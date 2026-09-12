@@ -101,10 +101,22 @@ bool KernelModuleLoader::Load_Vendor_Modules() {
         LOGINFO("Checking mounted /vendor_dlkm\n");
         ven_dlkm->Mount(true);
     }
+
+    auto unmount_with_kill = [](TWPartition* partition, int fallback_flags) {
+        if (!partition || partition->UnMount(false))
+            return;
+
+        const std::string mount_point = partition->Get_Mount_Point();
+        TWFunc::killForUseTargetProcess(mount_point);
+        if (!partition->UnMount(false, fallback_flags)) {
+            LOGERR("Unable to unmount '%s' after killing processes\n", mount_point.c_str());
+        }
+    };
+
     /* Always release whatever we mounted, even on an early return below. */
     auto mount_guard = android::base::make_scope_guard([&] {
-        if (ven) ven->UnMount(false);
-        if (ven_dlkm) ven_dlkm->UnMount(false, MNT_DETACH);
+        unmount_with_kill(ven_dlkm, MNT_DETACH);
+        unmount_with_kill(ven, 0);
     });
 
     for (const auto& module_dir : vendor_module_dirs) Try_And_Load_Modules(module_dir, true);
