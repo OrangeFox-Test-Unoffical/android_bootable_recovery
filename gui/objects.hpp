@@ -2,6 +2,9 @@
 	Copyright 2013 bigbiff/Dees_Troy TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -27,6 +30,7 @@
 #include <map>
 #include <set>
 #include <time.h>
+//#include <openssl/sha.h>
 
 using namespace rapidxml;
 
@@ -65,7 +69,7 @@ public:
 	virtual int Render(void) = 0;
 
 	// Update - Update any UI component animations (called <= 30 FPS)
-	//  Return 0 if unchanged, 1 if drawn, >1 if the object's bounds need a page redraw, or <0 on error
+	//  Return 0 if nothing to update, 1 on success and contiue, >1 if full render required, and <0 on error
 	virtual int Update(void) { return 0; }
 
 	// GetRenderPos - Returns the current position of the object
@@ -105,10 +109,6 @@ public:
 	//  Return 0 on success (and consume key), >0 to pass key to next handler, and <0 on error
 	virtual int NotifyKey(int key __unused, bool down __unused) { return 1; }
 
-	// NotifyScroll - Notify of mouse wheel movement
-	//  Return 0 to consume, >0 to pass, and <0 on error
-	virtual int NotifyScroll(int amount __unused) { return 1; }
-
 	virtual int GetActionPos(int& x, int& y, int& w, int& h) { x = mActionX; y = mActionY; w = mActionW; h = mActionH; return 0; }
 
 	//  Return 0 on success, <0 on error
@@ -118,8 +118,17 @@ public:
 	//  Return 1 if this object handles the request, 0 if not
 	virtual int IsInRegion(int x, int y) { return ((x < mActionX || x >= mActionX + mActionW || y < mActionY || y >= mActionY + mActionH) ? 0 : 1); }
 
+	// Focus control
+	virtual void SetFocus(bool focus);
+	virtual bool HasFocus() const { return mHasFocus; }
+	virtual int GetFocusedItemActionPos(int& x, int& y, int& w, int& h) { return 0; }
+	virtual std::string GetObjectType() const { return "ActionObject"; }
+
 protected:
 	int mActionX, mActionY, mActionW, mActionH;
+	bool mHasFocus = false;
+	enum { NO_ITEM = (size_t)-1 };
+	COLOR mFocusColor = {255, 0, 0, 255};
 };
 
 class GUIObject
@@ -136,6 +145,7 @@ public:
 	// NotifyVarChange - Notify of a variable change
 	//  Returns 0 on success, <0 on error
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
+	virtual std::string GetObjectType() const { return "GUIObject"; }
 
 protected:
 	class Condition
@@ -199,7 +209,6 @@ public:
 
 	// Retrieve the size of the current string (dynamic strings may change per call)
 	virtual int GetCurrentBounds(int& w, int& h);
-	virtual int GetRenderPos(int& x, int& y, int& w, int& h);
 
 	// Notify of a variable change
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
@@ -212,6 +221,8 @@ public:
 public:
 	bool isHighlighted;
 	bool scaleWidth;
+	int mLength;
+	bool mLimit;
 	unsigned maxWidth;
 
 protected:
@@ -223,7 +234,6 @@ protected:
 	int mIsStatic;
 	int mVarChanged;
 	int mFontHeight;
-	int mLastWidth;
 };
 
 // GUIImage - Used for static image
@@ -254,6 +264,7 @@ class GUIFill : public GUIObject, public RenderObject
 {
 public:
 	GUIFill(xml_node<>* node);
+	virtual ~GUIFill();
 
 public:
 	// Render - Render the full object to the GL surface
@@ -262,6 +273,36 @@ public:
 
 protected:
 	COLOR mColor;
+	gr_surface mCircle;
+};
+
+class GUIBattery : public GUIObject, public RenderObject
+{
+public:
+	GUIBattery(xml_node<>* node);
+
+public:
+	virtual int Render(void);
+	virtual int Update(void);
+
+protected:
+	COLOR mColor;
+	COLOR mColorLow;
+	int mDX, mDY, mDW, mDH,
+		mCX, mCY, mCW, mCH,
+		mFontHeight, mPadding;
+	bool mStateMode;
+	ImageResource* mCharge;
+	ImageResource* mImg;
+	ImageResource* mLowImg;
+	ImageResource* mImg100;
+	ImageResource* mImg75;
+	ImageResource* mImg50;
+	ImageResource* mImg25;
+	ImageResource* mImg15;
+	ImageResource* mImgc15;
+	ImageResource* mImg5;
+	FontResource* mFont;
 };
 
 // GUIAction - Used for standard actions
@@ -276,6 +317,9 @@ public:
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
 	virtual int NotifyKey(int key, bool down);
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
+	virtual size_t GetActionCount() const { return mActions.size();}
+	static int screenshotImpl(std::string arg);
+	static int flashlightImpl(std::string arg);
 
 	int doActions();
 
@@ -297,15 +341,16 @@ protected:
 	int doAction(Action action);
 	ThreadType getThreadType(const Action& action);
 	void simulate_progress_bar(void);
+	void find_magisk(void);
 	int flash_zip(std::string filename, int* wipe_cache);
-
-#ifdef TW_OZIP_DECRYPT_KEY
 	int ozip_decrypt(std::string zip_path);
-#endif
-
+	void reinject_after_flash();
+	void notify_after_install();
 	void operation_start(const string operation_name);
 	void operation_end(const int operation_status);
 	time_t Start;
+	
+	void sha512sum(char *string, char outputBuffer[129]);
 
 	// map action name to function pointer
 	typedef int (GUIAction::*execFunction)(std::string);
@@ -319,7 +364,11 @@ protected:
 	int key(std::string arg);
 	int page(std::string arg);
 	int reload(std::string arg);
+	int check_and_reload(std::string arg);
 	int readBackup(std::string arg);
+	int calculate_chmod(std::string arg);
+	int get_chmod(std::string arg);
+	int set_chmod(std::string arg);
 	int set(std::string arg);
 	int clear(std::string arg);
 	int mount(std::string arg);
@@ -338,11 +387,20 @@ protected:
 	int generatebackupname(std::string arg);
 	int checkpartitionlist(std::string arg);
 	int getpartitiondetails(std::string arg);
-	int screenshot(std::string arg);
+	int screenshot(std::string arg) { return GUIAction::screenshotImpl(arg); }
 	int setbrightness(std::string arg);
+	int cmdf(std::string arg, std::string file);
+	int batch(std::string arg);
+	int passwordcheck(std::string arg);
+	int setpassword(std::string arg);
+	int changeterminal(std::string arg);
 	int unmapsuperdevices(std::string arg);
-	int removedynamicgroups(std:: string arg);
 
+#ifdef FOX_USE_NANO_EDITOR
+	int editfile(std::string arg);
+#endif
+
+	int disableAVB2(std::string arg);
 	// (originally) threaded actions
 	int fileexists(std::string arg);
 	int flash(std::string arg);
@@ -356,7 +414,10 @@ protected:
 	int cmd(std::string arg);
 	int terminalcommand(std::string arg);
 	int killterminal(std::string arg);
+	int reinjecttwrp(std::string arg);
 	int checkbackupname(std::string arg);
+	int checkbackupfolder(std::string arg);
+	int generatedigests(std::string arg);
 	int decrypt(std::string arg);
 	int adbsideload(std::string arg);
 	int adbsideloadcancel(std::string arg);
@@ -377,25 +438,23 @@ protected:
 	int togglebacklight(std::string arg);
 	int twcmd(std::string arg);
 	int setbootslot(std::string arg);
+	int flashlight(std::string arg) { return GUIAction::flashlightImpl(arg); }
+	int fileextension(std::string arg);
+	int up_a_level(std::string arg);
+	int adb(std::string arg);
+	int disableled(std::string arg);
+	int wlfx(std::string arg);
+	int wlfw(std::string arg);
+	int calldeactivateprocess(std::string arg);
+	int disable_replace(std::string arg);
 	int repackimage(std::string arg);
 	int reflashtwrp(std::string arg);
 	int fixabrecoverybootloop(std::string arg);
+	int ftls(std::string arg);
+
 	int enableadb(std::string arg);
 	int enablefastboot(std::string arg);
-	int changeterminal(std::string arg);
-	int applycustomtwrpfolder(std::string arg);
 	int mergesnapshots(std::string arg);
-	int wlanstart(std::string arg);
-	int wlanstop(std::string arg);
-	int wlanscan(std::string arg);
-	int wlanconnect(std::string arg);
-	int wlangetstatus(std::string arg);
-	int wlantest(std::string arg);
-	int disableAVB2(std::string arg);
-#ifndef TW_EXCLUDE_NANO
-	int editfile(std::string arg);
-#endif
-
 	int simulate;
 };
 
@@ -421,6 +480,8 @@ public:
 	// NotifyTouch - Notify of a touch event
 	//  Return 0 on success, >0 to ignore remainder of touch, and <0 on error
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
+	virtual std::string GetObjectType() const { return "GUIButton"; }
+	size_t GetActionCount() const { return mAction->GetActionCount(); }
 
 protected:
 	GUIImage* mButtonImg;
@@ -435,6 +496,29 @@ protected:
 	bool hasFill;
 	COLOR mFillColor;
 	COLOR mHighlightColor;
+	Placement TextPlacement;
+};
+
+class GUIGesture : public GUIObject, public RenderObject, public ActionObject
+{
+public:
+	GUIGesture(xml_node<>* node);
+	virtual ~GUIGesture();
+
+public:
+	virtual int Render(void);
+	virtual int Update(void);
+	virtual int SetRenderPos(int x, int y, int w = 0, int h = 0);
+	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
+
+protected:
+	GUIAction* mAction;
+	bool mRendered;
+	bool hasFill;
+	bool vibrateLock;
+	int mMode;
+	int mSensetivity;
+	COLOR mFillColor;
 	Placement TextPlacement;
 };
 
@@ -460,6 +544,7 @@ public:
 	// NotifyTouch - Notify of a touch event
 	//  Return 0 on success, >0 to ignore remainder of touch, and <0 on error
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
+	virtual std::string GetObjectType() const { return "GUICheckbox"; }
 
 protected:
 	ImageResource* mChecked;
@@ -472,7 +557,20 @@ protected:
 	std::string mVarName;
 };
 
-class GUIScrollList : public GUIObject, public RenderObject, public ActionObject
+class IInteractiveScrollList
+{
+public:
+	virtual ~IInteractiveScrollList() {}
+
+	virtual void SetPageFocus(int inFocus) = 0;
+	virtual void SetSelectedItem(size_t index) = 0;
+	virtual bool MoveSelectionDown() = 0;
+	virtual bool MoveSelectionUp() = 0;
+	virtual size_t getSelectedItem() const = 0;
+	virtual size_t GetItemCount() const = 0;
+};
+
+class GUIScrollList : public GUIObject, public RenderObject, public ActionObject, public IInteractiveScrollList
 {
 public:
 	GUIScrollList(xml_node<>* node);
@@ -491,9 +589,6 @@ public:
 	//  Return 0 on success, >0 to ignore remainder of touch, and <0 on error
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
 
-	// NotifyScroll - Scroll from mouse wheel input
-	virtual int NotifyScroll(int amount);
-
 	// NotifyVarChange - Notify of a variable change
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
 
@@ -504,19 +599,26 @@ public:
 	// SetPageFocus - Notify when a page gains or loses focus
 	virtual void SetPageFocus(int inFocus);
 
+	virtual int GetFocusedItemActionPos(int& x, int& y, int& w, int& h);
+	virtual void SetSelectedItem(size_t index);
+	virtual bool MoveSelectionDown();
+	virtual bool MoveSelectionUp();
+	virtual size_t getSelectedItem() const { return selectedItem; }
+	virtual std::string GetObjectType() const { return "GUIScrollList"; }
+	// get number of items
+	virtual size_t GetItemCount() const = 0;
+
 protected:
 	// derived classes need to implement these
-	// get number of items
-	virtual size_t GetItemCount() { return 0; }
 	// render a single item in rect (mRenderX, yPos, mRenderW, actualItemHeight)
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	// an item was selected
 	virtual void NotifySelect(size_t item_selected __unused) {}
 
 	// render a standard-layout list item with optional icon and text
-	void RenderStdItem(int yPos, bool selected, ImageResource* icon, const char* text, int iconAndTextH = 0);
+	void RenderStdItem(int yPos, bool selected, ImageResource* icon, const char* text, const char* addtext = NULL, int groupStatus = 0);
+	//void RenderStdItem(int yPos, bool selected, ImageResource* icon, const char* text, int iconAndTextH = 0);
 
-	enum { NO_ITEM = (size_t)-1 };
 	// returns item index at coordinates or NO_ITEM if there is no item there
 	size_t HitTestItem(int x, int y);
 
@@ -543,6 +645,8 @@ protected:
 	// Header
 	COLOR mHeaderBackgroundColor;
 	COLOR mHeaderFontColor;
+	std::string itemHold;
+	std::string itemHldStatus;
 	std::string mHeaderText; // Original header text without parsing any variables
 	std::string mLastHeaderValue; // Header text after parsing variables
 	bool mHeaderIsStatic; // indicates if the header is static (no need to check for changes in NotifyVarChange)
@@ -564,6 +668,7 @@ protected:
 	int mItemSpacing; // stores the spacing or padding on the y axis, part of the actualItemHeight
 	int mSeparatorH; // Height of the separator between items
 	COLOR mSeparatorColor; // color of the separator that is between items
+	int mPadding; //[f/d] right icon padding
 
 	// Scrollbar
 	int mFastScrollW; // width of the fastscroll area
@@ -588,6 +693,13 @@ protected:
 	int fastScroll; // indicates that the inital touch was inside the fastscroll region - makes for easier fast scrolling as the touches don't have to stay within the fast scroll region and you drag your finger
 	int mUpdate; // indicates that a change took place and we need to re-render
 	bool AddLines(std::vector<std::string>* origText, std::vector<std::string>* origColor, size_t* lastCount, std::vector<std::string>* rText, std::vector<std::string>* rColor);
+
+  // [Yacha] Item padding
+  int mItemPaddingTop, mItemPaddingBottom;
+
+	COLOR groupColor;
+	ImageResource* groupArrow;
+	bool isGroup;
 };
 
 class GUIFileSelector : public GUIScrollList
@@ -607,13 +719,14 @@ public:
 	// SetPageFocus - Notify when a page gains or loses focus
 	virtual void SetPageFocus(int inFocus);
 
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
 
 protected:
 	struct FileData {
 		std::string fileName;
+		std::string fileExt;
 		unsigned char fileType;	 // Uses d_type format from struct dirent
 		mode_t protection;		  // Uses mode_t format from stat
 		uid_t userId;
@@ -633,18 +746,34 @@ protected:
 	std::vector<FileData> mFileList;
 	std::string mPathVar; // current path displayed, saved in the data manager
 	std::string mPathDefault; // default value for the path if none is set in mPathVar
-	bool mPathCreate; // make the path when it is missing instead of falling back to its parent
 	std::string mExtn; // used for filtering the file list, for example, *.zip
-	std::string mPrfx; // used for filtering the file list, for example, Magisk-
+	std::string mExtnVar; // filtering using variable [f/d]
 	std::string mVariable; // set when the user selects an item, pull path like /path/to/foo
 	std::string mSortVariable; // data manager variable used to change the sorting of files
 	std::string mSelection; // set when the user selects an item without the full path like selecting /path/to/foo would just be set to foo
 	int mShowFolders, mShowFiles; // indicates if the list should show folders and/or files
 	int mShowNavFolders; // indicates if the list should include the "up a level" item and allow you to traverse folders (nav folders are disabled for the restore list, for instance)
+	bool ignoreHideVar; // [f/d] show or hide hidden files (., temp, twres, lost+found). Ignores tw_hidden_files
 	static int mSortOrder; // must be static because it is used by the static function fileSort
 	ImageResource* mFolderIcon;
 	ImageResource* mFileIcon;
+	ImageResource* mUpIcon;
+	ImageResource* mExZipIcon;
+	ImageResource* mExImgIcon;
+	ImageResource* mExTxtIcon;
+	ImageResource* mExPngIcon;
+	ImageResource* mExLinkIcon;
+	ImageResource* mExBlockIcon;
+	ImageResource* mExSelectedIcon;
+	ImageResource* mExUnselectedIcon;
+	// Optional background for layered icons when iconsize is set
+	ImageResource* mIconBg;
 	bool updateFileList;
+	bool hasFiles, hasHiddenFiles;
+	int doubleLine = 0;
+	bool mSelListEnabled; // [f/d] is multiselection enabled
+	bool allowDouble;
+	std::string mFileFilterVar;
 };
 
 class GUIListBox : public GUIScrollList
@@ -657,6 +786,8 @@ public:
 	// Update - Update any UI component animations (called <= 30 FPS)
 	//  Return 0 if nothing to update, 1 on success and contiue, >1 if full render required, and <0 on error
 	virtual int Update(void);
+	virtual void CreateEncryptUsersList(void);
+	virtual void ReadFileToList(const char* fileName);
 
 	// NotifyVarChange - Notify of a variable change
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
@@ -664,7 +795,7 @@ public:
 	// SetPageFocus - Notify when a page gains or loses focus
 	virtual void SetPageFocus(int inFocus);
 
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
 
@@ -673,20 +804,27 @@ protected:
 		std::string displayName;
 		std::string variableName;
 		std::string variableValue;
+		std::string id;
 		unsigned int selected;
 		GUIAction* action;
 		std::vector<Condition> mConditions;
+		ImageResource* icon;
+		bool hasicon;
+		string unparsedName;
 	};
 
 protected:
 	std::vector<ListItem> mListItems;
 	std::vector<size_t> mVisibleItems; // contains indexes in mListItems of visible items only
 	std::string mVariable;
+	std::string mFileName;
+	FILE* fp;
 	std::string currentValue;
 	ImageResource* mIconSelected;
 	ImageResource* mIconUnselected;
 	bool isCheckList;
 	bool isTextParsed;
+	bool requireReload;
 };
 
 class GUIPartitionList : public GUIScrollList
@@ -706,12 +844,13 @@ public:
 	// SetPageFocus - Notify when a page gains or loses focus
 	virtual void SetPageFocus(int inFocus);
 
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
 
 protected:
 	void MatchList();
+	void CalculateTime(unsigned long long fileSize, unsigned long long imgSize);
 	void SetPosition();
 
 protected:
@@ -724,49 +863,8 @@ protected:
 	ImageResource* mIconSelected;
 	ImageResource* mIconUnselected;
 	bool updateList;
+	bool countTotal;
 };
-
-class GUIWlanList : public GUIScrollList
-{
-public:
-	GUIWlanList(xml_node<>* node);
-	virtual ~GUIWlanList();
-
-public:
-	// Update - Update any UI component animations (called <= 30 FPS)
-	//  Return 0 if nothing to update, 1 on success and contiue, >1 if full render required, and <0 on error
-	virtual int Update();
-
-	// NotifyVarChange - Notify of a variable change
-	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
-
-	// SetPageFocus - Notify when a page gains or loses focus
-	virtual void SetPageFocus(int inFocus);
-
-	virtual size_t GetItemCount();
-	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
-	virtual void NotifySelect(size_t item_selected);
-
-public:
-	struct WlanItem {
-		std::string ssid;
-		std::string signal;
-		std::string encryption;
-		bool selected;
-	};
-
-protected:
-	std::vector<WlanItem> mList;
-	std::string mVariable;
-	std::string currentValue;
-	ImageResource* mIconSelected;
-	ImageResource* mIconUnselected;
-	bool updateList;
-};
-
-// Global functions for managing WLAN list
-void SetWlanList(const std::vector<GUIWlanList::WlanItem>& list);
-std::vector<GUIWlanList::WlanItem> GetWlanList();
 
 class GUITextBox : public GUIScrollList
 {
@@ -782,9 +880,10 @@ public:
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
 
 	// ScrollList interface
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
+	virtual std::string GetObjectType() const { return "GUITextBox"; }
 protected:
 
 	size_t mLastCount;
@@ -818,12 +917,13 @@ public:
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
 
 	// ScrollList interface
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
 
 	static void Translate_Now();
 	static void Clear_For_Retranslation();
+	virtual std::string GetObjectType() const { return "GUIConsole"; }
 protected:
 	enum SlideoutState
 	{
@@ -845,58 +945,6 @@ protected:
 protected:
 	int RenderSlideout(void);
 	int RenderConsole(void);
-};
-
-// GUIBorderedLogBox - Custom log output box with border and customizable top/bottom row positions
-class GUIBorderedLogBox : public GUIScrollList
-{
-public:
-	GUIBorderedLogBox(xml_node<>* node);
-
-public:
-	// Render - Render the full object to the GL surface
-	//  Return 0 on success, <0 on error
-	virtual int Render(void);
-
-	// Update - Update any UI component animations (called <= 30 FPS)
-	//  Return 0 if nothing to update, 1 on success and continue, >1 if full render required, and <0 on error
-	virtual int Update(void);
-
-	// NotifyVarChange - Notify of a variable change
-	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
-
-	// NotifyTouch - Notify of a touch event
-	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
-
-	// Add log line to this box's buffer
-	void AddLogLine(const std::string& line, const std::string& color = "normal");
-
-	// Clear all logs
-	void ClearLogs();
-
-	// ScrollList interface
-	virtual size_t GetItemCount();
-	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
-	virtual void NotifySelect(size_t item_selected __unused) {}
-
-protected:
-	// Calculate actual render position based on top_row and bottom_row
-	void CalculateRenderPosition();
-
-protected:
-	COLOR mBorderColor;
-	int mBorderWidth;
-	int mLeftMargin;             // Left margin from screen edge
-	int mRightMargin;            // Right margin from screen edge
-	std::string mTopRowVar;      // Top row variable name (e.g., "%row5_y%")
-	std::string mBottomRowVar;   // Bottom row variable name (e.g., "%row15a_y%")
-	int mTopRowValue;            // Cached top row value (calculated in constructor)
-	int mBottomRowValue;         // Cached bottom row value (calculated in constructor)
-	std::vector<std::string> mLogLines;      // Log lines buffer
-	std::vector<std::string> mLogColors;     // Color for each line
-	size_t mLastRenderedCount;
-	xml_node<>* mXMLNode;        // Save XML node for recalculation
-	bool scrollToEnd;            // Auto-scroll to end when new lines added
 };
 
 class TerminalEngine;
@@ -925,17 +973,19 @@ public:
 	virtual void SetPageFocus(int inFocus);
 
 	// ScrollList interface
-	virtual size_t GetItemCount();
+	virtual size_t GetItemCount() const;
 	virtual void RenderItem(size_t itemindex, int yPos, bool selected);
 	virtual void NotifySelect(size_t item_selected);
 	bool status();
 	void stop();
+	virtual std::string GetObjectType() const { return "GUITerminal"; }
 protected:
 	void InitAndResize();
 
 	TerminalEngine* engine; // non-visual parts of the terminal (text buffer etc.), not owned
 	int updateCounter; // to track if anything changed in the back-end
 	bool lastCondition; // to track if the condition became true and we might need to resize the terminal engine
+	bool blockKeyboard;
 };
 
 // GUIAnimation - Used for animations
@@ -1013,6 +1063,11 @@ public:
 	// NotifyTouch - Notify of a touch event
 	//  Return 0 on success, >0 to ignore remainder of touch, and <0 on error
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
+	virtual std::string GetObjectType() const { return "GUISlider"; }
+	//int GetHandleXScreen() const { return sCurTouchX; }
+	COLOR mFocusColor = {255, 0, 0, 255};
+	int GetValXCurr() const { return sCurTouchX; }
+	int GetSliderPos(int& xStart, int& xEnd, int& y) { xStart = mRenderX; xEnd = mRenderX + mRenderW; y = mRenderY; return 0; }
 
 protected:
 	GUIAction* sAction;
@@ -1039,13 +1094,6 @@ public:
 	GUIKeyboard(xml_node<>* node);
 	virtual ~GUIKeyboard();
 
-public:
-	virtual int Render(void);
-	virtual int Update(void);
-	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
-	virtual int SetRenderPos(int x, int y, int w = 0, int h = 0);
-	virtual void SetPageFocus(int inFocus);
-
 protected:
 	struct Key
 	{
@@ -1054,6 +1102,20 @@ protected:
 		int end_x;
 		int layout;
 	};
+
+public:
+	virtual int Render(void);
+	virtual int Update(void);
+	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
+	virtual int SetRenderPos(int x, int y, int w = 0, int h = 0);
+	virtual void SetPageFocus(int inFocus);
+	virtual std::string GetObjectType() const { return "GUIKeyboard"; }
+	bool MoveSelectionNext();
+	bool MoveSelectionPrevious();
+	void SetSelectedItem(bool firstItem);
+	virtual int GetFocusedItemActionPos(int& x, int& y, int& w, int& h);
+
+protected:
 	int ParseKey(const char* keyinfo, Key& key, int& Xindex, int keyWidth, bool longpress);
 	void LoadKeyLabels(xml_node<>* parent, int layout);
 	void DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH);
@@ -1066,7 +1128,6 @@ protected:
 	};
 	struct Layout
 	{
-		ImageResource* keyboardImg;
 		Key keys[MAX_KEYBOARD_ROWS][MAX_KEYBOARD_KEYS];
 		int row_end_y[MAX_KEYBOARD_ROWS];
 		bool is_caps;
@@ -1080,13 +1141,16 @@ protected:
 		int layout_from; // 1-based; 0 for labels that apply to all layouts
 		int layout_to; // same as Key.layout
 		string text; // key label text
+		string noalt; // do not use alt image
 		ImageResource* image; // image (overrides text if defined)
+		ImageResource* imagealt; // image (overrides text if defined)
 	};
 	std::vector<KeyLabel> mKeyLabels;
 
 	// Find key at screen coordinates
 	Key* HitTestKey(int x, int y);
 
+	ImageResource* keyboardImg;
 	bool mRendered;
 	std::string mVariable;
 	int currentLayout;
@@ -1196,7 +1260,8 @@ public:
 	// called by multi-key actions to suppress key-release notifications
 	void ConsumeKeyRelease(int key);
 
-	bool IsKeyDown(int key_code);
+	bool IsKeyDown(int key_code) const;
+	bool AreKeysPressed(int key1_code, int key2_code) const;
 private:
 	int mLastKey;
 	int mLastKeyChar;
@@ -1231,6 +1296,11 @@ public:
 
 	// SetPageFocus - Notify when a page gains or loses focus
 	virtual void SetPageFocus(int inFocus);
+	virtual std::string GetObjectType() const { return "GUISliderValue"; }
+	int GetSliderPos(int& xStart, int& xEnd, int& y) { xStart = mMin; xEnd = mMax; y = mSliderY; return 0; }
+	int GetCurrentValue() const { return mValue; }
+	void SetCurrentValue(int value);
+	COLOR mFocusColor = {255, 0, 0, 255};
 
 protected:
 	int measureText(const std::string& str);
@@ -1296,8 +1366,6 @@ private:
 	COLOR m_color;
 	ImageResource *m_image;
 	bool m_present;
-	int m_prevX;
-	int m_prevY;
 };
 
 class GUIPatternPassword : public GUIObject, public RenderObject, public ActionObject
@@ -1312,6 +1380,12 @@ public:
 	virtual int NotifyTouch(TOUCH_STATE state, int x, int y);
 	virtual int NotifyVarChange(const std::string& varName, const std::string& value);
 	virtual int SetRenderPos(int x, int y, int w = 0, int h = 0);
+	virtual std::string GetObjectType() const { return "GUIPatternPassword"; }
+	bool MoveSelectionNext();
+	bool MoveSelectionPrevious();
+	void SetSelectedItem(size_t index);
+	virtual int GetFocusedItemActionPos(int& x, int& y, int& w, int& h);
+	COLOR mFocusColor = {255, 0, 0, 255};
 
 protected:
 	void CalculateDotPositions();
@@ -1335,6 +1409,7 @@ protected:
 
 	Dot* mDots;
 	int* mConnectedDots;
+	size_t mFocusedDotIndex;
 	size_t mConnectedDotsLen;
 	int mCurLineX;
 	int mCurLineY;
@@ -1363,6 +1438,7 @@ std::string LoadAttrString(xml_node<>* element, const char* attrname, const char
 int LoadAttrInt(xml_node<>* element, const char* attrname, int defaultvalue = 0);
 int LoadAttrIntScaleX(xml_node<>* element, const char* attrname, int defaultvalue = 0);
 int LoadAttrIntScaleY(xml_node<>* element, const char* attrname, int defaultvalue = 0);
+float LoadAttrFloat(xml_node<>* element, const char* attrname, float defaultvalue = 0.0);
 COLOR LoadAttrColor(xml_node<>* element, const char* attrname, bool* found_color, COLOR defaultvalue = COLOR(0,0,0,0));
 COLOR LoadAttrColor(xml_node<>* element, const char* attrname, COLOR defaultvalue = COLOR(0,0,0,0));
 FontResource* LoadAttrFont(xml_node<>* element, const char* attrname);

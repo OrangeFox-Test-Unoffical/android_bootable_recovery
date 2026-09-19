@@ -2,6 +2,9 @@
         Copyright 2015 bigbiff/Dees_Troy TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
 
+        Copyright (C) 2018-2025 OrangeFox Recovery Project
+        This file is part of the OrangeFox Recovery Project.
+
         TWRP is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -30,7 +33,9 @@ void gui_highlight(const char* text);
 void gui_msg(Message msg);
 void gui_err(Message msg);
 
+extern long mime;
 std::string gui_parse_text(std::string inText);
 std::string gui_lookup(const std::string& resource_name, const std::string& default_value);
+void gui_switchControlMode(void);
 
 #endif //_GUI_HPP_HEADER

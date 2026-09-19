@@ -1,6 +1,9 @@
 /*
-        Copyright 2012 to 2020 TeamWin
+        Copyright 2012 bigbiff/Dees_Troy TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
+
+        Copyright (C) 2018-2025 OrangeFox Recovery Project
+        This file is part of the OrangeFox Recovery Project.
 
         TWRP is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -39,7 +42,7 @@ GUIKeyboard::GUIKeyboard(xml_node<>* node)
 	: GUIObject(node)
 {
 	int layoutindex, rowindex, keyindex, Xindex, Yindex, keyHeight = 0, keyWidth = 0;
-	currentKey = NULL;
+	currentKey = nullptr;
 	highlightRenderCount = 0;
 	hasHighlight = hasCapsHighlight = hasCtrlHighlight = false;
 	char resource[10], layout[8], row[5], key[6], longpress[7];
@@ -48,8 +51,9 @@ GUIKeyboard::GUIKeyboard(xml_node<>* node)
 	xml_node<>* keylayout;
 	xml_node<>* keyrow;
 
+	keyboardImg = NULL;
+
 	for (layoutindex=0; layoutindex<MAX_KEYBOARD_LAYOUTS; layoutindex++) {
-		layouts[layoutindex].keyboardImg = NULL;
 		memset(layouts[layoutindex].keys, 0, sizeof(Layout::keys));
 		memset(layouts[layoutindex].row_end_y, 0, sizeof(Layout::row_end_y));
 	}
@@ -89,27 +93,21 @@ GUIKeyboard::GUIKeyboard(xml_node<>* node)
 	LoadKeyLabels(node, 0); // load global key labels
 
 	// compatibility ugliness: resources should be specified in the layouts themselves instead
-	// Load the images for the different layouts
+	// --Load the images for the different layouts--
+	//[f/d] Use only one layout image
 	child = FindNode(node, "layout");
 	if (child)
 	{
-		layoutindex = 1;
-		strcpy(resource, "resource1");
+		strcpy(resource, "resource");
 		attr = child->first_attribute(resource);
-		while (attr && layoutindex < (MAX_KEYBOARD_LAYOUTS + 1)) {
-			layouts[layoutindex - 1].keyboardImg = LoadAttrImage(child, resource);
-
-			layoutindex++;
-			resource[8] = (char)(layoutindex + 48);
-			attr = child->first_attribute(resource);
-		}
+		keyboardImg = LoadAttrImage(child, resource);
 	}
 
-	// Check the first image to get height and width
-	if (layouts[0].keyboardImg && layouts[0].keyboardImg->GetResource())
+	// Check image to get height and width
+	if (keyboardImg && keyboardImg->GetResource())
 	{
-		mRenderW = layouts[0].keyboardImg->GetWidth();
-		mRenderH = layouts[0].keyboardImg->GetHeight();
+		mRenderW = keyboardImg->GetWidth();
+		mRenderH = keyboardImg->GetHeight();
 	}
 
 	// Load all of the layout maps
@@ -269,6 +267,8 @@ void GUIKeyboard::LoadKeyLabels(xml_node<>* parent, int layout)
 				keylabel.layout_to = tempkey.layout;
 				keylabel.text = LoadAttrString(child, "text", "");
 				keylabel.image = LoadAttrImage(child, "resource");
+				keylabel.noalt = LoadAttrString(child, "noalt", "0");
+				keylabel.imagealt = LoadAttrImage(child, "alt");
 				mKeyLabels.push_back(keylabel);
 			} else {
 				LOGERR("Ignoring invalid keylabel in layout %d: '%s'.\n", layout, keydef.c_str());
@@ -282,15 +282,20 @@ void GUIKeyboard::DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH)
 	int keychar = key.key;
 	if (!keychar && !key.layout)
 		return;
+	
+	string useImage;
+	DataManager::GetValue("key_buttons", useImage);
 
-	// key background
+
+	//[f/d] Do not draw key background
+	/* key background
 	COLOR& c = (keychar >= 32 && keychar < 127) ? mKeyColorAlphanumeric : mKeyColorOther;
 	gr_color(c.red, c.green, c.blue, c.alpha);
 	keyX += mKeyMarginX;
 	keyY += mKeyMarginY;
 	keyW -= mKeyMarginX * 2;
 	keyH -= mKeyMarginY * 2;
-	gr_fill(keyX, keyY, keyW, keyH);
+	gr_fill(keyX, keyY, keyW, keyH);*/
 
 	// key label
 	FontResource* labelFont = mFont;
@@ -315,7 +320,7 @@ void GUIKeyboard::DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH)
 			{
 				// found a label
 				labelText = it->text;
-				labelImage = it->image;
+				labelImage = useImage == "0" || (it->noalt != "1" && !it->imagealt) ? it->image : it->noalt == "1" ? NULL : it->imagealt;
 				break;
 			}
 		}
@@ -328,10 +333,11 @@ void GUIKeyboard::DrawKey(Key& key, int keyX, int keyY, int keyW, int keyH)
 		int w = labelImage->GetWidth();
 		int h = labelImage->GetHeight();
 		int x = keyX + (keyW - w) / 2;
-		int y = keyY + (keyH - h) / 2;
+		int y = keyY + (keyH - h) / 2 + 2;
 		gr_blit(labelImage->GetResource(), 0, 0, w, h, x, y);
 	}
-	else if (!labelText.empty() && labelFont && labelFont->GetResource())
+	
+	if (!labelText.empty() && labelFont && labelFont->GetResource())
 	{
 		void* fontResource = labelFont->GetResource();
 		int textW = twrpTruetype::gr_ttf_measureEx(labelText.c_str(), fontResource);
@@ -373,16 +379,17 @@ int GUIKeyboard::Render(void)
 
 	Layout& lay = layouts[currentLayout - 1];
 
-	bool drawKeys = false;
-	if (lay.keyboardImg && lay.keyboardImg->GetResource())
+	bool drawKeys = true; //[f/d] Always draw keys
+	string useImage;
+	DataManager::GetValue("key_buttons", useImage);
+	if (keyboardImg && keyboardImg->GetResource() && useImage == "1")
 		// keyboard is image based
-		gr_blit(lay.keyboardImg->GetResource(), 0, 0, mRenderW, mRenderH, mRenderX, mRenderY);
+		gr_blit(keyboardImg->GetResource(), 0, 0, mRenderW, mRenderH, mRenderX, mRenderY);
 	else {
 		// keyboard is software drawn
 		// fill background
 		gr_color(mBackgroundColor.red, mBackgroundColor.green, mBackgroundColor.blue, mBackgroundColor.alpha);
 		gr_fill(mRenderX, mRenderY, mRenderW, mRenderH);
-		drawKeys = true;
 	}
 
 	// draw keys
@@ -420,6 +427,11 @@ int GUIKeyboard::Render(void)
 			if (hasHighlight && &key == currentKey && highlightRenderCount != 0) {
 				gr_color(mHighlightColor.red, mHighlightColor.green, mHighlightColor.blue, mHighlightColor.alpha);
 				gr_fill(keyX, keyY, keyW, keyH);
+			}
+
+			if (&key == currentKey && HasFocus()) {
+				gr_color(mFocusColor.red, mFocusColor.green, mFocusColor.blue, mFocusColor.alpha);
+				gr_draw_rect(keyX + 2, keyY + 2, keyW - 4, keyH - 4, 3);
 			}
 		}
 	}
@@ -485,6 +497,8 @@ int GUIKeyboard::NotifyTouch(TOUCH_STATE state, int x, int y)
 
 	if (!isConditionTrue())	 return -1;
 
+	string swipeAct;
+
 	switch (state)
 	{
 	case TOUCH_START:
@@ -502,21 +516,27 @@ int GUIKeyboard::NotifyTouch(TOUCH_STATE state, int x, int y)
 		break;
 
 	case TOUCH_RELEASE:
+		if (DataManager::GetStrValue("of_hw_control_mode") != "1")
+			DataManager::SetValue("tw_keyboard_press_key", "1");
+		DataManager::GetValue("key_allow_swipe", swipeAct);
+
 		// TODO: we might want to notify of key releases here
-		if (x < startX - (mRenderW * 0.5)) {
-			if (highlightRenderCount != 0) {
-				highlightRenderCount = 0;
-				mRendered = false;
+		if (swipeAct != "0") {
+			if (x < startX - (mRenderW * 0.5)) {
+				if (highlightRenderCount != 0) {
+					highlightRenderCount = 0;
+					mRendered = false;
+				}
+				PageManager::NotifyCharInput(KEYBOARD_SWIPE_LEFT);
+				return 0;
+			} else if (x > startX + (mRenderW * 0.5)) {
+				if (highlightRenderCount != 0) {
+					highlightRenderCount = 0;
+					mRendered = false;
+				}
+				PageManager::NotifyCharInput(KEYBOARD_SWIPE_RIGHT);
+				return 0;
 			}
-			PageManager::NotifyCharInput(KEYBOARD_SWIPE_LEFT);
-			return 0;
-		} else if (x > startX + (mRenderW * 0.5)) {
-			if (highlightRenderCount != 0) {
-				highlightRenderCount = 0;
-				mRendered = false;
-			}
-			PageManager::NotifyCharInput(KEYBOARD_SWIPE_RIGHT);
-			return 0;
 		}
 		// fall through
 	case TOUCH_HOLD:
@@ -639,4 +659,119 @@ void GUIKeyboard::SetPageFocus(int inFocus)
 {
 	if (inFocus)
 		CtrlActive = false;
+}
+
+bool GUIKeyboard::MoveSelectionPrevious()
+{
+	Layout& lay = layouts[currentLayout - 1];
+	Key* currentFocused = currentKey;
+	bool foundCurrent = (currentFocused == nullptr);
+
+	for (int row = MAX_KEYBOARD_ROWS - 1; row >= 0; --row) {
+		for (int col = MAX_KEYBOARD_KEYS - 1; col >= 0; --col) {
+			Key& key = lay.keys[row][col];
+			if (key.key != 0 || key.layout != 0) {
+				if (foundCurrent) {
+					currentKey = &key;
+					mRendered = false;
+					return true;
+				}
+
+				if (&key == currentFocused) {
+					foundCurrent = true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool GUIKeyboard::MoveSelectionNext()
+{
+	Layout& lay = layouts[currentLayout - 1];
+	Key* currentFocused = currentKey;
+	bool foundCurrent = (currentFocused == nullptr);
+
+	for (int row = 0; row < MAX_KEYBOARD_ROWS; ++row) {
+		for (int col = 0; col < MAX_KEYBOARD_KEYS; ++col) {
+			Key& key = lay.keys[row][col];
+			if (key.key != 0 || key.layout != 0) {
+				if (foundCurrent) {
+					currentKey = &key;
+					mRendered = false;
+					return true;
+				}
+
+				if (&key == currentFocused) {
+					foundCurrent = true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+int GUIKeyboard::GetFocusedItemActionPos(int& x, int& y, int& w, int& h)
+{
+	if (!currentKey) {
+		return 0;
+	}
+
+	Layout& lay = layouts[currentLayout - 1];
+	int y1 = 0;
+	for (int row = 0; row < MAX_KEYBOARD_ROWS; ++row) {
+		int rowY = mRenderY + y1;
+		int rowH = lay.row_end_y[row] - y1;
+		y1 = lay.row_end_y[row];
+		int x1 = 0;
+		for (int col = 0; col < MAX_KEYBOARD_KEYS; ++col) {
+			Key& key = lay.keys[row][col];
+			int keyY = rowY;
+			int keyH = rowH;
+			int keyX = mRenderX + x1;
+			int keyW = key.end_x - x1;
+			x1 = key.end_x;
+
+			if (&key == currentKey) {
+				x = keyX;
+				y = keyY;
+				w = keyW;
+				h = keyH;
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+void GUIKeyboard::SetSelectedItem(bool firstItem)
+{
+	Layout& lay = layouts[currentLayout - 1];
+
+	if (firstItem) {
+		for (int row = 0; row < MAX_KEYBOARD_ROWS; ++row) {
+			for (int col = 0; col < MAX_KEYBOARD_KEYS; ++col) {
+				Key& key = lay.keys[row][col];
+				if (key.key != 0 || key.layout != 0) {
+					currentKey = &key;
+					mRendered = false;
+					return;
+				}
+			}
+		}
+	} else {
+		for (int row = MAX_KEYBOARD_ROWS - 1; row >= 0; --row) {
+			for (int col = MAX_KEYBOARD_KEYS - 1; col >= 0; --col) {
+				Key& key = lay.keys[row][col];
+				if (key.key != 0 || key.layout != 0) {
+					currentKey = &key;
+					mRendered = false;
+					return;
+				}
+			}
+		}
+	}
 }

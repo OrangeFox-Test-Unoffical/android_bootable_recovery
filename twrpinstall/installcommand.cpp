@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
  *
+ * Copyright (C) 2020-2022 The OrangeFox Recovery Project
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,16 +133,17 @@ static int check_newer_ab_build(ZipArchiveHandle zip)
 
     std::vector<std::string> assertResults = android::base::Split(pkg_device, "[,|]");
 
-    bool deviceExists = false;
-
-    // twrp.target.devices
-    bool has_target_devices = false;
-    char tw_devices[PROPERTY_VALUE_MAX * 2];
-    property_get("ro.twrp.target.devices", tw_devices, "");
-    std::vector<std::string> TWRP_devices = android::base::Split(tw_devices, "[,|]");
-    if (strlen(tw_devices) > 1) {
-       has_target_devices = true;
+    // Fox
+    bool has_fox_devices = false;
+    char fox_devices[PROPERTY_VALUE_MAX * 2];
+    property_get("ro.twrp.target.devices", fox_devices, "");
+    std::vector<std::string> OrangeFox_Devices = android::base::Split(fox_devices, "[,|]");
+    if (strlen(fox_devices) > 1) {
+       has_fox_devices = true;
     }
+    // Fox
+
+    bool deviceExists = false;
 
     for(const std::string& deviceAssert : assertResults)
     {
@@ -149,17 +152,19 @@ static int check_newer_ab_build(ZipArchiveHandle zip)
             deviceExists = true;
             break;
         }
-        // twrp.target.devices
-        else if (has_target_devices) {
-           for(const std::string& twrpDevice_x : TWRP_devices) {
-               std::string twrpName = android::base::Trim(twrpDevice_x);
-               if (!twrpName.empty() && !assertName.empty() && assertName == twrpName) {
+        // Fox
+        else 
+        if (has_fox_devices) {
+           for(const std::string& FoxDevice_x : OrangeFox_Devices) {
+               std::string foxName = android::base::Trim(FoxDevice_x);
+               if (!foxName.empty() && !assertName.empty() && assertName == foxName) {
             	   deviceExists = true;
-            	   printf("Package is for product %s. The selected TWRP target device is %s\n", pkg_device.c_str(), twrpName.c_str());
+            	   printf("Package is for product %s. The selected OrangeFox target device is %s\n", pkg_device.c_str(), foxName.c_str());
             	   break;
                }
            }
         }
+        // Fox
     }
 
     if (!deviceExists) {

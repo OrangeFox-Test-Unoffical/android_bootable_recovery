@@ -41,6 +41,7 @@ extern "C" {
 class RecoveryUI;
 struct selabel_handle;
 
+extern struct selabel_handle* sehandle;
 extern RecoveryUI* ui;
 extern bool has_cache;
 

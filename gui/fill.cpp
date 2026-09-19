@@ -46,6 +46,7 @@ extern "C" {
 GUIFill::GUIFill(xml_node<>* node) : GUIObject(node)
 {
 	bool has_color = false;
+	mCircle = NULL;
 	mColor = LoadAttrColor(node, "color", &has_color);
 	if (!has_color) {
 		LOGERR("No color specified for fill\n");
@@ -58,6 +59,12 @@ GUIFill::GUIFill(xml_node<>* node) : GUIObject(node)
 	return;
 }
 
+GUIFill::~GUIFill()
+{
+	if (mCircle)
+		gr_free_surface(mCircle);
+}
+
 int GUIFill::Render(void)
 {
 	if (!isConditionTrue())
@@ -65,6 +72,7 @@ int GUIFill::Render(void)
 
 	gr_color(mColor.red, mColor.green, mColor.blue, mColor.alpha);
 	gr_fill(mRenderX, mRenderY, mRenderW, mRenderH);
+
 	return 0;
 }
 

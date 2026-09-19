@@ -143,8 +143,9 @@ static std::unique_ptr<Package> ReadWipePackage(size_t wipe_package_size) {
     return nullptr;
   }
 
+  // 同上:第 2 参是未使用的进度回调(nullptr),本树 otautil 无该重载
   return Package::CreateMemoryPackage(
-      std::vector<uint8_t>(wipe_package.begin(), wipe_package.end()), nullptr);
+      std::vector<uint8_t>(wipe_package.begin(), wipe_package.end()));
 }
 
 // Checks if the wipe package matches expectation. If the check passes, reads the list of

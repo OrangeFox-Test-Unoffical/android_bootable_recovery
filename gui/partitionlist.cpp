@@ -1,6 +1,9 @@
 /*
-	Copyright 2020 TeamWin
+	Copyright 2013 bigbiff/Dees_Troy TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
+
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
 
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,8 +22,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <format>
-#include <android-base/strings.h>
 
 extern "C" {
 #include "../twcommon.h"
@@ -31,7 +32,6 @@ extern "C" {
 #include "objects.hpp"
 #include "../data.hpp"
 #include "../partitions.hpp"
-#include "../variables.h"
 
 GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
 {
@@ -40,7 +40,7 @@ GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
 
 	mIconSelected = mIconUnselected = NULL;
 	mUpdate = 0;
-	updateList = false;
+	countTotal = updateList = false;
 
 	child = FindNode(node, "icon");
 	if (child)
@@ -62,21 +62,51 @@ GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
 	}
 
 	int iconWidth = 0, iconHeight = 0;
-	if (mIconSelected && mIconSelected->GetResource() && mIconUnselected && mIconUnselected->GetResource()) {
-		iconWidth = std::max(mIconSelected->GetWidth(), mIconUnselected->GetWidth());
-		iconHeight = std::max(mIconSelected->GetHeight(), mIconUnselected->GetHeight());
-	} else if (mIconSelected && mIconSelected->GetResource()) {
-		iconWidth = mIconSelected->GetWidth();
-		iconHeight = mIconSelected->GetHeight();
-	} else if (mIconUnselected && mIconUnselected->GetResource()) {
-		iconWidth = mIconUnselected->GetWidth();
-		iconHeight = mIconUnselected->GetHeight();
+
+	child = FindNode(node, "iconsize");
+	if (child) {
+		iconWidth = LoadAttrIntScaleX(child, "w", iconWidth);
+		iconHeight = LoadAttrIntScaleY(child, "h", iconHeight);
+	} else {
+		if (mIconSelected && mIconSelected->GetResource() && mIconUnselected && mIconUnselected->GetResource()) {
+			iconWidth = std::max(mIconSelected->GetWidth(), mIconUnselected->GetWidth());
+			iconHeight = std::max(mIconSelected->GetHeight(), mIconUnselected->GetHeight());
+		} else if (mIconSelected && mIconSelected->GetResource()) {
+			iconWidth = mIconSelected->GetWidth();
+			iconHeight = mIconSelected->GetHeight();
+		} else if (mIconUnselected && mIconUnselected->GetResource()) {
+			iconWidth = mIconUnselected->GetWidth();
+			iconHeight = mIconUnselected->GetHeight();
+		}
 	}
+	
 	SetMaxIconSize(iconWidth, iconHeight);
+
+	// [Yacha] Add support for padding
+	child = FindNode(node, "padding");
+	if (child) {
+		this->mItemPaddingTop = LoadAttrIntScaleY(child, "top", 0);
+		this->mItemPaddingBottom = LoadAttrIntScaleY(child, "bottom", 0);
+		// If only one value provided, use it for both top and bottom
+		if (LoadAttrIntScaleY(child, "size", -1) != -1) {
+			this->mItemPaddingTop = this->mItemPaddingBottom = LoadAttrIntScaleY(child, "size", 0);
+		}
+	}
+
+	// [Yacha] Add support for group styling
+	child = FindNode(node, "group");
+	if (child) {
+		groupArrow = LoadAttrImage(child, "arrowresource");
+		groupColor = LoadAttrColor(child, "color", &isGroup);
+	}
 
 	child = FindNode(node, "listtype");
 	if (child && (attr = child->first_attribute("name"))) {
 		ListType = attr->value();
+		if (ListType == "backup_total") {
+			ListType = "backup";
+			countTotal = true;
+		}
 		updateList = true;
 	} else {
 		mList.clear();
@@ -96,12 +126,13 @@ int GUIPartitionList::Update(void)
 
 	// Check for changes in mount points if the list type is mount and update the list and render if needed
 	if (ListType == "mount") {
-		for (PartitionList& partition : mList) {
-			if (PartitionManager.Is_Mounted_By_Path(partition.Mount_Point) && !partition.selected) {
-				partition.selected = true;
+		int listSize = mList.size();
+		for (int i = 0; i < listSize; i++) {
+			if (PartitionManager.Is_Mounted_By_Path(mList.at(i).Mount_Point) && !mList.at(i).selected) {
+				mList.at(i).selected = 1;
 				mUpdate = 1;
-			} else if (!PartitionManager.Is_Mounted_By_Path(partition.Mount_Point) && partition.selected) {
-				partition.selected = false;
+			} else if (!PartitionManager.Is_Mounted_By_Path(mList.at(i).Mount_Point) && mList.at(i).selected) {
+				mList.at(i).selected = 0;
 				mUpdate = 1;
 			}
 		}
@@ -124,7 +155,8 @@ int GUIPartitionList::Update(void)
 
 	if (mUpdate) {
 		mUpdate = 0;
-		return 2;
+		if (Render() == 0)
+			return 2;
 	}
 
 	return 0;
@@ -137,20 +169,12 @@ int GUIPartitionList::NotifyVarChange(const std::string& varName, const std::str
 	if (!isConditionTrue())
 		return 0;
 
-	// A deferred data/media walk landed, so the sizes on screen are stale.
-	if (ListType == "backup" && varName == TW_BACKUP_SIZES_READY) {
-		updateList = true;
-		mUpdate = 1;
-		return 0;
-	}
-
 	if (varName == mVariable && !mUpdate)
 	{
-		if (ListType == "storage") {
+		if (ListType == "storage" || ListType == "part_option") {
 			currentValue = value;
 			SetPosition();
 		} else if (ListType == "backup") {
-			updateList = true;
 			MatchList();
 		} else if (ListType == "restore") {
 			updateList = true;
@@ -167,7 +191,7 @@ void GUIPartitionList::SetPageFocus(int inFocus)
 {
 	GUIScrollList::SetPageFocus(inFocus);
 	if (inFocus) {
-		if (ListType == "storage" || ListType == "flashimg") {
+		if (ListType == "storage" || ListType == "part_option" || ListType == "flashimg") {
 			DataManager::GetValue(mVariable, currentValue);
 			SetPosition();
 		}
@@ -177,18 +201,65 @@ void GUIPartitionList::SetPageFocus(int inFocus)
 }
 
 void GUIPartitionList::MatchList(void) {
-	std::string variablelist;
+	int i, listSize = mList.size();
+	string variablelist, searchvalue;
+	unsigned long long totalSize = 0, imgSize = 0, fileSize = 0;
+	size_t pos;
+
 	DataManager::GetValue(mVariable, variablelist);
 
-	std::vector<std::string> selected_paths = android::base::Tokenize(variablelist, ";");
-	for (PartitionList& partition : mList) {
-		auto it = std::find(selected_paths.begin(), selected_paths.end(), partition.Mount_Point);
-		partition.selected = it != selected_paths.end();
-		if (partition.selected) {
-			TWPartition* t_part = PartitionManager.Find_Partition_By_Path(partition.Mount_Point);
-			DataManager::SetValue("tw_is_slot_part", t_part != nullptr ? (int) t_part->SlotSelect : 0);
+	for (i = 0; i < listSize; i++) {
+		searchvalue = mList.at(i).Mount_Point + ";";
+		pos = variablelist.find(searchvalue);
+		if (pos != string::npos) {
+			mList.at(i).selected = 1;
+
+			TWPartition* t_part = PartitionManager.Find_Partition_By_Path(mList.at(i).Mount_Point);
+			DataManager::SetValue("tw_is_slot_part", t_part != NULL ? (int) t_part->SlotSelect : 0);
+
+			if (countTotal) {
+				if (mList.at(i).isFiles)
+					fileSize += mList.at(i).PartitionSize;
+				else
+					imgSize += mList.at(i).PartitionSize;
+			}
+		} else {
+			mList.at(i).selected = 0;
 		}
 	}
+
+	if (countTotal) {
+		char formatSize[255];
+		totalSize = imgSize + fileSize;
+		sprintf(formatSize, totalSize % 1048576 == 0 ? "%.0lf" : "%.2lf", (double)totalSize / 1048576);
+		DataManager::SetValue("fox_total_backup", formatSize);
+		CalculateTime(fileSize, imgSize);
+	}
+}
+
+//[f/d]
+void GUIPartitionList::CalculateTime(unsigned long long fileSize, unsigned long long imgSize){
+	unsigned long long avImg = 20, avFile = 20;
+
+	//Because many devices are work with usb 2.0 ports and have
+	//old SD cards so there is two groups of values: for high speed
+	//internal memory and for slow external devices
+	if (DataManager::GetCurrentStoragePath() == "/data/media/0") {
+		DataManager::GetValue("of_average_img", avImg);
+		DataManager::GetValue("of_average_file", avFile);
+	} else {
+		DataManager::GetValue("of_average_ext_img", avImg);
+		DataManager::GetValue("of_average_ext_file", avFile);
+	}
+
+	//Reset to 20MB/s values when something goes wrong
+	if (avImg < 1)
+		avImg = 20;
+	if (avFile < 1)
+		avFile = 20;
+
+	DataManager::SetValue("fox_ai_deep_learning_time",
+		((fileSize / 1048576 / avFile) + (imgSize / 1048576 / avImg)) / 60);
 }
 
 void GUIPartitionList::SetPosition() {
@@ -196,16 +267,16 @@ void GUIPartitionList::SetPosition() {
 
 	SetVisibleListLocation(0);
 	for (int i = 0; i < listSize; i++) {
-		if (mList[i].Mount_Point == currentValue) {
-			mList[i].selected = true;
+		if (mList.at(i).Mount_Point == currentValue) {
+			mList.at(i).selected = 1;
 			SetVisibleListLocation(i);
 		} else {
-			mList[i].selected = false;
+			mList.at(i).selected = 0;
 		}
 	}
 }
 
-size_t GUIPartitionList::GetItemCount()
+size_t GUIPartitionList::GetItemCount() const
 {
 	return mList.size();
 }
@@ -214,66 +285,117 @@ void GUIPartitionList::RenderItem(size_t itemindex, int yPos, bool selected)
 {
 	// note: the "selected" parameter above is for the currently touched item
 	// don't confuse it with the more persistent "selected" flag per list item used below
-	ImageResource* icon = mList[itemindex].selected ? mIconSelected : mIconUnselected;
-	const std::string& text = mList[itemindex].Display_Name;
+	ImageResource* icon = mList.at(itemindex).selected ? mIconSelected : mIconUnselected;
+	const std::string& text = mList.at(itemindex).Display_Name;
 
-	RenderStdItem(yPos, selected, icon, text.c_str());
+	// Determine group status for rendering
+	int groupStatus = 0;
+	if (isGroup) {
+		size_t listSize = mList.size();
+		if (itemindex == 0)
+			if (listSize == 1)
+				groupStatus = 4; // start & end
+			else
+				groupStatus = 1; // start
+		else if (itemindex == listSize - 1)
+			groupStatus = 3; // end
+		else
+			groupStatus = 2; // body
+	}
+
+	RenderStdItem(yPos, selected, icon, text.c_str(), NULL, groupStatus);
 }
 
 void GUIPartitionList::NotifySelect(size_t item_selected)
 {
 	if (item_selected < mList.size()) {
-		PartitionList& selected_partition = mList[item_selected];
+		int listSize = mList.size();
 		if (ListType == "mount") {
-			if (!selected_partition.selected) {
-				if (PartitionManager.Mount_By_Path(selected_partition.Mount_Point, true)) {
-					selected_partition.selected = true;
-					PartitionManager.Add_MTP_Storage(selected_partition.Mount_Point);
+			if (!mList.at(item_selected).selected) {
+				if (PartitionManager.Mount_By_Path(mList.at(item_selected).Mount_Point, true)) {
+					mList.at(item_selected).selected = 1;
+					PartitionManager.Add_MTP_Storage(mList.at(item_selected).Mount_Point);
 					mUpdate = 1;
 				}
 			} else {
-				if (PartitionManager.UnMount_By_Path(selected_partition.Mount_Point, true)) {
-					selected_partition.selected = false;
+				if (PartitionManager.UnMount_By_Path(mList.at(item_selected).Mount_Point, true)) {
+					mList.at(item_selected).selected = 0;
 					mUpdate = 1;
 				}
 			}
 		} else if (!mVariable.empty()) {
 			if (ListType == "storage") {
-				TWPartition* Part = PartitionManager.Find_Partition_By_Path(selected_partition.Mount_Point);
-				if (Part == nullptr) {
-					LOGERR("Unable to locate partition for '%s'\n", selected_partition.Mount_Point.c_str());
+				int i;
+				std::string str = mList.at(item_selected).Mount_Point;
+				bool update_size = false;
+				TWPartition* Part = PartitionManager.Find_Partition_By_Path(str);
+				if (Part == NULL) {
+					LOGERR("Unable to locate partition for '%s'\n", str.c_str());
 					return;
 				}
-				bool update_size = !Part->Is_Mounted() && Part->Removable;
-				if (!Part->Mount(true))
-					return;
-				if (update_size && !Part->Update_Size(true))
-					return;
+				if (!Part->Is_Mounted() && Part->Removable)
+					update_size = true;
+				if (!Part->Mount(true)) {
+					// Do Nothing
+				} else if (update_size && !Part->Update_Size(true)) {
+					// Do Nothing
+				} else {
+					for (i=0; i<listSize; i++)
+						mList.at(i).selected = 0;
 
-				for (PartitionList& partition : mList)
-					partition.selected = false;
+					if (update_size) {
+						char free_space[255];
+						sprintf(free_space, "%llu", Part->Free / 1024 / 1024);
+						mList.at(item_selected).Display_Name = Part->Storage_Name + " (";
+						mList.at(item_selected).Display_Name += free_space;
+						mList.at(item_selected).Display_Name += gui_parse_text("{@mbyte}");
+						mList.at(item_selected).Display_Name += ")";
+					}
+					mList.at(item_selected).selected = 1;
+					mUpdate = 1;
 
-				if (update_size) {
-					selected_partition.Display_Name = std::format("{} ({} MB)", Part->Storage_Name, Part->Free / (1024 * 1024));
+					DataManager::SetValue(mVariable, str);
 				}
-				selected_partition.selected = true;
-				mUpdate = 1;
-				DataManager::SetValue(mVariable, selected_partition.Mount_Point);
 			} else {
-				if (ListType == "flashimg") { // only one item can be selected for flashing images
-					for (PartitionList& partition : mList)
-						partition.selected = false;
+				if (ListType == "flashimg" || ListType == "part_option" ) { // only one item can be selected for flashing images
+					for (int i=0; i<listSize; i++)
+						mList.at(i).selected = 0;
 				}
-				selected_partition.selected = !selected_partition.selected;
-				if (selected_partition.selected) {
-					TWPartition* t_part = PartitionManager.Find_Partition_By_Path(selected_partition.Mount_Point);
-					DataManager::SetValue("tw_is_slot_part", t_part != nullptr ? (int) t_part->SlotSelect : 0);
+				if (mList.at(item_selected).selected)
+					mList.at(item_selected).selected = 0;
+				else {
+					mList.at(item_selected).selected = 1;
+					TWPartition* t_part = PartitionManager.Find_Partition_By_Path(mList.at(item_selected).Mount_Point);
+					DataManager::SetValue("tw_is_slot_part", t_part != NULL ? (int) t_part->SlotSelect : 0);
 				}
 
-				std::string variablelist;
-				for (const PartitionList& partition : mList) {
-					if (partition.selected)
-						variablelist += partition.Mount_Point + ";";
+				if (countTotal) { // [f/d] count size of backup after selecting partition
+					unsigned long long totalSize = 0, imgSize = 0, fileSize = 0;
+					char formatSize[255];
+					for (int i=0; i<listSize; i++) {
+						if(mList.at(i).selected == 1) {
+							if (mList.at(i).isFiles)
+								fileSize += mList.at(i).PartitionSize;
+							else
+								imgSize += mList.at(i).PartitionSize;
+						}
+					}
+					totalSize = fileSize + imgSize;
+					sprintf(formatSize, totalSize % 1048576 == 0 ? "%.0lf" : "%.2lf", (double)totalSize / 1048576);
+					DataManager::SetValue("fox_total_backup", formatSize);
+					CalculateTime(fileSize, imgSize);
+				}
+
+				int i;
+				string variablelist;
+				for (i=0; i<listSize; i++) {
+					if (mList.at(i).selected) {
+						if (ListType == "part_option") {
+							variablelist += mList.at(i).Mount_Point; //[f/d] No ; in part_option
+						} else {
+							variablelist += mList.at(i).Mount_Point + ";";
+						}
+					}
 				}
 
 				mUpdate = 1;

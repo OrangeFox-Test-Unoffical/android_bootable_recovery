@@ -2,6 +2,9 @@
     Copyright 2012 to 2020 TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -34,12 +37,14 @@ const int SCROLLING_FLOOR = 2; // minimum pixels for scrolling to stop
 GUIScrollList::GUIScrollList(xml_node<>* node) : GUIObject(node)
 {
 	xml_node<>* child;
+	xml_attribute<>* attr;
 
 	firstDisplayedItem = mItemSpacing = mFontHeight = mSeparatorH = y_offset = scrollingSpeed = 0;
-	maxIconWidth = maxIconHeight =  mHeaderIconHeight = mHeaderIconWidth = 0;
+	mPadding = maxIconWidth = maxIconHeight =  mHeaderIconHeight = mHeaderIconWidth = 0;
 	mHeaderSeparatorH = mHeaderH = actualItemHeight = 0;
 	mHeaderIsStatic = false;
-	mBackground = mHeaderIcon = NULL;
+	mItemPaddingTop = mItemPaddingBottom = 0;
+	groupArrow = mBackground = mHeaderIcon = NULL;
 	mFont = NULL;
 	mFastScrollW = mFastScrollLineW = mFastScrollRectW = mFastScrollRectH = 0;
 	mFastScrollRectCurrentY = mFastScrollRectCurrentH = mFastScrollRectTouchY = 0;
@@ -54,9 +59,27 @@ GUIScrollList::GUIScrollList(xml_node<>* node) : GUIObject(node)
 	ConvertStrToColor("white", &mHeaderFontColor);
 	ConvertStrToColor("white", &mFastScrollLineColor);
 	ConvertStrToColor("white", &mFastScrollRectColor);
-	hasHighlightColor = false;
+	isGroup = hasHighlightColor = false;
 	allowSelection = true;
 	selectedItem = NO_ITEM;
+
+	// [f/d] Icon right padding
+	child = FindNode(node, "iconsize");
+	if (child) {
+		mPadding = LoadAttrIntScaleX(child, "padding", mPadding);
+	}
+	
+	// [f/d] Hold item
+	child = FindNode(node, "extra");
+	if (child) {
+		attr = child->first_attribute("hold");
+		if (attr) {
+			itemHold = attr->value();
+			DataManager::SetValue(itemHold, "0");
+		} else {
+			itemHold = "";
+		}
+	}
 
 	// Load header text
 	// note: node can be NULL for the emergency console
@@ -95,6 +118,19 @@ GUIScrollList::GUIScrollList(xml_node<>* node) : GUIObject(node)
 	{
 		mSeparatorColor = LoadAttrColor(child, "color");
 		mSeparatorH = LoadAttrIntScaleY(child, "height");
+	}
+
+	// [Yacha] Group item padding - add spacing between items in a group
+	// Example XML: <padding size="20" /> or <padding top="15" bottom="25" />
+	child = FindNode(node, "padding");
+	if (child)
+	{
+		mItemPaddingTop = LoadAttrIntScaleY(child, "top", 0);
+		mItemPaddingBottom = LoadAttrIntScaleY(child, "bottom", 0);
+		// If only one value provided, use it for both top and bottom
+		if (LoadAttrIntScaleY(child, "size", -1) != -1) {
+			mItemPaddingTop = mItemPaddingBottom = LoadAttrIntScaleY(child, "size", 0);
+		}
 	}
 
 	// Fast scroll
@@ -216,17 +252,24 @@ int GUIScrollList::Render(void)
 	size_t listSize = GetItemCount();
 	int listW = mRenderW; // this is only used for the separators - the list items are rendered in the full width of the list
 
-	if (listSize <= lines) {
+	int windowH = mRenderH - mHeaderH;
+	int totalHeight = listSize * actualItemHeight;
+	if (isGroup)
+		totalHeight += mItemPaddingTop + mItemPaddingBottom;
+
+	if (totalHeight <= windowH) {
 		hasScroll = false;
 		scrollingSpeed = 0;
 		lines = listSize;
 		y_offset = 0;
+		listW = mRenderW;
 	} else {
 		hasScroll = true;
-		listW -= mFastScrollW; // space for fast scroll
-		lines++;
-		if (lines < listSize)
-			lines++;
+		listW = mRenderW - mFastScrollW;
+		// Determine how many items to render
+		lines = windowH / actualItemHeight + 2;
+		if (firstDisplayedItem + (int)lines > (int)listSize)
+			lines = listSize - firstDisplayedItem;
 	}
 
 	int yPos = mRenderY + mHeaderH + y_offset;
@@ -238,14 +281,38 @@ int GUIScrollList::Render(void)
 		if (itemindex >= listSize)
 			break;
 
+		// [Yacha] Apply top padding for first item in a group
+		int groupStatus = 0;
+		if (isGroup) {
+			if (itemindex == 0)
+				if (listSize == 1)
+					groupStatus = 4; // start & end
+				else
+					groupStatus = 1; // start
+			else if (itemindex == listSize - 1)
+				groupStatus = 3; // end
+			else
+				groupStatus = 2; // body
+		}
+
+		// Apply top padding for the first item in a group
+		if (groupStatus == 1 || groupStatus == 4) {
+			yPos += mItemPaddingTop;
+		}
+
 		RenderItem(itemindex, yPos, itemindex == selectedItem);
 
 		// Add the separator
 		gr_color(mSeparatorColor.red, mSeparatorColor.green, mSeparatorColor.blue, mSeparatorColor.alpha);
 		gr_fill(mRenderX, yPos + actualItemHeight - mSeparatorH, listW, mSeparatorH);
 
-		// Move the yPos
+		// Move the yPos, accounting for padding
 		yPos += actualItemHeight;
+
+		// Apply bottom padding for the last item in a group
+		if (groupStatus == 3 || groupStatus == 4) {
+			yPos += mItemPaddingBottom;
+		}
 	}
 
 	// Render the Header (last so that it overwrites the top most row for per pixel scrolling)
@@ -286,6 +353,8 @@ int GUIScrollList::Render(void)
 
 		// first determine the total list height and where we are in the list
 		int totalHeight = GetItemCount() * actualItemHeight; // total height of the full list in pixels
+		if (isGroup)
+			totalHeight += mItemPaddingTop + mItemPaddingBottom;
 		int topPos = firstDisplayedItem * actualItemHeight - y_offset;
 
 		// now scale it proportionally to the scrollbar height
@@ -318,11 +387,94 @@ void GUIScrollList::RenderItem(size_t itemindex __unused, int yPos, bool selecte
 	RenderStdItem(yPos, selected, NULL, "implement RenderItem!");
 }
 
-void GUIScrollList::RenderStdItem(int yPos, bool selected, ImageResource* icon, const char* text, int iconAndTextH)
+void GUIScrollList::RenderStdItem(int yPos, bool selected, ImageResource* icon, const char* text, const char* addtext, int groupStatus)
 {
-	if (hasHighlightColor && selected) {
+	COLOR highlightColor = {0, 0, 0, 0};
+
+	if (DataManager::GetStrValue("of_hw_control_mode") == "1") {
+		COLOR* clr_ptr = &mFocusColor;
+		ConvertStrToColor(DataManager::GetStrValue("theme_accent_dark"), clr_ptr);
+		highlightColor = mFocusColor;
+	} else {
+		highlightColor = mHighlightColor;
+	}
+
+	bool isHighlight = false;
+
+	if (hasHighlightColor && selected && (HasFocus() || DataManager::GetStrValue("of_hw_control_mode") != "1")) {
 		// Highlight the item background of the selected item
-		gr_color(mHighlightColor.red, mHighlightColor.green, mHighlightColor.blue, mHighlightColor.alpha);
+		isHighlight = true;
+	}
+
+	int iconAndTextH = actualItemHeight;
+	int groupOffset = 45;
+
+	if (groupStatus > 0) {
+		int x = mRenderX + groupOffset;
+		int w = mRenderW - 2 * groupOffset;
+		int h = iconAndTextH;
+		int y = yPos;
+		int r = 32;
+		RoundedCornerFlags corners = RoundedCornerFlags::NONE;
+		int s = 0;
+
+		GGLSurface *surface = nullptr;
+		uint32_t* img = nullptr;
+		uint32_t* hl_img = nullptr;
+		surface = (GGLSurface *)malloc(sizeof(GGLSurface));
+		memset(surface, 0, sizeof(GGLSurface));
+		surface->version = sizeof(surface);
+
+		// [Yacha] Apply padding correctly to the group background
+		if (groupStatus == 1 || groupStatus == 4) { // First or single item
+			// Add top padding to the background of the first/single element
+			y -= mItemPaddingTop;
+			h += mItemPaddingTop;
+		}
+
+		if (groupStatus == 3 || groupStatus == 4) { // Last or single item
+			// Add bottom padding to the background of the last/single element
+			h += mItemPaddingBottom;
+		}
+
+		if (groupStatus == 1) {
+			corners = RoundedCornerFlags::TOP_LEFT | RoundedCornerFlags::TOP_RIGHT;
+		} else if (groupStatus == 2) {
+			r = 0;
+		} else if (groupStatus == 3) {
+			corners = RoundedCornerFlags::BOTTOM_LEFT | RoundedCornerFlags::BOTTOM_RIGHT;
+		} else if (groupStatus == 4) {
+			corners = RoundedCornerFlags::ALL;
+		}
+
+		img = createShape(w, h, r, s, groupColor, corners);
+
+		surface->width = w;
+		surface->height = h;
+		surface->stride = w;
+		surface->data = (GGLubyte*)img;
+		surface->format = res_get_pixel_format();
+
+		gr_blit((gr_surface)surface, 0, 0, w, h, x, y);
+		if (isHighlight) {
+			hl_img = createShape(w, h, r, s, highlightColor, corners);
+			surface->data = (GGLubyte*)hl_img;
+			gr_blit((gr_surface)surface, 0, 0, w, h, x, y);
+		}
+		res_free_surface(surface);
+		free(img);
+		free(hl_img);
+
+		// render group arrow
+		if (groupArrow && groupArrow->GetResource()) {
+			int arrowH = groupArrow->GetHeight();
+			int arrowW = groupArrow->GetWidth();
+			int arrowY = yPos + (iconAndTextH - arrowH) / 2;
+			int arrowX = mRenderW - groupOffset - 75;
+			gr_blit(groupArrow->GetResource(), 0, 0, arrowW, arrowH, arrowX, arrowY);
+		}
+	} else if (isHighlight) {
+		gr_color(highlightColor.red, highlightColor.green, highlightColor.blue, highlightColor.alpha);
 		gr_fill(mRenderX, yPos, mRenderW, actualItemHeight);
 	}
 
@@ -334,23 +486,32 @@ void GUIScrollList::RenderStdItem(int yPos, bool selected, ImageResource* icon, 
 		gr_color(mFontColor.red, mFontColor.green, mFontColor.blue, mFontColor.alpha);
 	}
 
-	if (!iconAndTextH)
-		iconAndTextH = actualItemHeight;
-
 	// render icon
 	if (icon && icon->GetResource()) {
 		int iconH = icon->GetHeight();
 		int iconW = icon->GetWidth();
 		int iconY = yPos + (iconAndTextH - iconH) / 2;
-		int iconX = mRenderX + (maxIconWidth - iconW) / 2;
+		int iconX = (groupStatus > 0 ? mRenderX + groupOffset : mRenderX) + (maxIconWidth - iconW) / 2 - mPadding; //[f/d] right icon padding
 		gr_blit(icon->GetResource(), 0, 0, iconW, iconH, iconX, iconY);
 	}
 
 	// render label text
 	if (mFont && mFont->GetResource()) {
 		int textX = mRenderX + maxIconWidth + 5;
-		int textY = yPos + (iconAndTextH / 2);
-		gr_textEx_scaleW(textX, textY, text, mFont->GetResource(), mRenderW, TEXT_ONLY_RIGHT, 0);
+		if (addtext != NULL) { //[f/d] draw 2 lines
+			int textY = yPos + (iconAndTextH / 2) - scale_theme_y(34);
+			int textYt = yPos + (iconAndTextH / 2) + scale_theme_y(24);
+			gr_textEx_scaleW(textX, textY, text, mFont->GetResource(), mRenderW, TEXT_ONLY_RIGHT, 0);
+
+			COLOR addtext_color = {0, 0, 0, 0};
+			ConvertStrToColor(DataManager::GetStrValue("text_secondary"), &addtext_color);
+
+			gr_color(addtext_color.red, addtext_color.green, addtext_color.blue, addtext_color.alpha); //[f/d] i'm lazy af so use #5F6368 color and don't allow set it using xml ಠ_ಠ
+			gr_textEx_scaleW(textX, textYt, addtext, mFont->GetResource(), mRenderW, TEXT_ONLY_RIGHT, 0);
+		} else { //1 line
+			int textY = yPos + (iconAndTextH / 2);
+			gr_textEx_scaleW(textX, textY, text, mFont->GetResource(), mRenderW, TEXT_ONLY_RIGHT, 0);
+		}
 	}
 }
 
@@ -412,9 +573,14 @@ size_t GUIScrollList::HitTestItem(int x __unused, int y)
 	// Locate the correct item
 	size_t actualSelection = firstDisplayedItem;
 	int selectY = y_offset;
+	if (isGroup && actualSelection == 0)
+		selectY += mItemPaddingTop;
+
 	while (selectY + actualItemHeight < startSelection) {
 		selectY += actualItemHeight;
 		actualSelection++;
+		if (isGroup && actualSelection == 1)
+			selectY += mItemPaddingTop;
 	}
 
 	if (actualSelection < GetItemCount())
@@ -463,6 +629,8 @@ int GUIScrollList::NotifyTouch(TOUCH_STATE state, int x, int y)
 			int relY = y - mRenderY - mHeaderH; // touch position relative to window
 			int windowH = mRenderH - mHeaderH;
 			int totalHeight = GetItemCount() * actualItemHeight; // total height of the full list in pixels
+			if (isGroup)
+				totalHeight += mItemPaddingTop + mItemPaddingBottom;
 
 			// calculate new top position of the fastscroll bar relative to window
 			int newY = relY - mFastScrollRectTouchY;
@@ -500,6 +668,12 @@ int GUIScrollList::NotifyTouch(TOUCH_STATE state, int x, int y)
 		mUpdate = 1;
 		break;
 
+	case TOUCH_HOLD:
+		if (selectedItem != NO_ITEM && itemHold != "")
+			DataManager::SetValue(itemHold, "1");
+		else
+			break;
+
 	case TOUCH_RELEASE:
 		if (fastScroll)
 			mUpdate = 1; // get rid of touch effects on the fastscroll bar
@@ -512,8 +686,8 @@ int GUIScrollList::NotifyTouch(TOUCH_STATE state, int x, int y)
 #ifndef TW_NO_HAPTICS
 			DataManager::Vibrate("tw_button_vibrate");
 #endif
-
-			selectedItem = NO_ITEM;
+			if (DataManager::GetStrValue("of_hw_control_mode") != "1")
+				selectedItem = NO_ITEM;
 		} else {
 			// Start kinetic scrolling
 			scrollingSpeed = lastY - last2Y;
@@ -521,27 +695,9 @@ int GUIScrollList::NotifyTouch(TOUCH_STATE state, int x, int y)
 				scrollingSpeed = 0;
 		}
 	case TOUCH_REPEAT:
-	case TOUCH_HOLD:
+	//case TOUCH_HOLD:
 		break;
 	}
-	return 0;
-}
-
-int GUIScrollList::NotifyScroll(int amount)
-{
-	if (!isConditionTrue())
-		return -1;
-	if (!hasScroll || amount == 0)
-		return 0;
-
-	// Reuse touch inertia; 2/5 yields roughly three rows per wheel step.
-	int wheelSpeed = amount * std::max(SCROLLING_FLOOR, actualItemHeight * 2 / 5);
-	if (scrollingSpeed != 0 && (scrollingSpeed > 0) != (wheelSpeed > 0))
-		scrollingSpeed = wheelSpeed;
-	else
-		scrollingSpeed += wheelSpeed;
-	selectedItem = NO_ITEM;
-	mUpdate = 1;
 	return 0;
 }
 
@@ -552,6 +708,10 @@ void GUIScrollList::HandleScrolling()
 	while (firstDisplayedItem && y_offset > 0) {
 		firstDisplayedItem--;
 		y_offset -= actualItemHeight;
+		// Account for padding if moving to a group boundary
+		if (isGroup && firstDisplayedItem == 0) {
+			y_offset -= mItemPaddingTop;
+		}
 	}
 	if (firstDisplayedItem == 0 && y_offset > 0) {
 		y_offset = 0; // user kept dragging downward past the top of the list, so always reset the offset to 0 since we can't scroll any further in this direction
@@ -561,27 +721,50 @@ void GUIScrollList::HandleScrolling()
 	// handle dragging upward, scrolling downward
 	int totalSize = GetItemCount();
 	int lines = GetDisplayItemCount(); // number of full lines our list can display at once
-	int bottom_offset = GetDisplayRemainder() - actualItemHeight; // extra display area that can display a partial line for per pixel scrolling
+	int windowH = mRenderH - mHeaderH;
+	int totalHeight = totalSize * actualItemHeight;
+	if (isGroup)
+		totalHeight += mItemPaddingTop + mItemPaddingBottom;
+
+	int bottom_offset = windowH - totalHeight; // extra display area that can display a partial line for per pixel scrolling
 
 	// the offset should always be <= 0 and > -actualItemHeight, adjust the first display row and offset as needed
-	while (firstDisplayedItem + lines + (bottom_offset ? 1 : 0) < totalSize && abs(y_offset) > actualItemHeight) {
+	while (firstDisplayedItem + (int)lines < (int)totalSize && abs(y_offset) > actualItemHeight) {
 		firstDisplayedItem++;
 		y_offset += actualItemHeight;
+		// Account for padding if moving past a group boundary
+		if (isGroup && firstDisplayedItem == 1) {
+			y_offset += mItemPaddingTop;
+		}
 	}
+
 	// Check if we dragged too far, set the list at the bottom and adjust offset as needed
-	if (bottom_offset != 0 && firstDisplayedItem + lines + 1 >= totalSize && y_offset <= bottom_offset) {
-		firstDisplayedItem = totalSize - lines - 1;
-		y_offset = bottom_offset;
-		scrollingSpeed = 0; // stop kinetic scrolling
-	} else if (firstDisplayedItem + lines >= totalSize && y_offset < 0) {
-		firstDisplayedItem = totalSize - lines;
+	if (totalHeight > windowH) {
+		int currentPos = firstDisplayedItem * actualItemHeight - y_offset;
+		if (isGroup && firstDisplayedItem > 0)
+			currentPos += mItemPaddingTop;
+
+		if (currentPos > totalHeight - windowH) {
+			int newTopPos = totalHeight - windowH;
+			if (isGroup && newTopPos > mItemPaddingTop) {
+				firstDisplayedItem = (newTopPos - mItemPaddingTop) / actualItemHeight;
+				y_offset = -((newTopPos - mItemPaddingTop) % actualItemHeight);
+			} else {
+				firstDisplayedItem = newTopPos / actualItemHeight;
+				y_offset = -(newTopPos % actualItemHeight);
+			}
+			scrollingSpeed = 0;
+		}
+	} else {
+		firstDisplayedItem = 0;
 		y_offset = 0;
-		scrollingSpeed = 0; // stop kinetic scrolling
+		scrollingSpeed = 0;
 	}
 }
 
 int GUIScrollList::GetDisplayItemCount()
 {
+	// We don't count padding in the item count because the padding is not part of every item
 	return (mRenderH - mHeaderH) / (actualItemHeight);
 }
 
@@ -676,4 +859,62 @@ bool GUIScrollList::AddLines(std::vector<std::string>* origText, std::vector<std
 		}
 	}
 	return true;
+}
+
+int GUIScrollList::GetFocusedItemActionPos(int& x, int& y, int& w, int& h)
+{
+	if (selectedItem == NO_ITEM || selectedItem >= GetItemCount()) {
+		return 0;
+	}
+
+	y = mRenderY + mHeaderH + y_offset + selectedItem * actualItemHeight;
+	if (isGroup && selectedItem > 0)
+		y += mItemPaddingTop;
+	x = mRenderX;
+	w = mRenderW;
+	h = actualItemHeight;
+
+	return 1;
+}
+
+void GUIScrollList::SetSelectedItem(size_t index)
+{
+	if (index < GetItemCount()) {
+		selectedItem = index;
+		mUpdate = 1;
+	}
+}
+
+bool GUIScrollList::MoveSelectionDown()
+{
+	if (selectedItem == NO_ITEM) {
+		SetSelectedItem(0);
+		return true;
+	}
+
+	if (selectedItem < GetItemCount() - 1) {
+		selectedItem++;
+		SetVisibleListLocation(selectedItem);
+		mUpdate = 1;
+		return true;
+	}
+
+	return false;
+}
+
+bool GUIScrollList::MoveSelectionUp()
+{
+	if (selectedItem == NO_ITEM) {
+		SetSelectedItem(GetItemCount() - 1);
+		return true;
+	}
+
+	if (selectedItem > 0) {
+		selectedItem--;
+		SetVisibleListLocation(selectedItem);
+		mUpdate = 1;
+		return true;
+	}
+
+	return false;
 }

@@ -1,38 +1,47 @@
-#ifndef _KERNELMODULELOADER_HPP
-#define _KERNELMODULELOADER_HPP
+#ifndef TWRP_KERNEL_MODULE_LOADER_HPP
+#define TWRP_KERNEL_MODULE_LOADER_HPP
 
-#include <dirent.h>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <android-base/file.h>
-#include <android-base/strings.h>
-#include <modprobe/modprobe.h>
-#include <sys/mount.h>
-#include <sys/utsname.h>
 
-#include "twcommon.h"
-#include "twrp-functions.hpp"
+// Base paths probed for kernel modules by TWRP.
 
-#define VENDOR_MODULE_DIR "/vendor/lib/modules"           // Base path for vendor kernel modules to check by TWRP
-#define VENDOR_BOOT_MODULE_DIR "/lib/modules"             // vendor_boot ramdisk GKI modules to check by TWRP
-#define VENDOR_DLKM_MODULE_DIR "/vendor_dlkm/lib/modules" // vendor_dlkm placed modules to check by TWRP
-typedef enum {
-	RECOVERY_FASTBOOT_MODE = 0,
-	RECOVERY_IN_BOOT_MODE,
-	FASTBOOTD_MODE
-} BOOT_MODE;
+// vendor modules (mounted /vendor)
+inline std::filesystem::path VENDOR_MODULE_DIR = "/vendor/lib/modules";
 
-class KernelModuleLoader
-{
-public:
-	static bool Load_Vendor_Modules(); // Load specific maintainer defined kernel modules in TWRP
+// vendor_boot ramdisk GKI modules
+inline std::filesystem::path VENDOR_BOOT_MODULE_DIR = "/lib/modules";
 
-private:
-	static bool Try_And_Load_Modules(std::string module_dir, bool vendor_is_mounted); // Use libmodprobe to attempt loading kernel modules
-	static bool Write_Module_List(std::string module_dir); // Write list of modules to load from TW_LOAD_VENDOR_MODULES
-	static bool Copy_Modules_To_Tmpfs(std::string module_dir); // Copy modules to ramdisk for loading
-	static std::vector<string> Skip_Loaded_Kernel_Modules(); // return list of loaded kernel modules already done by init
-	static BOOT_MODE Get_Boot_Mode(); // For getting the current boot mode
+// vendor_dlkm placed modules
+inline std::filesystem::path VENDOR_DLKM_MODULE_DIR = "/vendor_dlkm/lib/modules";
+
+enum class BootMode {
+    RecoveryFastboot = 0,
+    RecoveryInBoot,
+    Fastbootd,
 };
 
-#endif // _KERNELMODULELOADER_HPP
+class KernelModuleLoader {
+public:
+    // Load maintainer-defined kernel modules in TWRP
+    static bool Load_Vendor_Modules();
+
+private:
+    // Use libmodprobe to attempt loading kernel modules
+    static bool Try_And_Load_Modules(std::string module_dir, bool vendor_is_mounted);
+
+    // Write list of modules to load from TW_LOAD_VENDOR_MODULES
+    static bool Write_Module_List(const std::string& module_dir);
+
+    // Copy modules to ramdisk for loading
+    static bool Copy_Modules_To_Tmpfs(const std::string& module_dir);
+
+    // Modules already loaded by init that we must not reload
+    static std::vector<std::string> Skip_Loaded_Kernel_Modules();
+
+    // Query the current boot mode
+    static BootMode Get_Boot_Mode();
+};
+
+#endif  // TWRP_KERNEL_MODULE_LOADER_HPP

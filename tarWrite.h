@@ -19,6 +19,7 @@
 #ifndef _TARWRITE_HEADER
 #define _TARWRITE_HEADER
 
+#include "libtar/libtar.h"
 void reinit_libtar_buffer();
 void init_libtar_buffer(unsigned new_buff_size, int pipe_fd);
 void free_libtar_buffer();

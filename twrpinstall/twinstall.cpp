@@ -2,6 +2,9 @@
 	Copyright 2012 to 2017 bigbiff/Dees_Troy TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -28,7 +31,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/mount.h>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
 
 #include <string.h>
 #include <stdio.h>
@@ -46,9 +52,13 @@
 #include "data.hpp"
 #include "partitions.hpp"
 #include "twrpDigestDriver.hpp"
+#include "twrpdigest/twrpDigest.hpp"
+#include "twrpdigest/twrpMD5.hpp"
 #include "twrp-functions.hpp"
+#include "orangefox.hpp"
 #include "gui/gui.hpp"
 #include "gui/pages.hpp"
+#include "gui/blanktimer.hpp"
 #include "twinstall.h"
 #include "installcommand.h"
 #include "../twrpRepacker.hpp"
@@ -66,6 +76,9 @@ enum zip_type {
 };
 
 static int Install_Theme(const char* path, ZipArchiveHandle Zip) {
+#ifdef TW_OEM_BUILD // We don't do custom themes in OEM builds
+	return INSTALL_CORRUPT;
+#else
 	std::string binary_name("ui.xml");
 	ZipEntry64 binary_entry;
 	if (FindEntry(Zip, binary_name, &binary_entry) != 0) {
@@ -73,8 +86,7 @@ static int Install_Theme(const char* path, ZipArchiveHandle Zip) {
 	}
 	if (!PartitionManager.Mount_Settings_Storage(true))
 		return INSTALL_ERROR;
-	string theme_path = DataManager::GetSettingsStoragePath();
-	theme_path += "/TWRP/theme";
+	std::string theme_path = DataManager::GetCurrentStoragePath() + "/theme";
 	if (!TWFunc::Path_Exists(theme_path)) {
 		if (!TWFunc::Recursive_Mkdir(theme_path)) {
 			return INSTALL_ERROR;
@@ -87,9 +99,13 @@ static int Install_Theme(const char* path, ZipArchiveHandle Zip) {
 	LOGINFO("Installing custom theme '%s' to '%s'\n", path, theme_path.c_str());
 	PageManager::RequestReload();
 	return INSTALL_SUCCESS;
+#endif
 }
 
-static int Prepare_Update_Binary(ZipArchiveHandle Zip) {
+static int Prepare_Update_Binary(const char *path, ZipArchiveHandle Zip) {
+	if (TWFunc::Block_Operations_Until_Reboot())
+		return INSTALL_ERROR;
+
 	char arches[PATH_MAX];
 	property_get("ro.product.cpu.abilist", arches, "error");
 	if (strcmp(arches, "error") == 0)
@@ -123,6 +139,13 @@ static int Prepare_Update_Binary(ZipArchiveHandle Zip) {
 		return INSTALL_ERROR;
 	}
 
+	// -------------- OrangeFox: start ---------------- //
+	int Fox_Ret = Fox_Prepare_Update_Binary(path, Zip);
+	if (Fox_Ret != INSTALL_SUCCESS) {
+	   return Fox_Ret;
+	}
+	// -------------- OrangeFox: end ---------------- //
+
 	// If exists, extract file_contexts from the zip file
 	std::string file_contexts("file_contexts");
 	ZipEntry64 file_contexts_entry;
@@ -147,6 +170,7 @@ static int Prepare_Update_Binary(ZipArchiveHandle Zip) {
 
 static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) {
 	int ret_val, pipe_fd[2], status, zip_verify;
+	int aroma_running = 0;
 	char buffer[1024];
 	FILE* child_data;
 	pipe(pipe_fd);
@@ -206,11 +230,22 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
 			DataManager::_SetProgress(fraction_float);
 		} else if (strcmp(command, "ui_print") == 0) {
 			char* display_value = strtok(NULL, "\n");
-			if (display_value) {
-				gui_print("%s", display_value);
-			} else {
-				gui_print("\n");
-			}
+	  		if (display_value) {
+	      		     if (strcmp(display_value, "AROMA Filemanager Finished...") == 0 && (aroma_running == 1)) {
+		  		aroma_running = 0;
+		  		gui_changeOverlay("");
+		  		TWFunc::copy_file(Fox_aroma_cfg, Fox_sdcard_aroma_cfg, 0644);
+			     }
+	      		    gui_print("%s", display_value);
+	      		    if (strcmp(display_value, "(c) 2013-2015 by amarullz.com") == 0 && (aroma_running == 0)) {
+		  		aroma_running = 1;
+		  		gui_changeOverlay("black_out");
+		  		TWFunc::copy_file(Fox_aroma_cfg, Fox_sdcard_aroma_cfg, 0644);
+			     }
+	    		}
+	  		else {
+	      			gui_print("\n");
+	    		}
 		} else if (strcmp(command, "wipe_cache") == 0) {
 			*wipe_cache = 1;
 		} else if (strcmp(command, "clear_display") == 0) {
@@ -224,28 +259,48 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
 	fclose(child_data);
 
 	int waitrc = TWFunc::Wait_For_Child(pid, &status, "Updater");
-	if (waitrc != 0)
-		return INSTALL_ERROR;
+
+  	// Should never happen, but in case of crash or other unexpected condition
+  	if (aroma_running == 1) {
+      		gui_changeOverlay("");
+    	}
+
+  	// if updater-script doesn't find the correct device
+  	if (WEXITSTATUS (status) == TW_ERROR_WRONG_DEVICE) {
+       		gui_print_color("error", "\nPossible causes of this error:\n  1. Wrong device\n  2. Wrong firmware\n  3. Corrupt zip\n  4. System not mounted\n  5. Bugged updater-script.\n\nSearch online for \"error %i\". ",
+       			TW_ERROR_WRONG_DEVICE);
+       		gui_print_color("error", "Check \"/tmp/recovery.log\", and look above, for the specific cause of this error.\n\n");
+     	}
+
+  	if (waitrc != 0) {
+      		set_miui_install_status(OTA_CORRUPT, false);
+      		return INSTALL_ERROR;
+    	}
 
 	return INSTALL_SUCCESS;
 }
 
-static constexpr const char* UPDATE_DYNAMIC_PART_OP_LIST_NAME = "dynamic_partitions_op_list";
-static constexpr const char* UPDATE_SUPER_IMAGE_ZST = "super.img.zst";
-static constexpr const char* UPDATE_SUPER_ZST = "super.zst";
+int TWinstall_zip(const char *path, int *wipe_cache, bool check_for_digest)
+{
+  int ret_val, zip_verify = 1, unmount_system = 1, reflashtwrp = 0, unmount_vendor = 1;
+  bool run_rom_scripts = false;
 
-bool isUpdatePkg(ZipArchiveHandle Zip) {
-	ZipEntry64 find_entry;
-	if (FindEntry(Zip, UPDATE_DYNAMIC_PART_OP_LIST_NAME, &find_entry) == 0) return true;
-	if (FindEntry(Zip, UPDATE_SUPER_IMAGE_ZST, &find_entry) == 0) return true;
-	if (FindEntry(Zip, UPDATE_SUPER_ZST, &find_entry) == 0) return true;
-	if (FindEntry(Zip, AB_OTA, &find_entry) == 0) return true;
-	return false;
-}
+  if (TWFunc::Block_Operations_Until_Reboot())
+	return INSTALL_CORRUPT;
 
-int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
-	int ret_val, zip_verify = 1, unmount_system = 1, reflashtwrp = 0;
+  if (strcmp(path, "error") == 0)
+    {
+      LOGERR("Failed to get adb sideload file: '%s'\n", path);
+      return INSTALL_CORRUPT;
+    }
 
+  if (DataManager::GetIntValue(FOX_INSTALL_PREBUILT_ZIP) == 1)
+     {
+         DataManager::SetValue(FOX_ZIP_INSTALLER_CODE, 0); // internal zip = standard zip installer
+         DataManager::SetValue(FOX_ZIP_INSTALLER_TREBLE, 0);
+     }    
+  else   
+    {
 	gui_msg(Msg("installing_zip=Installing zip file '{1}'")(path));
 	if (strlen(path) < 9 || strncmp(path, "/sideload", 9) != 0) {
 		string digest_str;
@@ -259,11 +314,16 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 			}
 		}
 	}
+    }
 
-	DataManager::GetValue(TW_UNMOUNT_SYSTEM, unmount_system);
+  DataManager::GetValue(TW_UNMOUNT_SYSTEM, unmount_system);
+  DataManager::GetValue(TW_UNMOUNT_VENDOR, unmount_vendor);
 
-	DataManager::GetValue(TW_SIGNED_ZIP_VERIFY_VAR, zip_verify);
-	DataManager::SetProgress(0);
+#ifndef TW_OEM_BUILD
+  DataManager::GetValue(TW_SIGNED_ZIP_VERIFY_VAR, zip_verify);
+#endif
+
+  DataManager::SetProgress(0);
 
 	auto package = Package::CreateMemoryPackage(path);
 	if (!package) {
@@ -284,49 +344,87 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 		if (ret_val != VERIFY_SUCCESS) {
 			LOGINFO("Zip signature verification failed: %i\n", ret_val);
 			gui_err("verify_zip_fail=Zip signature verification failed!");
+#ifdef USE_MINZIP
+			sysReleaseMap(&map);
+#endif
 			return -1;
 		} else {
 			gui_msg("verify_zip_done=Zip signature verified successfully.");
 		}
-	}
+    }
+    
+    ZipArchiveHandle Zip = package->GetZipArchiveHandle();
+    if (!Zip) {
+      set_miui_install_status(OTA_CORRUPT, true);
+      gui_err("zip_corrupt=Zip file is corrupt!");
+      return INSTALL_CORRUPT;
+    }
 
-	ZipArchiveHandle Zip = package->GetZipArchiveHandle();
-	if (!Zip) {
-		return INSTALL_CORRUPT;
-	}
-
-	bool _isUpdatePkg = isUpdatePkg(Zip);
-
-	if (_isUpdatePkg) {
-		if (TWFunc::get_log_dir() == DATA_LOGS_DIR && !TWFunc::Path_Exists(DATA_LOGS_DIR))
-			TWFunc::Use_Tmpfs_Cache();
-	}
-
-	if (unmount_system) {
+    if (unmount_system) {
+	if (PartitionManager.Is_Mounted_By_Path(PartitionManager.Get_Android_Root_Path())) {
 		gui_msg("unmount_system=Unmounting System...");
-		if(!PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), true)) {
-			gui_err("unmount_system_err=Failed unmounting System");
+		if (PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false)) {
+			//unlink(PartitionManager.Get_Android_Root_Path().c_str());
+			//mkdir(PartitionManager.Get_Android_Root_Path().c_str(), 0755);
+		}
+		else {
+			gui_msg("unmount_system_err=Failed to unmount System");
+		        return -1;
+		}
+	}
+   }
+
+   if (unmount_vendor) {
+	if (PartitionManager.Is_Mounted_By_Path("/vendor")) {
+		gui_msg("unmount_vendor=Unmounting Vendor...");
+		if (PartitionManager.UnMount_By_Path("/vendor", false)) {
+		   	//unlink("/vendor");
+		   	//mkdir("/vendor", 0755);
+		} else {
+			gui_msg("unmount_vendor_err=Failed to unmount Vendor");
 			return -1;
 		}
-		unlink("/system");
-		mkdir("/system", 0755);
 	}
+   }
 
-	time_t start, stop;
-	time(&start);
+   // DJ9, 20200622: try to avoid a situation where blockimg will bomb out when trying to create a stash
+   if (TWFunc::Path_Exists("/cache/.") && !TWFunc::Path_Exists("/cache/recovery/.") && !TWFunc::Path_Exists("/data/cache/.")) {
+	LOGINFO("Recreating the /cache/recovery/ folder ...\n");
+	if (!TWFunc::Recursive_Mkdir("/cache/recovery", false))
+	   LOGERR("Could not create /cache/recovery - blockimg may have problems with creating stashes\n");
+   }
+   // DJ9
 
-	std::string update_binary_name(UPDATE_BINARY_NAME);
-	ZipEntry64 update_binary_entry;
-	if (FindEntry(Zip, update_binary_name, &update_binary_entry) == 0) {
+  time_t start, stop;
+  time(&start);
+
+  std::string update_binary_name(UPDATE_BINARY_NAME);
+  ZipEntry64 update_binary_entry;
+  if (FindEntry(Zip, update_binary_name, &update_binary_entry) == 0) {
 		LOGINFO("Update binary zip\n");
 		// Additionally verify the compatibility of the package.
-		if (!verify_package_compatibility(Zip)) {
+		if (!Fox_Skip_Treble_Compatibility_Check() && !verify_package_compatibility(Zip)) {
 			gui_err("zip_compatible_err=Zip Treble compatibility error!");
 			ret_val = INSTALL_CORRUPT;
 		} else {
-			ret_val = Prepare_Update_Binary(Zip);
-			if (ret_val == INSTALL_SUCCESS)
+			ret_val = Prepare_Update_Binary(path, Zip);
+			if (ret_val == INSTALL_SUCCESS) {
+				usleep(32);
+				run_rom_scripts = ((DataManager::GetIntValue(FOX_ZIP_INSTALLER_CODE) != 0) // only run after flashing a ROM
+	  			&& (DataManager::GetIntValue(FOX_INSTALL_PREBUILT_ZIP) != 1)); // don't run for built-in zips
+
+				if (run_rom_scripts && TWFunc::Path_Exists(FOX_PRE_ROM_FLASH_SCRIPT)) {
+					TWFunc::RunFoxScript(FOX_PRE_ROM_FLASH_SCRIPT, path);
+	  			}
+
 				ret_val = Run_Update_Binary(path, wipe_cache, UPDATE_BINARY_ZIP_TYPE);
+
+				if (DataManager::GetIntValue("fox_processing_asserts") != 0) {
+					TWFunc::Fox_Property_Set("ro.product.device", DataManager::GetStrValue("fox_product_device"));
+					DataManager::SetValue("fox_processing_asserts", "0");
+					LOGINFO("\nDevice code name restored\n");
+				}
+			}
 		}
 	} else {
 		std::string ab_binary_name(AB_OTA);
@@ -341,7 +439,20 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 			PartitionManager.Mount_By_Path("/vendor", false);
 			TWFunc::copy_file("/system/bin/sh", "/tmp/sh", 0755);
 			mount("/tmp/sh", "/system/bin/sh", "auto", MS_BIND, NULL);
+
+			run_rom_scripts = true;
+			usleep(32);
+
+			if (run_rom_scripts && TWFunc::Path_Exists(FOX_PRE_ROM_FLASH_SCRIPT)) {
+				TWFunc::RunFoxScript(FOX_PRE_ROM_FLASH_SCRIPT, path);
+			}
+
+			TWFunc::IsRecoveryOverwritten(true);
+
 			ret_val = Run_Update_Binary(path, wipe_cache, AB_OTA_ZIP_TYPE);
+
+			DataManager::SetValue(FOX_ZIP_INSTALLER_CODE, 1); // mark as custom ROM install
+
 			umount("/system/bin/sh");
 			unlink("/tmp/sh");
 			if (!vendor_mount_state)
@@ -351,38 +462,93 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 			if (android::base::GetBoolProperty("ro.virtual_ab.enabled", false)) {
 				PartitionManager.Unlock_Block_Partitions();
 				PartitionManager.Prepare_All_Super_Volumes();
-				gui_warn("mount_vab_partitions=Devices on super may not mount until rebooting recovery.");
+				gui_warn("mount_vab_partitions=Devices on super may not mount until after rebooting recovery.");
 			}
 			gui_warn("flash_ab_reboot=To flash additional zips, please reboot recovery to switch to the updated slot.");
-			DataManager::GetValue(TW_AUTO_REFLASHTWRP_VAR, reflashtwrp);
-			if (reflashtwrp) {
-			twrpRepacker repacker;
-			repacker.Flash_Current_Twrp();
-			}
 		} else {
 			std::string binary_name("ui.xml");
 			ZipEntry64 binary_entry;
 			if (FindEntry(Zip, binary_name, &binary_entry) == 0) {
-				LOGINFO("TWRP theme zip\n");
+				LOGINFO("OrangeFox theme zip\n");
 				ret_val = Install_Theme(path, Zip);
 			} else {
 				ret_val = INSTALL_CORRUPT;
 			}
 		}
-	}
-	time(&stop);
-	int total_time = (int) difftime(stop, start);
-	if (ret_val == INSTALL_CORRUPT) {
-		gui_err("invalid_zip_format=Invalid zip file format!");
-	} else {
-		LOGINFO("Install took %i second(s).\n", total_time);
-	}
+   }
 
-	if (ret_val == INSTALL_SUCCESS) gui_msg(Msg(msg::kHighlight, "install_took_seconds_msg=Install took {1} second(s).")(total_time));
+  time(&stop);
+  int total_time = (int) difftime(stop, start);
 
-	if (_isUpdatePkg && ret_val == INSTALL_SUCCESS) {
-		if (DataManager::GetIntValue(TW_AUTO_DISABLE_AVB2_VAR)) PartitionManager.Disable_AVB2(true);
-	}
+  if (ret_val == INSTALL_CORRUPT)
+    {
+        set_miui_install_status(OTA_CORRUPT, true);
+        gui_err("invalid_zip_format=Invalid zip file format!");
+    }
+  else
+  if (ret_val == INSTALL_ERROR)
+     {
+	set_miui_install_status(OTA_ERROR, false);
+     }
+  else // success - so let us see whether we need to run OTA_BAK
+  {
+     // if MIUI-specific features have been disabled
+     if (Fox_Skip_OTA()) // yes
+     {
+         //LOGINFO("OrangeFox: not running the incremental OTA backup (OTA_BAK).\n");
+     }  
+     else // else let us proceed with the OTA stuff
+     if (DataManager::GetIntValue(FOX_INCREMENTAL_OTA_FAIL) != 1)
+     {
+      	if (DataManager::GetIntValue(FOX_INCREMENTAL_PACKAGE) == 1 && DataManager::GetIntValue(FOX_ZIP_INSTALLER_CODE) != 0)
+      	  {
+      	    if (TWinstall_Run_OTA_BAK (true)) // true, because the value of Fox_Zip_Installer_Code to be set
+      	      {
+	        if (Fox_OTA_Backup_Stock_Boot_Image()) // whether to create an additional backup of the stock boot image
+	           {
+	      		usleep(2048);
+	      		string ota_folder = DataManager::GetStrValue("ota_bak_folder");
+	      		usleep(2048);
+	      		if (ota_folder.empty())
+	      		   ota_folder = FOX_OTA_PATH;
+			string ota_bootimg = ota_folder + "/boot.img";
+			if (TWFunc::Path_Exists(boot_bak_img)) {
+			   if (TWFunc::copy_file(boot_bak_img, ota_bootimg, 0644) == 0) {
+			   	LOGINFO("OrangeFox: stock boot image extracted into the OTA directory.\n");
+			     }
+			   unlink(boot_bak_img.c_str());
+		 	}
+	           }
+      	      }
+      	  }
 
-	return ret_val;
+      	DataManager::SetValue(FOX_METADATA_PRE_BUILD, 0);
+      	DataManager::SetValue(FOX_MIUI_ZIP_TMP, 0);
+      	DataManager::SetValue(FOX_INCREMENTAL_OTA_FAIL, 0);
+      	DataManager::SetValue(FOX_LOADED_FINGERPRINT, 0);
+      	DataManager::SetValue(FOX_RUN_SURVIVAL_BACKUP, 0);
+      
+     } // end of OTA stuff
+    LOGINFO("Install took %i second(s).\n", total_time);
+   }
+
+   if (ret_val == INSTALL_SUCCESS)
+      set_miui_install_status(OTA_SUCCESS, false);
+
+   usleep(32);
+   if (DataManager::GetIntValue(FOX_ZIP_INSTALLER_CODE) != 0) // just flashed a ROM
+   {
+      usleep(16);
+      TWFunc::Check_OrangeFox_Overwrite_FromROM(false, path);
+   }
+
+   if (run_rom_scripts && TWFunc::Path_Exists(FOX_POST_ROM_FLASH_SCRIPT)) {
+   	usleep(2048);
+   	TWFunc::RunFoxScript(FOX_POST_ROM_FLASH_SCRIPT, path);
+   	sleep(1);
+   	DataManager::SetValue("found_fox_overwriting_rom", "0");
+   	TWFunc::Fox_Property_Set("found_fox_overwriting_rom", "");
+   }
+
+  return ret_val;
 }

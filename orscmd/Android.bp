@@ -3,6 +3,11 @@ cc_binary {
     stem: "twrp",
     recovery: true,
 
+    // 用 FOX_* 版本宏(TW_VERSION_STR 链),显式声明使用 fox_recovery_defaults
+    defaults: [
+        "fox_recovery_defaults",
+    ],
+
     srcs: [
         "orscmd.cpp",
     ],

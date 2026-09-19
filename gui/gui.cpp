@@ -2,6 +2,9 @@
         Copyright 2012 bigbiff/Dees_Troy TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
         TWRP is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +20,6 @@
 */
 
 #include <linux/input.h>
-#include <android-base/properties.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -25,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -35,7 +36,6 @@
 #include <sys/mount.h>
 #include <time.h>
 #include <unistd.h>
-#include <atomic>
 
 extern "C"
 {
@@ -43,8 +43,6 @@ extern "C"
 #include <pixelflinger/pixelflinger.h>
 }
 #include "twrpminui/minui.h"
-#include "twrpminui/truetype.hpp"
-#include "twrpperf/perf_manager.hpp"
 
 #include "rapidxml.hpp"
 #include "objects.hpp"
@@ -55,6 +53,7 @@ extern "C"
 #include "../openrecoveryscript.hpp"
 #include "../orscmd/orscmd.h"
 #include "blanktimer.hpp"
+#include "tw_atomic.hpp"
 
 // Enable to print render time of each frame to the log file
 //#define PRINT_RENDER_TIME 1
@@ -69,113 +68,12 @@ using namespace rapidxml;
 
 // Global values
 static int gGuiInitialized = 0;
-static std::atomic_bool gForceRender;
+static TWAtomicInt gForceRender;
 blanktimer blankTimer;
 int ors_read_fd = -1;
 static FILE* orsout = NULL;
 static float scale_theme_w = 1;
 static float scale_theme_h = 1;
-
-static constexpr uint64_t kGuiStatsInterval = 120;
-
-struct InputCycleStats {
-	uint64_t events = 0;
-	bool catch_up = false;
-};
-
-struct PerfTiming {
-	uint64_t calls = 0;
-	uint64_t total_ns = 0;
-	uint64_t max_ns = 0;
-};
-
-struct GuiPerfStats {
-	uint64_t cycles = 0;
-	uint64_t input_events = 0;
-	uint64_t catch_up_frames = 0;
-	uint64_t max_event_batch = 0;
-	PerfTiming update;
-	PerfTiming render;
-	PerfTiming flip;
-
-	void Reset()
-	{
-		cycles = 0;
-		input_events = 0;
-		catch_up_frames = 0;
-		max_event_batch = 0;
-		update = {};
-		render = {};
-		flip = {};
-	}
-};
-
-static GuiPerfStats gui_perf_stats;
-
-static uint64_t monotonic_ns()
-{
-	timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	return static_cast<uint64_t>(now.tv_sec) * 1000000000ULL + now.tv_nsec;
-}
-
-static void record_timing(PerfTiming *timing, uint64_t elapsed_ns)
-{
-	++timing->calls;
-	timing->total_ns += elapsed_ns;
-	if (elapsed_ns > timing->max_ns)
-		timing->max_ns = elapsed_ns;
-}
-
-static uint64_t average_us(const PerfTiming& timing)
-{
-	return timing.calls == 0 ? 0 : timing.total_ns / timing.calls / 1000;
-}
-
-static bool gui_stats_enabled()
-{
-	static bool enabled = false;
-	static uint64_t next_check_ns = 0;
-	const uint64_t now_ns = monotonic_ns();
-	if (now_ns < next_check_ns)
-		return enabled;
-
-	next_check_ns = now_ns + 1000000000ULL;
-	const bool new_enabled = android::base::GetBoolProperty("twrp.gui.stats", false);
-	if (new_enabled != enabled) {
-		enabled = new_enabled;
-		gui_perf_stats.Reset();
-		uint64_t entries, hits, misses, evictions;
-		twrpTruetype::gr_ttf_get_cache_stats(&entries, &hits, &misses, &evictions);
-		LOGINFO("GUI perf stats %s\n", enabled ? "enabled" : "disabled");
-	}
-	return enabled;
-}
-
-static void log_gui_stats()
-{
-	const uint64_t input_x100 = gui_perf_stats.cycles == 0 ? 0 :
-		gui_perf_stats.input_events * 100 / gui_perf_stats.cycles;
-	LOGINFO("GUI perf: cycles=%" PRIu64 ", input=%" PRIu64
-		" (%" PRIu64 ".%02" PRIu64 "/cycle), catchup=%" PRIu64
-		", batch_max=%" PRIu64 ", update=%" PRIu64 " avg/max=%" PRIu64
-		"/%" PRIu64 " us, render=%" PRIu64 " avg/max=%" PRIu64
-		"/%" PRIu64 " us, flip=%" PRIu64 " avg/max=%" PRIu64 "/%" PRIu64 " us\n",
-		gui_perf_stats.cycles, gui_perf_stats.input_events, input_x100 / 100,
-		input_x100 % 100, gui_perf_stats.catch_up_frames,
-		gui_perf_stats.max_event_batch, gui_perf_stats.update.calls,
-		average_us(gui_perf_stats.update), gui_perf_stats.update.max_ns / 1000,
-		gui_perf_stats.render.calls, average_us(gui_perf_stats.render),
-		gui_perf_stats.render.max_ns / 1000, gui_perf_stats.flip.calls,
-		average_us(gui_perf_stats.flip), gui_perf_stats.flip.max_ns / 1000);
-
-	uint64_t entries, hits, misses, evictions;
-	twrpTruetype::gr_ttf_get_cache_stats(&entries, &hits, &misses, &evictions);
-	LOGINFO("TTF cache: entries=%" PRIu64 ", hits=%" PRIu64
-		", misses=%" PRIu64 ", evictions=%" PRIu64 "\n",
-		entries, hits, misses, evictions);
-	gui_perf_stats.Reset();
-}
 
 // Needed by pages.cpp too
 int gGuiRunning = 0;
@@ -186,6 +84,9 @@ void terminal_pty_read();
 int select_fd = 0;
 
 static int gRecorder = -1;
+
+static long long g_suppress_power_toggle_until_ms = 0;
+static inline long long nowMs() { struct timeval t; gettimeofday(&t, NULL); return (long long)t.tv_sec * 1000LL + t.tv_usec / 1000; }
 
 extern "C" void gr_write_frame_to_file(int fd);
 
@@ -217,7 +118,7 @@ public:
 		// these might be read from DataManager in the future
 		touch_hold_ms = 500;
 		touch_repeat_ms = 100;
-		key_hold_ms = 500;
+		key_hold_ms = 200;
 		key_repeat_ms = 100;
 		touch_status = TS_NONE;
 		key_status = KS_NONE;
@@ -291,8 +192,10 @@ bool InputHandler::processInput(int timeout_ms)
 		// This path means that we did not get any new touch data, but
 		// we do not get new touch data if you press and hold on either
 		// the screen or on a keyboard key or mouse button
-		if (touch_status || key_status)
-			processHoldAndRepeat();
+		if (touch_status || key_status){
+			if(!(ev.code == KEY_MENU || ev.code == KEY_HOME || ev.code == KEY_BACK))
+				processHoldAndRepeat();
+		}
 		return (ret != -2);  // -2 means no more events in the queue
 	}
 
@@ -307,15 +210,45 @@ bool InputHandler::processInput(int timeout_ms)
 		break;
 
 	case EV_KEY:
-		process_EV_KEY(ev);
+		if((ev.code == KEY_MENU || ev.code == KEY_HOME || ev.code == KEY_BACK) && DataManager::GetIntValue("tw_enable_keys") != 0) {
+		    if(ev.value != 0){
+		         if(ev.code == KEY_HOME && DataManager::GetStrValue("tw_menu_key") != "")
+	                       PageManager::NotifyKey(KEY_HOMEPAGE, true);
+		         if(ev.code == KEY_BACK && DataManager::GetStrValue("tw_menu_key") != "")
+	                       PageManager::NotifyKey(KEY_BACK, true);
+		         DataManager::Vibrate("tw_button_vibrate");
+		    }else{
+	                 switch (ev.code)
+	                 {
+	                  case KEY_MENU:
+	                  	  if(DataManager::GetIntValue("tw_busy") == 0)
+								PageManager::ChangeOverlay("console");
+		                  break;
+	                  case KEY_HOME:
+							if(DataManager::GetStrValue("tw_menu_key") != "")
+								PageManager::NotifyKey(KEY_HOMEPAGE, false);
+							else
+								gui_changeOverlay("");
+		                  break;
+	                  case KEY_BACK:
+							if(DataManager::GetStrValue("tw_menu_key") != "")
+								PageManager::NotifyKey(KEY_BACK, false);
+							else
+								gui_changeOverlay("");
+		                  break;
+		          }
+	            }
+	        } else if (ev.code != KEY_BACK && (ev.code < BTN_DIGI || ev.code > BTN_TOOL_QUADTAP)) { // skip touch-related codes
+			process_EV_KEY(ev);
+		}
 		break;
 	}
 
 #ifndef TW_NO_SCREEN_BLANK
 	if (!blankTimer.isScreenOff()) {
 #endif
-		if (ev.code != KEY_POWER && ev.code > KEY_RESERVED)
-			blankTimer.resetTimerAndUnblank();
+	if (ev.code != KEY_POWER && ev.code > KEY_RESERVED)
+		blankTimer.resetTimerAndUnblank();
 #ifndef TW_NO_SCREEN_BLANK
 	}
 #endif
@@ -329,6 +262,7 @@ void InputHandler::processHoldAndRepeat()
 	// touch and key repeat section
 	struct timeval curTime;
 	gettimeofday(&curTime, NULL);
+	mime = 0;
 	long seconds = curTime.tv_sec - touchStart.tv_sec;
 	long useconds = curTime.tv_usec - touchStart.tv_usec;
 	long mtime = ((seconds) * 1000 + useconds / 1000.0) + 0.5;
@@ -346,17 +280,39 @@ void InputHandler::processHoldAndRepeat()
 		gettimeofday(&touchStart, NULL);
 		PageManager::NotifyTouch(TOUCH_REPEAT, x, y);
 	}
-	else if (key_status == KS_KEY_PRESSED && mtime > key_hold_ms)
+	else if (key_status == KS_KEY_PRESSED && mtime >= 200 && !kb->AreKeysPressed(KEY_VOLUMEUP, KEY_VOLUMEDOWN))
 	{
-		LOGEVENT("KEY_HOLD: %d,%d\n", x, y);
+		LOGEVENT("KEY_HOLD: %ld\n", mtime);
+		mime = mtime;
 		gettimeofday(&touchStart, NULL);
 		key_status = KS_KEY_REPEAT;
-		kb->KeyRepeat();
+
+		if (kb->AreKeysPressed(KEY_VOLUMEUP, KEY_POWER)) {
+			GUIAction::flashlightImpl("");
+			DataManager::Vibrate("tw_button_vibrate");
+		} else if (kb->AreKeysPressed(KEY_VOLUMEDOWN, KEY_POWER)) {
+			GUIAction::screenshotImpl("");
+			DataManager::Vibrate("tw_button_vibrate");
+			g_suppress_power_toggle_until_ms = nowMs() + 1000; // prevent screen-off from power key after screenshot
+		} else if (kb->IsKeyDown(KEY_POWER) && DataManager::GetStrValue("of_hw_control_mode") == "1") {
+			PageManager::SelectFocusedElement(true);
+		} else {
+			kb->KeyRepeat();
+		}
+	}
+	else if (key_status == KS_KEY_PRESSED && kb->AreKeysPressed(KEY_VOLUMEUP, KEY_VOLUMEDOWN) && mtime >= 3000)
+	{
+		mime = mtime;
+		gettimeofday(&touchStart, NULL);
+		key_status = KS_KEY_REPEAT;
+
+		gui_switchControlMode();
 	}
 	else if (key_status == KS_KEY_REPEAT && mtime > key_repeat_ms)
 	{
 		LOGEVENT("KEY_REPEAT: %d,%d\n", x, y);
 		gettimeofday(&touchStart, NULL);
+		mime = mtime;
 		kb->KeyRepeat();
 	}
 }
@@ -377,18 +333,13 @@ void InputHandler::process_EV_ABS(input_event& ev)
 	x = ev.value >> 16;
 	y = ev.value & 0xFFFF;
 
-	if (ev.code == TWRP_ABS_MOUSE_POSITION)
-	{
-		PageManager::GetMouseCursor()->SetRenderPos(x, y);
-		return;
-	}
-
-#ifdef TW_USE_MEIZU_TOUCH_MAPPING
+	#ifdef FOX_USE_MEIZU_TOUCH_MAPPING
 	if (x > gr_fb_width() || y > gr_fb_height()) {
 		x /= 10;
 		y /= 10;
+		//LOGINFO("Meizu touch mapping (x=%d; y=%d\n)", x, y);
 	}
-#endif
+	#endif
 
 	if (ev.code == 0)
 	{
@@ -464,7 +415,7 @@ void InputHandler::process_EV_KEY(input_event& ev)
 			return;
 		}
 #endif
-		if (kb->KeyDown(ev.code)) {
+		if (kb->KeyDown(ev.code) >= 0) {
 			// Key repeat is enabled for this key
 			key_status = KS_KEY_PRESSED;
 			touch_status = TS_NONE;
@@ -475,7 +426,36 @@ void InputHandler::process_EV_KEY(input_event& ev)
 		}
 	} else {
 		// This is a key release
-		kb->KeyUp(ev.code);
+		if (DataManager::GetStrValue("of_hw_control_mode") == "1") {
+			if (!blankTimer.isScreenOff()) {
+				if (ev.code == KEY_VOLUMEUP && key_status != KS_KEY_REPEAT) {
+					LOGEVENT("VOLUME_UP Key Released\n");
+					PageManager::MoveFocus(Page::Direction::Up);
+				}
+				if (ev.code == KEY_VOLUMEDOWN && key_status != KS_KEY_REPEAT) {
+					LOGEVENT("VOLUME_DOWN Key Released\n");
+					PageManager::MoveFocus(Page::Direction::Down);
+				}
+				if (ev.code == KEY_POWER && key_status != KS_KEY_REPEAT) {
+					LOGEVENT("POWER Key Released\n");
+					PageManager::SelectFocusedElement(false);
+				}
+			} else {
+				blankTimer.toggleBlank();
+			}
+		} else {
+			if (ev.code == KEY_POWER && key_status != KS_KEY_REPEAT) {
+				LOGEVENT("POWER Key Released\n");
+				long long now = nowMs();
+				if (now < g_suppress_power_toggle_until_ms) {
+					LOGEVENT("Skipping POWER toggle due to recent screenshot\n");
+				} else {
+					blankTimer.toggleBlank();
+				}
+			}
+		}
+		if (mime <= 500)
+			kb->KeyUp(ev.code);
 		key_status = KS_NONE;
 		touch_status = TS_NONE;
 #ifdef TW_USE_KEY_CODE_TOUCH_SYNC
@@ -496,10 +476,6 @@ void InputHandler::process_EV_REL(input_event& ev)
 		cursor->Move(ev.value, 0);
 	else if (ev.code == REL_Y)
 		cursor->Move(0, ev.value);
-	else if (ev.code == REL_WHEEL) {
-		cursor->GetPos(x, y);
-		PageManager::NotifyScroll(x, y, ev.value);
-	}
 
 	if (touch_status) {
 		cursor->GetPos(x, y);
@@ -608,6 +584,15 @@ static void ors_command_read()
 				char* pg = &command[11];
 				gui_changePage(pg);
 				ors_command_done();
+			} else if (strlen(command) > 5 && strncmp(command, "xset ", 5) == 0) {
+				char* xsetcom = &command[5];
+				std::string setst = string(xsetcom);
+				string varName = setst.substr(0, setst.find('='));
+				string value = setst.substr(setst.find('=') + 1, string::npos);
+
+				DataManager::GetValue(value, value);
+				DataManager::SetValue(varName, value);
+				ors_command_done();
 			} else {
 				// mirror output messages
 				gui_set_FILE(orsout);
@@ -631,64 +616,53 @@ static void ors_command_read()
 	}
 }
 
-// Get and dispatch input events until it's time to draw the next frame.
-static InputCycleStats loopTimer(int input_timeout_ms)
+// Get and dispatch input events until it's time to draw the next frame
+// This special function will return immediately the first time, but then
+// always returns 1/30th of a second (or immediately if called later) from
+// the last time it was called
+static void loopTimer(int input_timeout_ms)
 {
 	static timespec lastCall;
 	static int initialized = 0;
-	InputCycleStats stats;
-	constexpr int maxCatchUpEvents = 64;
-	constexpr long long maxCatchUpNs = 1000000;
-	constexpr long long nsPerSecond = 1000000000LL;
-	const long long frameIntervalNs = nsPerSecond / TW_FRAMERATE;
 
 	if (!initialized)
 	{
 		clock_gettime(CLOCK_MONOTONIC, &lastCall);
 		initialized = 1;
-		return stats;
+		return;
 	}
 
-	do {
-		const bool got_event = input_handler.processInput(input_timeout_ms);
-		if (got_event)
-			++stats.events;
+	do
+	{
+		bool got_event = input_handler.processInput(input_timeout_ms); // get inputs but don't send drag notices
 		timespec curTime;
 		clock_gettime(CLOCK_MONOTONIC, &curTime);
+
 		timespec diff = TWFunc::timespec_diff(lastCall, curTime);
-		const long long elapsedNs = diff.tv_sec * nsPerSecond + diff.tv_nsec;
 
-		if (elapsedNs >= frameIntervalNs) {
-			if (got_event) {
-				timespec catchUpStart = curTime;
-				for (int drained = 1; drained < maxCatchUpEvents; ++drained) {
-					if (!input_handler.processInput(0))
-						break;
-					++stats.events;
-					stats.catch_up = true;
+		// This is really 2 or TW_FRAMERATE times per second
+		// As long as we get events, increase the timeout so we can catch up with input
+		long timeout = got_event ? 500000000 : (1.0 / TW_FRAMERATE * 1000000000);
 
-					clock_gettime(CLOCK_MONOTONIC, &curTime);
-					timespec catchUp = TWFunc::timespec_diff(catchUpStart, curTime);
-					if (catchUp.tv_sec || catchUp.tv_nsec >= maxCatchUpNs)
-						break;
-				}
-			}
+		if (diff.tv_sec || diff.tv_nsec > timeout)
+		{
+			// int32_t input_time = TWFunc::timespec_diff_ms(lastCall, curTime);
+			// LOGINFO("loopTimer(): %u ms, count: %u\n", input_time, count);
 
-			clock_gettime(CLOCK_MONOTONIC, &curTime);
 			lastCall = curTime;
-			input_handler.handleDrag();
-			return stats;
+			input_handler.handleDrag(); // send only drag notices if needed
+			return;
 		}
 
-		input_timeout_ms = (frameIntervalNs - elapsedNs) / 1000000;
+		// We need to sleep some period time microseconds
+		//unsigned int sleepTime = 33333 -(diff.tv_nsec / 1000);
+		//usleep(sleepTime); // removed so we can scan for input
+		input_timeout_ms = 0;
 	} while (1);
 }
 
 static int runPages(const char *page_name, const int stop_on_page_done)
 {
-	auto& perf_manager = twrp::TwrpPerfManager::Get();
-	perf_manager.Initialize();
-
 	DataManager::SetValue("tw_page_done", 0);
 	DataManager::SetValue("tw_gui_done", 0);
 
@@ -701,6 +675,11 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 
 	DataManager::SetValue("tw_loaded", 1);
 
+	if (DataManager::GetStrValue("of_request_switch_control_mode") == "1") {
+		DataManager::SetValue("of_request_switch_control_mode", "0");
+		gui_switchControlMode();
+	}
+
 	struct timeval timeout;
 	fd_set fdset;
 	int has_data = 0;
@@ -710,22 +689,9 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 
 	for (;;)
 	{
-		// Apply completed background size scans on the GUI thread.
+		// TWRP16: 在 GUI 线程上套用后台算出的 /data 大小(延迟统计的收口点)
 		PartitionManager.Process_Async_Data_Size();
-		perf_manager.Update();
-		input_timeout_ms = perf_manager.ClampTimeoutMs(input_timeout_ms);
-		const bool collect_stats = gui_stats_enabled();
-		const InputCycleStats input_stats = loopTimer(input_timeout_ms);
-		if (input_stats.events > 0)
-			perf_manager.NotifyInteraction();
-		if (collect_stats) {
-			++gui_perf_stats.cycles;
-			gui_perf_stats.input_events += input_stats.events;
-			if (input_stats.catch_up)
-				++gui_perf_stats.catch_up_frames;
-			if (input_stats.events > gui_perf_stats.max_event_batch)
-				gui_perf_stats.max_event_batch = input_stats.events;
-		}
+		loopTimer(input_timeout_ms);
 		FD_ZERO(&fdset);
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 1;
@@ -735,9 +701,11 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 		if (PartitionManager.uevent_pfd.fd > 0) {
 			FD_SET(PartitionManager.uevent_pfd.fd, &fdset);
 		}
+#ifndef TW_OEM_BUILD
 		if (ors_read_fd > 0 && !orsout) { // orsout is non-NULL if a command is still running
 			FD_SET(ors_read_fd, &fdset);
 		}
+#endif
 		// TODO: combine this select with the poll done by input handling
 		has_data = select(select_fd, &fdset, NULL, NULL, &timeout);
 		if (has_data > 0) {
@@ -749,44 +717,31 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 				ors_command_read();
 		}
 
-		if (!gForceRender)
+		if (!gForceRender.get_value())
 		{
-			const uint64_t update_start_ns = collect_stats ? monotonic_ns() : 0;
 			int ret = PageManager::Update();
-			if (collect_stats)
-				record_timing(&gui_perf_stats.update, monotonic_ns() - update_start_ns);
 			if (ret == 0)
 				++idle_frames;
 			else if (ret == -2)
 				break; // Theme reload failure
 			else
 				idle_frames = 0;
-			if (ret > 0)
-				perf_manager.NotifyFrameActivity();
 			// due to possible animation objects, we need to delay activating the input timeout
 			input_timeout_ms = idle_frames > 15 ? 1000 : 0;
 
 #ifndef PRINT_RENDER_TIME
-			if (ret > 1) {
-				const uint64_t render_start_ns = collect_stats ? monotonic_ns() : 0;
-				PageManager::Render(true);
-				if (collect_stats)
-					record_timing(&gui_perf_stats.render, monotonic_ns() - render_start_ns);
-			}
+			if (ret > 1)
+				PageManager::Render();
 
-			if (ret > 0) {
-				const uint64_t flip_start_ns = collect_stats ? monotonic_ns() : 0;
+			if (ret > 0)
 				flip();
-				if (collect_stats)
-					record_timing(&gui_perf_stats.flip, monotonic_ns() - flip_start_ns);
-			}
 #else
 			if (ret > 1)
 			{
 				timespec start, end;
 				int32_t render_t, flip_t;
 				clock_gettime(CLOCK_MONOTONIC, &start);
-				PageManager::Render(true);
+				PageManager::Render();
 				clock_gettime(CLOCK_MONOTONIC, &end);
 				render_t = TWFunc::timespec_diff_ms(start, end);
 
@@ -802,20 +757,11 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 		}
 		else
 		{
-			gForceRender = false;
-			perf_manager.NotifyFrameActivity();
-			const uint64_t render_start_ns = collect_stats ? monotonic_ns() : 0;
+			gForceRender.set_value(0);
 			PageManager::Render();
-			if (collect_stats)
-				record_timing(&gui_perf_stats.render, monotonic_ns() - render_start_ns);
-			const uint64_t flip_start_ns = collect_stats ? monotonic_ns() : 0;
 			flip();
-			if (collect_stats)
-				record_timing(&gui_perf_stats.flip, monotonic_ns() - flip_start_ns);
 			input_timeout_ms = 0;
 		}
-		if (collect_stats && gui_perf_stats.cycles >= kGuiStatsInterval)
-			log_gui_stats();
 
 		blankTimer.checkForTimeout();
 		if (stop_on_page_done && DataManager::GetIntValue("tw_page_done") != 0)
@@ -823,22 +769,20 @@ static int runPages(const char *page_name, const int stop_on_page_done)
 			gui_changePage("main");
 			break;
 		}
-		if (DataManager::GetIntValue("tw_gui_done") != 0) {
+		if (DataManager::GetIntValue("tw_gui_done") != 0)
 			break;
-		}
 	}
 	if (ors_read_fd > 0)
 		close(ors_read_fd);
 	ors_read_fd = -1;
 	set_select_fd();
 	gGuiRunning = 0;
-	perf_manager.Release();
 	return 0;
 }
 
 int gui_forceRender(void)
 {
-	gForceRender = true;
+	gForceRender.set_value(1);
 	return 0;
 }
 
@@ -846,15 +790,19 @@ int gui_changePage(std::string newPage)
 {
 	LOGINFO("Set page: '%s'\n", newPage.c_str());
 	PageManager::ChangePage(newPage);
-	gForceRender = true;
+	gForceRender.set_value(1);
 	return 0;
 }
 
 int gui_changeOverlay(std::string overlay)
 {
 	LOGINFO("Set overlay: '%s'\n", overlay.c_str());
+	if(overlay != "slideout")
+	    DataManager::SetValue("tw_menu_key", "slideout");
+	else
+	    DataManager::SetValue("tw_menu_key", "");
 	PageManager::ChangeOverlay(overlay);
-	gForceRender = true;
+	gForceRender.set_value(1);
 	return 0;
 }
 
@@ -924,6 +872,23 @@ std::string gui_lookup(const std::string& resource_name, const std::string& defa
 	return PageManager::GetResources()->FindString(resource_name, default_value);
 }
 
+void gui_switchControlMode(void)
+{
+	LOGINFO("Request to switch GUI control mode\n");
+
+	DataManager::Vibrate("tw_button_vibrate");
+	if (DataManager::GetStrValue("of_hw_control_mode") != "1") {
+		DataManager::SetValue("of_hw_control_mode", "1");
+		DataManager::SetValue("of_reload_back", PageManager::GetCurrentPage());
+		gui_changeOverlay("dialog_enable_hw_mode");
+	} else {
+		DataManager::SetValue("of_hw_control_mode", "0");
+		blankTimer.resetTimerAndUnblank();
+		PageManager::NotifyVarChange("", "");
+		gui_forceRender();
+	}
+}
+
 extern "C" int gui_init(void)
 {
 	gr_init();
@@ -955,11 +920,23 @@ extern "C" int gui_init(void)
 
 extern "C" int gui_loadResources(void)
 {
+#ifndef TW_OEM_BUILD
 	int check = 0;
 	DataManager::GetValue(TW_IS_ENCRYPTED, check);
+
+#ifdef FOX_ALLOW_EARLY_SETTINGS_LOAD
+#ifdef FOX_SETTINGS_ROOT_DIRECTORY
+	if (PartitionManager.Mount_Settings_Storage(false))
+		DataManager::ReadSettingsFile();
+#else
+	DataManager::LoadPersistValues();
+#endif
+	TWFunc::FoxThemeCheck();
+#endif
+
 	if (check)
 	{
-		if (PageManager::LoadPackage("TWRP", TWRES "ui.xml", "decrypt"))
+		if (PageManager::LoadPackage("OrangeFox", TWRES "ui.xml", "decrypt"))
 		{
 			gui_err("base_pkg_err=Failed to load base packages.");
 			goto error;
@@ -972,7 +949,7 @@ extern "C" int gui_loadResources(void)
 	{
 		std::string theme_path;
 
-		theme_path = DataManager::GetCurrentStoragePath();
+		theme_path = DataManager::GetSettingsStoragePath();
 		if (!PartitionManager.Mount_Settings_Storage(false))
 		{
 			int retry_count = 5;
@@ -989,20 +966,34 @@ extern "C" int gui_loadResources(void)
 			}
 		}
 
-		theme_path += TWFunc::Check_For_TwrpFolder() + "/theme/ui.zip";
-		if (check || PageManager::LoadPackage("TWRP", theme_path, "main"))
+		theme_path = DataManager::GetSettingsStoragePath() + "/theme/ui.zip";
+		if (check || PageManager::LoadPackage("OrangeFox", theme_path, "main"))
 		{
-			if (PageManager::LoadPackage("TWRP", TWRES "ui.xml", "main"))
+#endif // ifndef TW_OEM_BUILD
+			if (PageManager::LoadPackage("OrangeFox", TWRES "ui.xml", "main"))
 			{
 				gui_err("base_pkg_err=Failed to load base packages.");
 				goto error;
 			}
+#ifndef TW_OEM_BUILD
 		}
 	}
+#endif // ifndef TW_OEM_BUILD
 	// Set the default package
-	PageManager::SelectPackage("TWRP");
+	PageManager::SelectPackage("OrangeFox");
 
 	gGuiInitialized = 1;
+#ifdef FOX_ALLOW_EARLY_SETTINGS_LOAD
+#ifdef FOX_SETTINGS_ROOT_DIRECTORY
+	// Read the settings again to overwrite gui default settings that were loaded by PageManager::LoadPackage
+	if (PartitionManager.Mount_Settings_Storage(false))
+		DataManager::ReadSettingsFile();
+#else
+	DataManager::LoadPersistValues();
+#endif
+	PageManager::LoadLanguage(DataManager::GetStrValue("tw_language"));
+	GUIConsole::Translate_Now();
+#endif
 	return 0;
 
 error:
@@ -1013,32 +1004,40 @@ error:
 
 extern "C" int gui_loadCustomResources(void)
 {
-	if (!PartitionManager.Mount_Settings_Storage(false)) {
+#ifndef TW_OEM_BUILD
+	if (!PartitionManager.Mount_Settings_Storage(false)) 
+	{
 		LOGINFO("Unable to mount settings storage during GUI startup.\n");
 		return -1;
 	}
 
-	std::string theme_path = DataManager::GetCurrentStoragePath();
-	theme_path += TWFunc::Check_For_TwrpFolder() + "/theme/ui.zip";
+	std::string theme_path = DataManager::GetSettingsStoragePath();
+	theme_path += "/Fox/.bin./xd.zip";
 	// Check for a custom theme
-	if (TWFunc::Path_Exists(theme_path)) {
+	if (TWFunc::Path_Exists(theme_path)) 
+	{
 		// There is a custom theme, try to load it
-		if (PageManager::ReloadPackage("TWRP", theme_path)) {
+		if (PageManager::ReloadPackage("OrangeFox", theme_path)) 
+		{
 			// Custom theme failed to load, try to load stock theme
-			if (PageManager::ReloadPackage("TWRP", TWRES "ui.xml")) {
+			if (PageManager::ReloadPackage("OrangeFox", TWRES "ui.xml")) 
+			{
 				gui_err("base_pkg_err=Failed to load base packages.");
 				goto error;
 			}
 		}
 	}
 	// Set the default package
-	PageManager::SelectPackage("TWRP");
+	PageManager::SelectPackage("OrangeFox");
+#endif
 	return 0;
 
+#ifndef TW_OEM_BUILD
 error:
 	LOGERR("An internal error has occurred: unable to load theme.\n");
 	gGuiInitialized = 0;
 	return -1;
+#endif
 }
 
 extern "C" int gui_start(void)
@@ -1046,15 +1045,16 @@ extern "C" int gui_start(void)
 	return gui_startPage("main", 1, 0);
 }
 
-extern "C" int gui_startPage(const char *page_name, __attribute__((unused)) const int allow_commands, int stop_on_page_done)
+extern "C" int gui_startPage(const char *page_name, const int allow_commands, int stop_on_page_done)
 {
 	if (!gGuiInitialized)
 		return -1;
 
 	// Set the default package
-	PageManager::SelectPackage("TWRP");
+	PageManager::SelectPackage("OrangeFox");
 
 	input_handler.init();
+#ifndef TW_OEM_BUILD
 	if (allow_commands)
 	{
 		if (ors_read_fd < 0)
@@ -1065,6 +1065,7 @@ extern "C" int gui_startPage(const char *page_name, __attribute__((unused)) cons
 			ors_read_fd = -1;
 		}
 	}
+#endif
 	return runPages(page_name, stop_on_page_done);
 }
 

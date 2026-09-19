@@ -2,6 +2,9 @@
 	Copyright 2017 TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -149,6 +152,11 @@ int GUISlider::Render(void)
 	if (sSliderLabel) {
 		int ret = sSliderLabel->Render();
 		if (ret < 0)		return ret;
+	}
+
+	if (HasFocus()) {
+		gr_color(mFocusColor.red, mFocusColor.green, mFocusColor.blue, mFocusColor.alpha);
+		gr_draw_rect(mRenderX + 2, mRenderY + 2, mRenderW - 4, mRenderH - 4, 3);
 	}
 
 	sUpdate = 0;

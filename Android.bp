@@ -415,13 +415,108 @@ bootstrap_go_package {
     ],
     srcs: [
         "twrp_recovery_defaults.go",
-        "soong/makevars.go"
+        "soong/makevars.go",
+        "fox_common.go",
+        "fox_recovery_defaults.go"
     ],
     pluginFor: ["soong_build"]
 }
 
 twrp_recovery_defaults {
     name: "twrp_recovery_defaults"
+}
+
+fox_recovery_defaults {
+    name: "fox_recovery_defaults"
+}
+
+// libaosprecovery: R12 的 aosp-recovery 合并安装库(gui 依赖),从 OrangeFox 同步。
+bootstrap_go_package {
+    name: "soong-libaosprecovery_defaults",
+    pkgPath: "bootable/recovery/libaosprecovery",
+    deps: [
+        "soong",
+        "soong-android",
+        "soong-cc",
+    ],
+    srcs: [
+        "libaosprecovery_defaults.go",
+        "soong/makevars.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+libaosprecovery_defaults {
+    name: "libaosprecovery_defaults"
+}
+
+// 改为静态库:本树没有任何地方安装/拷贝 libaosprecovery.so,
+// 作为 shared 库会导致 recovery 在设备上找不到 .so 而起不来;
+// 静态链入后符号(tw_*_default_metadata / args::get_args / ExtractPackageRecursive)直接进二进制。
+cc_library_static {
+    name: "libaosprecovery",
+    recovery_available: true,
+    defaults: ["libaosprecovery_defaults"],
+    cflags: [
+        "-std=gnu++2a",
+        "-DRECOVERY_API_VERSION=3",
+    ],
+    include_dirs: [
+        "bootable/recovery/install/include",
+        "bootable/recovery/recovery_ui/include",
+        "bootable/recovery/recovery_utils/include",
+        "bootable/recovery/otautil/include",
+        "bootable/recovery/minadbd",
+        "bootable/recovery/minadbd/include",
+        // "bootable/recovery/minzip" 已删除:本树没有 minzip 模块(USE_MINZIP 也未启用,相关代码是 #ifdef 死分支)
+        "bootable/recovery/twrpinstall/include",
+        "bootable/recovery/Fox_ssl/include",
+        "system/libvintf/include",
+    ],
+    srcs: [
+        "install/adb_install.cpp",
+        "install/get_args.cpp",
+        "install/install.cpp",
+        "install/spl_check.cpp",
+        "install/wipe_data.cpp",
+        "install/wipe_device.cpp",
+        "install/set_metadata.cpp",
+        "install/ZipUtil.cpp",
+    ],
+    shared_libs: [
+        "libbase",
+        "libbootloader_message",
+        "libcrypto",
+        "libext4_utils",
+        "libfs_mgr",
+        "libfusesideload",
+        "libhidl-gen-utils",
+        "libhidlbase",
+        "liblog",
+        "libselinux",
+        "libtinyxml2",
+        "libutils",
+        "libz",
+        "libziparchive",
+        "libcutils",
+        "libc++",
+    ],
+    static_libs: [
+        "libotautil",
+        "libvintf",
+        "libhidl-gen-utils",
+        "librecovery_utils",
+        // "libc++fs" 已删除:AOSP 16 已无该模块(std::filesystem 并入 libc++)
+        "libprotobuf-cpp-lite",
+        "ota_metadata_proto_cc",
+        "update_metadata-protos",
+    ],
+    required: [
+        "init_recovery.rc",
+        "ueventd.rc.recovery",
+        "libdl_android.bootstrap",
+        "ziptool.recovery",
+    ],
 }
 
 cc_binary {
@@ -431,6 +526,7 @@ cc_binary {
         "recovery_defaults",
         "twrp_defaults",
         "twrp_recovery_defaults",
+        "fox_recovery_defaults",
     ],
 
     cflags: [
@@ -459,6 +555,11 @@ cc_binary {
         "twrpRepacker.cpp",
         "oaes/oaes.cpp",
         "BasePartition.cpp",
+        // OrangeFox(OFRP)源文件:原先只在 OF 的 Android.mk 里编译,Soong 侧漏接线
+        "orangefox.cpp",
+        // TWRP16 的这两个文件在工作树里存在但未接线(链接期 UnitConversion::FormatBytes / abx2xml 未定义)
+        "abx.cpp",
+        "unit_conversion.cpp",
     ] + select(soong_config_variable("twrpGlobalVars", "exclude_apex"), {
         false: [
             "twrpApex.cpp"
@@ -469,6 +570,7 @@ cc_binary {
     include_dirs: [
         "system/core/fs_mgr",
         "system/core/libsparse",
+        "bootable/recovery/Fox_ssl/include"
     ],
     local_include_dirs: [
         "gui/include",
@@ -496,7 +598,10 @@ cc_binary {
         "libtwrpinstall",
         "libzstd",
         "update_metadata-protos",
-        "libtwrpgui",
+        "libguitwrp",
+        // libaosprecovery(cc_library_shared):提供 tw_*_default_metadata / args::get_args / ExtractPackageRecursive
+        // 只挂在 libguitwrp 的 shared_libs 上不够 —— recovery 链接命令里不会带上它
+        "libaosprecovery",
         "libtwrpperf",
         "libmounts",
         "libotautil",

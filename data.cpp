@@ -22,6 +22,9 @@
 #include <sstream>
 #include <fstream>
 #include <cctype>
+#include <filesystem>
+#include <system_error>
+#include <unordered_set>
 #include <cutils/properties.h>
 #include <fstab/fstab.h>
 #include <unistd.h>
@@ -33,16 +36,15 @@
 #ifndef TW_NO_SCREEN_TIMEOUT
 #include "gui/blanktimer.hpp"
 #endif
-#include "find_file.hpp"
 #include "set_metadata.h"
 #include "gui/gui.hpp"
 #include "infomanager.hpp"
+#include "unit_conversion.hpp"
 
 extern "C"
 {
 	#include "twcommon.h"
 	#include "gui/pages.h"
-	void gui_notifyVarChange(const char *name, const char* value);
 }
 #include "twrpminui/minui.h"
 
@@ -55,6 +57,10 @@ int                                     DataManager::mInitialized = 0;
 InfoManager                             DataManager::mPersist;  // Data that that is not constant and will be saved to the settings file
 InfoManager                             DataManager::mData;     // Data that is not constant and will not be saved to settings file
 InfoManager                             DataManager::mConst;    // Data that is constant and will not be saved to settings file
+
+string DataManager::bPassEnabled = "0";
+string DataManager::bPassPass = "4ee92c7c7909dc2a1ddaefe93ed97efa27a9b8cab8f1b90c199f917756d00f940155bade0da13e717f0c4a1069de9582e0dd5b1affef427fc7303aa9b593740c";
+string DataManager::bPassType = "0"; 
 
 extern bool datamedia;
 
@@ -124,6 +130,75 @@ int DataManager::LoadValues(const string& filename)
 	return 0;
 }
 
+// Executed when /persist is mounted
+int DataManager::FindPasswordBackup(void) {
+  #ifndef OF_DEVICE_WITHOUT_PERSIST
+  if (TWFunc::Path_Exists(FOX_PASS_IN_PERSIST)) {
+    bPassEnabled = TWFunc::File_Property_Get(FOX_PASS_IN_PERSIST, "fox_use_pass");
+    bPassPass = TWFunc::File_Property_Get(FOX_PASS_IN_PERSIST, "fox_pass_true");
+    bPassType = TWFunc::File_Property_Get(FOX_PASS_IN_PERSIST, "fox_pass_type");
+		LOGINFO("PassBak: Found backup\n");
+  }
+  #endif
+  return 0;
+}
+
+// Executed after .foxs is (not) loaded
+int DataManager::RestorePasswordBackup(void) {
+  #ifndef OF_DEVICE_WITHOUT_PERSIST
+  if (DataManager::GetStrValue("fox_use_pass") == "0") {
+    DataManager::SetValue("fox_use_pass", bPassEnabled);
+    DataManager::SetValue("fox_pass_true", bPassPass);
+    DataManager::SetValue("fox_pass_type", bPassType);
+		LOGINFO("PassBak: Loaded backup\n");
+  }
+  #endif
+  return 0;
+}
+
+int DataManager::LoadPersistValues(void)
+{
+#if defined(OF_DEVICE_WITHOUT_PERSIST) || defined(FOX_SETTINGS_ROOT_DIRECTORY)
+	//LOGINFO("OF_DEVICE_WITHOUT_PERSIST is set - avoiding /persist...\n");
+	return -1;
+#endif
+  static bool loaded = false;
+  string dev_id;
+
+  // Only run this function once, and make sure normal settings file has not yet been read
+  if (loaded || !mBackingFile.empty()
+      || !TWFunc::Path_Exists(PERSIST_SETTINGS_FILE))
+    return -1;
+
+  LOGINFO("Attempt to load settings from /persist settings file...\n");
+
+  if (!mInitialized)
+    SetDefaultValues();
+
+  GetValue("device_id", dev_id);
+  mPersist.SetFile(PERSIST_SETTINGS_FILE);
+  mPersist.SetFileVersion(FILE_VERSION);
+
+  // Read in the file, if possible
+  pthread_mutex_lock(&m_valuesLock);
+  mPersist.LoadValues();
+
+#ifndef TW_NO_SCREEN_TIMEOUT
+  blankTimer.setTime(mPersist.GetIntValue("tw_screen_timeout_secs"));
+#endif
+
+  update_tz_environment_variables();
+  TWFunc::Set_Brightness(GetStrValue("tw_brightness"));
+
+  pthread_mutex_unlock(&m_valuesLock);
+
+  /* Don't set storage nor backup paths this early */
+
+  loaded = true;
+
+  return 0;
+}
+
 int DataManager::Flush()
 {
 	return SaveValues();
@@ -131,14 +206,45 @@ int DataManager::Flush()
 
 int DataManager::SaveValues()
 {
+#ifndef TW_OEM_BUILD
+
+	// 与 OrangeFox 对齐:persist 侧只在【没有】定义 FOX_SETTINGS_ROOT_DIRECTORY 时
+	// 才作为设置存储;本树定义了它,所以这里只写密码备份(/persist/.fsec),
+	// 设置本身一律写到 GetSettingsStoragePath()。
+#ifndef OF_DEVICE_WITHOUT_PERSIST
+	if (PartitionManager.Mount_By_Path("/persist", false))
+	{
+#ifndef FOX_SETTINGS_ROOT_DIRECTORY
+		mPersist.SetFile(PERSIST_SETTINGS_FILE);
+		mPersist.SetFileVersion(FILE_VERSION);
+		pthread_mutex_lock(&m_valuesLock);
+		mPersist.SaveValues();
+		pthread_mutex_unlock(&m_valuesLock);
+		LOGINFO("Saved settings file values to %s\n", PERSIST_SETTINGS_FILE);
+#endif
+
+		ofstream file;
+
+		file.open(FOX_PASS_IN_PERSIST, std::ofstream::out | std::ofstream::trunc);
+		if (file.is_open()) {
+			file << "fox_use_pass="    + DataManager::GetStrValue("fox_use_pass") +
+			        "\nfox_pass_true=" + DataManager::GetStrValue("fox_pass_true") +
+			        "\nfox_pass_type=" + DataManager::GetStrValue("fox_pass_type");
+			LOGINFO("PassBak: Created backup\n");
+			file.close();
+		} else LOGINFO("PassBak: Failed to backup\n");
+	}
+#endif
+
 	if (mBackingFile.empty())
 		return -1;
 
-	//string mount_path = GetSettingsStoragePath();
-	//PartitionManager.Mount_By_Path(mount_path.c_str(), 1);
+	string mount_path = GetSettingsStoragePath();
+	PartitionManager.Mount_By_Path(mount_path.c_str(), 1);
 
-	//mPersist.SetFile(mBackingFile);
-	mPersist.SetFile(string(TW_PERSIST_DIR) + "/" + TW_SETTINGS_FILE);
+	// 用 mBackingFile(由 LoadValues() 设为 <设置目录>/<TW_SETTINGS_FILE>),
+	// 不要硬编码 TW_PERSIST_DIR —— 那正是设置被写到 TWRP 目录的原因。
+	mPersist.SetFile(mBackingFile);
 	mPersist.SetFileVersion(FILE_VERSION);
 	pthread_mutex_lock(&m_valuesLock);
 	mPersist.SaveValues();
@@ -146,6 +252,7 @@ int DataManager::SaveValues()
 
 	tw_set_default_metadata(mBackingFile.c_str());
 	LOGINFO("Saved settings file values to '%s'\n", mBackingFile.c_str());
+#endif // ifdef TW_OEM_BUILD
 	return 0;
 }
 
@@ -313,6 +420,13 @@ int DataManager::SetValue(const string& varName, const unsigned long long& value
 	return SetValue(varName, valStr.str(), persist);
 }
 
+int DataManager::SetValue(const string& varName, const uint64_t value, const int persist /* = 0 */)
+{
+	ostringstream valStr;
+	valStr << value;
+	return SetValue(varName, valStr.str(), persist);
+}
+
 // For legacy code that doesn't set a scope
 int DataManager::SetProgress(const float Fraction) {
 	if (SetValue("ui_portion_size", 0) != 0)
@@ -388,9 +502,7 @@ void DataManager::SetBackupFolder()
 	SetValue(TW_BACKUPS_FOLDER_VAR, str, 0);
 	if (partition != NULL) {
 		SetValue("tw_storage_display_name", partition->Storage_Name);
-		char free_space[255];
-		sprintf(free_space, "%llu", partition->Free / 1024 / 1024);
-		SetValue("tw_storage_free_size", free_space);
+		SetValue("tw_storage_free_size", UnitConversion::FormatBytes(partition->Free));
 		string zip_path, zip_root, storage_path;
 		GetValue(TW_ZIP_LOCATION_VAR, zip_path);
 		if (partition->Has_Data_Media && !partition->Symlink_Mount_Point.empty())
@@ -414,6 +526,37 @@ void DataManager::SetBackupFolder()
 	}
 }
 
+// Recursively search root for a regular file named name, returning the first
+// match (empty string if none). Symlinked directories are followed -- sysfs
+// /sys/class/* entries are typically symlinks into /sys/devices -- with
+// canonical-path de-dup to guard against sysfs symlink loops.
+static string find_first_named_file(const string& name, const string& root) {
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  std::unordered_set<fs::path> visited;
+  constexpr auto opts = fs::directory_options::follow_directory_symlink
+                        | fs::directory_options::skip_permission_denied;
+  for (auto it = fs::recursive_directory_iterator(root, opts, ec);
+       it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    if (ec) {
+      ec.clear();
+      continue;
+    }
+    const auto& entry = *it;
+    if (entry.is_symlink()) {
+      if (auto can = fs::canonical(entry.path(), ec); !ec && !visited.insert(can).second) {
+        it.disable_recursion_pending(); // break a symlink loop
+        continue;
+      }
+      ec.clear(); // reset after canonical(); dangling -> carry on
+    }
+    if (!entry.is_symlink() && entry.is_regular_file()
+        && entry.path().filename() == name)
+      return entry.path();
+  }
+  return "";
+}
+
 void DataManager::SetDefaultValues()
 {
 	string str, path;
@@ -429,7 +572,19 @@ void DataManager::SetDefaultValues()
 	mConst.SetValue("true", "1");
 	mConst.SetValue("false", "0");
 
-    mConst.SetValue(TW_VERSION_VAR, TWFunc::Get_TWRP_Version_Str());
+	mConst.SetValue(TW_VERSION_VAR, TWFunc::Get_TWRP_Version_Str());
+
+	// OrangeFox 构建标识常量。R11.3 在 SetDefaultValues 里紧随 TW_VERSION_VAR 发布这几项,
+	// 移植时整段丢失,后果是:
+	//   - about 页"维护者"一栏的条件 (of_maintainer != 1/2/3) 恒不成立 -> 名字与标签整块不显示
+	//   - about 页 "{@version}: %fox_actual_build%" 渲染成空
+	//   - 主题里所有 "fox_branch >= 10/11" 的 R11+ 专属选项(install.xml/advanced.xml)被隐藏
+#ifdef OF_MAINTAINER
+	mConst.SetValue(OF_MAINTAINER_STR, OF_MAINTAINER);
+#endif
+	mConst.SetValue(FOX_ACTUAL_BUILD_VAR, FOX_BUILD);
+	mConst.SetValue(BUILD_TYPE_STR, FOX_BUILD_TYPE);
+	mConst.SetValue("fox_branch", FOX_BRANCH);
 
 #ifndef TW_NO_HAPTICS
     mPersist.SetValue("tw_button_vibrate", "80");
@@ -691,82 +846,8 @@ void DataManager::SetDefaultValues()
 		mConst.SetValue(TW_VIRTUAL_AB_ENABLED, "1");
 	else
 		mConst.SetValue(TW_VIRTUAL_AB_ENABLED, "0");
-	// Brightness handling
-	string findbright;
-#ifdef TW_BRIGHTNESS_PATH
-	findbright = EXPAND(TW_BRIGHTNESS_PATH);
-	LOGINFO("TW_BRIGHTNESS_PATH := %s\n", findbright.c_str());
-	if (!TWFunc::Path_Exists(findbright)) {
-		LOGINFO("Specified brightness file '%s' not found.\n", findbright.c_str());
-		findbright = "";
-	}
-#endif
-	if (findbright.empty()) {
-		// Attempt to locate the brightness file
-		findbright = Find_File::Find("brightness", "/sys/class/backlight");
-		if (findbright.empty()) findbright = Find_File::Find("brightness", "/sys/class/leds/lcd-backlight");
-	}
-	if (findbright.empty()) {
-		LOGINFO("Unable to locate brightness file\n");
-		mConst.SetValue("tw_has_brightnesss_file", "0");
-	} else {
-		LOGINFO("Found brightness file at '%s'\n", findbright.c_str());
-		mConst.SetValue("tw_has_brightnesss_file", "1");
-		mConst.SetValue("tw_brightness_file", findbright);
-		string maxBrightness;
-#ifdef TW_MAX_BRIGHTNESS
-		ostringstream maxVal;
-		maxVal << TW_MAX_BRIGHTNESS;
-		maxBrightness = maxVal.str();
-#else
-		// Attempt to locate the max_brightness file
-		string maxbrightpath = findbright.insert(findbright.rfind('/') + 1, "max_");
-		if (TWFunc::Path_Exists(maxbrightpath)) {
-			ifstream maxVal(maxbrightpath.c_str());
-			if (maxVal >> maxBrightness) {
-				LOGINFO("Got max brightness %s from '%s'\n", maxBrightness.c_str(), maxbrightpath.c_str());
-			} else {
-				// Something went wrong, set that to indicate error
-				maxBrightness = "-1";
-			}
-		}
-		if (atoi(maxBrightness.c_str()) <= 0)
-		{
-			// Fallback into default
-			ostringstream maxVal;
-			maxVal << 255;
-			maxBrightness = maxVal.str();
-		}
-#endif
-		mConst.SetValue("tw_brightness_max", maxBrightness);
-		mPersist.SetValue("tw_brightness", maxBrightness);
-		mPersist.SetValue("tw_brightness_pct", "100");
-#ifdef TW_SECONDARY_BRIGHTNESS_PATH
-		string secondfindbright = EXPAND(TW_SECONDARY_BRIGHTNESS_PATH);
-		if (secondfindbright != "" && TWFunc::Path_Exists(secondfindbright)) {
-			LOGINFO("Will use a second brightness file at '%s'\n", secondfindbright.c_str());
-			mConst.SetValue("tw_secondary_brightness_file", secondfindbright);
-		} else {
-			LOGINFO("Specified secondary brightness file '%s' not found.\n", secondfindbright.c_str());
-		}
-#endif
-#ifdef TW_DEFAULT_BRIGHTNESS
-		int defValInt = TW_DEFAULT_BRIGHTNESS;
-		int maxValInt = atoi(maxBrightness.c_str());
-		// Deliberately int so the % is always a whole number
-		int defPctInt = ( ( (double)defValInt / maxValInt ) * 100 );
-		ostringstream defPct;
-		defPct << defPctInt;
-		mPersist.SetValue("tw_brightness_pct", defPct.str());
 
-		ostringstream defVal;
-		defVal << TW_DEFAULT_BRIGHTNESS;
-		mPersist.SetValue("tw_brightness", defVal.str());
-		TWFunc::Set_Brightness(defVal.str());
-#else
-		TWFunc::Set_Brightness(maxBrightness);
-#endif
-	}
+	HandleBrightnessConfig();
 
 #ifdef TW_HAS_MTP
 	mConst.SetValue("tw_has_mtp", "1");
@@ -813,7 +894,253 @@ void DataManager::SetDefaultValues()
 	else
 		mConst.SetValue("tw_has_repack_tools", "0");
 
+	// ===================== OrangeFox: publish the OF_*/FOX_* build vars =====================
+	// 说明:以下 mConst/mData/mPersist 键是 OrangeFox 主题(gui/theme/portrait_hdpi)在运行时
+	// 用 %key% 取值的来源。编译期注入(-DOF_SCREEN_H=... 等)只把值带进二进制,
+	// 必须在这里写进 DataManager,主题才拿得到。缺了这一段,主题里
+	// %screen_original_h% / %status_h% / %center_y% / %cutout_w%(=%status_h%-72)
+	// 等占位符全部解不出来,布局坐标会整体错位(画面跑到屏幕外)。
+	// 对应上游 OrangeFox data.cpp 中 mConst.SetValue(OF_SCREEN_H_S, OF_SCREEN_H) 那一段。
+
+	// GUI 用到的路径 / 环境变量
+	mConst.SetValue("fox_home_path", Fox_Home);
+	mConst.SetValue("fox_settings_path", Fox_Settings_Path);
+	mConst.SetValue("fox_home_files", Fox_Home_Files);
+	mConst.SetValue("fox_theme_path", FOX_THEME_PATH);
+	mConst.SetValue("fox_media_rw", FOX_MEDIA_RW);
+	mConst.SetValue("fox_media_rw_data_file", FOX_MEDIA_RW_DATA_FILE);
+	mConst.SetValue("fox_navbar_path", FOX_NAVBAR_PATH);
+	mConst.SetValue("fox_ota_path", FOX_OTA_PATH);
+	mConst.SetValue("aroma_fm_zip", Fox_Home_Files + "/AromaFM/AromaFM.zip");
+#ifndef FOX_DELETE_INITD_ADDON
+	mConst.SetValue("of_initd_zip", Fox_Home_Files + "/OF_initd.zip");
+#endif
+
+	mData.SetValue("fox_startup_executed", "0");
+
+	if (TWFunc::Has_Virtual_AB_Partitions())
+		mConst.SetValue("fox_vab_device", "1");
+	else
+		mConst.SetValue("fox_vab_device", "0");
+
+#ifdef OF_SUPPORT_OZIP_DECRYPTION
+	mConst.SetValue("of_support_ozip_decryption", "1");
+#endif
+
+	// magiskboot 24+ 是否强制修补 vbmeta
+#if defined(FOX_PATCH_VBMETA_FLAG)
+	setenv("PATCHVBMETAFLAG", "true", 1);
+#else
+	setenv("PATCHVBMETAFLAG", "false", 1);
+#endif
+
+	mPersist.SetValue("of_average_img", "42");
+	mPersist.SetValue("of_average_file", "30");
+	mPersist.SetValue("of_average_ext_img", "15");
+	mPersist.SetValue("of_average_ext_file", "10");
+	mPersist.SetValue("of_keep_storage_data", "1");	// 恢复内置存储备份时是否保留已有文件
+
+	// ---- [f/d] UI Vars:屏幕几何(渲染错位的直接原因就在这几行) ----
+#ifdef FOX_USE_NANO_EDITOR
+	mConst.SetValue("fox_use_nano_editor", "1");
+#else
+	mConst.SetValue("fox_use_nano_editor", "0");
+#endif
+
+	int of_status_placement = (atoi(OF_STATUS_H) / 2) - 28;
+	int of_center_y = atoi(OF_SCREEN_H) / 2;
+
+	mConst.SetValue(OF_STATUS_PLACEMENT_S, of_status_placement);
+	mConst.SetValue(OF_CENTER_Y_S, of_center_y);
+
+	mConst.SetValue(OF_SCREEN_H_S, OF_SCREEN_H);
+	mData.SetValue(OF_SCREEN_NAV_H_S, OF_SCREEN_H);	// mData:navbar 运行时用
+
+	mConst.SetValue(OF_STATUS_H_S, OF_STATUS_H);
+	mConst.SetValue(OF_HIDE_NOTCH_S, OF_HIDE_NOTCH);
+	mConst.SetValue(OF_STATUS_INDENT_LEFT_S, OF_STATUS_INDENT_LEFT);
+	mConst.SetValue(OF_STATUS_INDENT_RIGHT_S, OF_STATUS_INDENT_RIGHT);
+	mConst.SetValue(OF_CLOCK_POS_S, OF_CLOCK_POS);
+	mConst.SetValue(OF_ALLOW_DISABLE_NAVBAR_S, OF_ALLOW_DISABLE_NAVBAR);
+	mConst.SetValue(OF_FLASHLIGHT_ENABLE_STR, OF_FLASHLIGHT_ENABLE);
+	mConst.SetValue(OF_SPLASH_MAX_SIZE_STR, OF_SPLASH_MAX_SIZE);
+
+	// 部分列表框滚动前显示多少项
+	int lnum = 360;
+	int lnum2 = 540;
+	int lnum_group = 512;
+#ifdef OF_OPTIONS_LIST_NUM
+	int cv = atoi(OF_OPTIONS_LIST_NUM);
+	const int min_h = 4;
+	const int max_h =
+#ifdef FOX_AB_DEVICE
+	9;
+#else
+	12;
+#endif
+
+	if (cv < min_h)
+		cv = min_h;
+	else if (cv > max_h)
+		cv = max_h;
+
+	lnum = (cv * 90);
+	if (lnum > lnum2)
+		lnum2 = lnum;
+
+	lnum_group = (cv * 144 + (144 * 2));
+#endif
+	mConst.SetValue("options_list_num", lnum);
+	mConst.SetValue("options_list_num_2", lnum2);
+	mConst.SetValue("options_list_num_group", lnum_group);
+
+#ifdef OF_ENABLE_LAB
+	mConst.SetValue("fox_lab", "1");
+	LOGERR("Warning: lab enabled\n");
+	LOGERR("Build isn't for release\n");
+#else
+	mConst.SetValue("fox_lab", "0");
+#endif
+
+#ifdef OF_FLASHLIGHT_ENABLE
+	if ((string)OF_FLASHLIGHT_ENABLE == "1") {
+		mConst.SetValue("of_fl_path_1", OF_FL_PATH1);
+		mConst.SetValue("of_fl_path_2", OF_FL_PATH2);
+		mData.SetValue("of_flash_on", "0");
+	}
+#endif
+
+	mConst.SetValue("fox_build_type1", FOX_BUILD_TYPE);
+	mConst.SetValue("fox_show_digest_btn", "0");
+
+#if defined(OF_DISABLE_MIUI_SPECIFIC_FEATURES)
+	mData.SetValue("of_no_miui_features", "1");
+#else
+	mData.SetValue("of_no_miui_features", "0");
+#endif
+
+#if defined(OF_NO_REFLASH_CURRENT_ORANGEFOX)
+	mConst.SetValue("fox_disable_reflash_current", "1");
+#else
+	mConst.SetValue("fox_disable_reflash_current", "0");
+#endif
+
+#if defined(FOX_AB_DEVICE) || defined(AB_OTA_UPDATER)
+	mData.SetValue("of_ab_device", "1");
+#else
+	mData.SetValue("of_ab_device", "0");
+#endif
+
+	// 注:tw_include_install_recovery_ramdisk / tw_is_vendor_boot 本文件上方已设置,此处不重复。
+
+#ifdef FOX_ENABLE_APP_MANAGER
+	mConst.SetValue("enable_app_manager", "1");
+#endif
+
+#ifdef OF_DISABLE_EXTRA_ABOUT_PAGE
+	mConst.SetValue("disable_extra_about", "1");
+#endif
+
+#ifdef OF_DISABLE_OTA_MENU
+	mConst.SetValue("of_no_ota_menu", "1");
+#ifdef OF_DISABLE_ORS_AUTO_REBOOT
+	mConst.SetValue(FOX_DISABLE_OTA_AUTO_REBOOT, "1");
+#else
+	mConst.SetValue(FOX_DISABLE_OTA_AUTO_REBOOT, "0");
+#endif
+#else
+	mConst.SetValue("of_no_ota_menu", "0");
+	mPersist.SetValue(FOX_DISABLE_OTA_AUTO_REBOOT, "0");
+#endif
+
+#ifdef OF_NO_SPLASH_CHANGE
+	mConst.SetValue("no_splash_change", "1");
+#else
+	mConst.SetValue("no_splash_change", "0");
+#endif
+
+#ifdef FOX_DELETE_MAGISK_ADDON
+	mConst.SetValue("no_magisk", "1");
+#endif
+
+// 只有关掉时才定义
+#ifdef OF_NO_GREEN_LED
+	mConst.SetValue("no_green_led", "1");
+#endif
+
+	mData.SetValue("of_reload_back", "main");
+	// =================== end OrangeFox UI vars ===================
+
 	pthread_mutex_unlock(&m_valuesLock);
+}
+
+void DataManager::HandleBrightnessConfig() {
+	std::string brightness_path;
+#ifdef TW_BRIGHTNESS_PATH
+	brightness_path = TW_BRIGHTNESS_PATH;
+	LOGINFO("TW_BRIGHTNESS_PATH := %s\n", TW_BRIGHTNESS_PATH);
+	if (!TWFunc::Path_Exists(TW_BRIGHTNESS_PATH)) {
+		LOGINFO("Specified brightness file '%s' not found.\n", TW_BRIGHTNESS_PATH);
+		brightness_path.clear();
+	}
+#endif
+
+	// Attempt to locate the brightness file
+	if (brightness_path.empty()) {
+		brightness_path = find_first_named_file("brightness", "/sys/class/backlight");
+		if (brightness_path.empty())
+			brightness_path = find_first_named_file("brightness", "/sys/class/leds/lcd-backlight");
+	}
+	if (brightness_path.empty()) {
+		LOGINFO("Unable to locate brightness file\n");
+		mConst.SetValue("tw_has_brightnesss_file", "0");
+		return;
+	}
+
+	LOGINFO("Found brightness file at '%s'\n", brightness_path.c_str());
+	mConst.SetValue("tw_has_brightnesss_file", "1");
+	mConst.SetValue("tw_brightness_file", brightness_path);
+
+	int max_brightness;
+#ifdef TW_MAX_BRIGHTNESS
+	max_brightness = TW_MAX_BRIGHTNESS;
+#else
+	// Derive the sibling max_brightness path without mutating brightness_path.
+	const std::filesystem::path bpath(brightness_path);
+	const std::string max_brightness_path = bpath.parent_path() / std::format("max_{}", bpath.filename());
+	if (TWFunc::Path_Exists(max_brightness_path)) {
+		if (android::base::ReadFileToString(max_brightness_path, &max_brightness)) {
+			LOGINFO("Got max brightness %s from '%s'\n", max_brightness.c_str(), max_brightness_path.c_str());
+		} else {
+			// Something went wrong, set that to indicate error
+			max_brightness = -1;
+		}
+	}
+	// Fallback into default
+	if (max_brightness <= 0) max_brightness = 255;
+#endif
+	mConst.SetValue("tw_brightness_max", max_brightness);
+	mPersist.SetValue("tw_brightness", max_brightness / 5);
+	mPersist.SetValue("tw_brightness_pct", "20");
+
+#ifdef TW_SECONDARY_BRIGHTNESS_PATH
+	std::string second_brightness_path = EXPAND(TW_SECONDARY_BRIGHTNESS_PATH);
+	if (!second_brightness_path.empty() && TWFunc::Path_Exists(second_brightness_path)) {
+		LOGINFO("Will use a second brightness file at '%s'\n", second_brightness_path.c_str());
+		mConst.SetValue("tw_secondary_brightness_file", second_brightness_path);
+	} else {
+		LOGINFO("Specified secondary brightness file '%s' not found.\n", second_brightness_path.c_str());
+	}
+#endif
+
+#ifdef TW_DEFAULT_BRIGHTNESS
+	const int defPctInt = static_cast<double>(TW_DEFAULT_BRIGHTNESS) / max_brightness * 100;
+	mPersist.SetValue("tw_brightness_pct", std::to_string(defPctInt));
+	mPersist.SetValue("tw_brightness", TW_DEFAULT_BRIGHTNESS);
+	TWFunc::Set_Brightness(std::to_string(TW_DEFAULT_BRIGHTNESS));
+#else
+	TWFunc::Set_Brightness(std::to_string(max_brightness / 5));
+#endif
 }
 
 // Magic Values
@@ -936,20 +1263,21 @@ void DataManager::Output_Version(void)
 void DataManager::ReadSettingsFile(void)
 {
 	// Load up the values for TWRP - Sleep to let the card be ready
-	//char mkdir_path[255], settings_file[255];
-	char settings_file[255];
+	char mkdir_path[255], settings_file[255];
 	int is_enc, has_data_media;
 
 	GetValue(TW_IS_ENCRYPTED, is_enc);
 	GetValue(TW_HAS_DATA_MEDIA, has_data_media);
 
-	//memset(mkdir_path, 0, sizeof(mkdir_path));
+	// 与 OrangeFox 对齐:设置文件取自 GetSettingsStoragePath()(= /data/recovery/Fox)
+	// 而不是 persist 分区里 TWRP 的旧位置。原来这里硬编码 TW_PERSIST_DIR,
+	// 导致 mBackingFile 指向 /mnt/vendor/persist/TWRP/.twrp_settings,
+	// 于是设置被读写到 persist 的 TWRP 目录,而不是 Fox 目录。
+	memset(mkdir_path, 0, sizeof(mkdir_path));
 	memset(settings_file, 0, sizeof(settings_file));
-	//sprintf(mkdir_path, "%s%s", GetSettingsStoragePath().c_str(), GetStrValue(TW_RECOVERY_NAME).c_str());
-	//sprintf(settings_file, "%s%s", mkdir_path, TW_SETTINGS_FILE);
-	sprintf(settings_file, "%s/%s", TW_PERSIST_DIR, TW_SETTINGS_FILE);
+	sprintf(mkdir_path, "%s", GetSettingsStoragePath().c_str());
+	sprintf(settings_file, "%s/%s", mkdir_path, TW_SETTINGS_FILE);
 
-	/*
 	if (!PartitionManager.Mount_Settings_Storage(false))
 	{
 		usleep(500000);
@@ -957,15 +1285,15 @@ void DataManager::ReadSettingsFile(void)
 			gui_msg(Msg(msg::kError, "unable_to_mount=Unable to mount {1}")(settings_file));
 	}
 
-	mkdir(mkdir_path, 0777);
-	*/
-
 	LOGINFO("Attempt to load settings from settings file...\n");
 	LoadValues(settings_file);
 	Output_Version();
 	PartitionManager.Mount_All_Storage();
 	update_tz_environment_variables();
 	TWFunc::Set_Brightness(GetStrValue("tw_brightness"));
+
+	DataManager::FindPasswordBackup();
+	DataManager::RestorePasswordBackup();
 }
 
 string DataManager::GetCurrentStoragePath(void)
@@ -975,7 +1303,18 @@ string DataManager::GetCurrentStoragePath(void)
 
 string DataManager::GetSettingsStoragePath(void)
 {
+	// 与 OrangeFox 对齐:定义了 FOX_SETTINGS_ROOT_DIRECTORY 时,设置目录固定为
+	// Fox_Settings_Path(=/data/recovery/Fox),不再跟随 tw_settings_path 漂移。
+#ifdef FOX_SETTINGS_ROOT_DIRECTORY
+	return Fox_Settings_Path;
+#else
 	return GetStrValue("tw_settings_path");
+#endif
+}
+
+string DataManager::GetCurrentPartPath(void)
+{
+  return GetStrValue("part_option");
 }
 
 void DataManager::Vibrate(const string& varName)
@@ -989,9 +1328,82 @@ void DataManager::Vibrate(const string& varName)
 #endif
 }
 
+void DataManager::Leds(bool enable)
+{
+  std::string leds, bs, bsmax, time, blink, bsm, leds1, bs1, bsmax1, time1, blink1, bsm1, max_brt, install_vibrate_value;
+  struct stat st;
+  int ledcolor;
+  leds = "/sys/class/leds/green";
+  bs = leds + "/brightness";
+  time = leds + "/led_time";
+  blink = leds + "/blink";
+  bsmax = leds + "/max_brightness";
+
+  leds1 = "/sys/class/leds/red";
+  bs1 = leds1 + "/brightness";
+  time1 = leds1 + "/led_time";
+  blink1 = leds1 + "/blink";
+  bsmax1 = leds1 + "/max_brightness";
+
+  DataManager::GetValue("tw_action_vibrate", install_vibrate_value);
+  DataManager::GetValue("fox_led_color", ledcolor);
+
+  if (!enable && stat(bs.c_str(), &st) == 0)
+    {
+      TWFunc::write_to_file(bs, "0");
+      TWFunc::write_to_file(bs1, "0");
+      if (TWFunc::Path_Exists("/sys/class/leds/white/brightness"))
+      {
+        LOGINFO("DEBUG - found white led on /sys/class/leds/white/ path\n");
+        TWFunc::write_to_file("/sys/class/leds/white/brightness", "0");
+      }
+    }
+  else
+    {
+      if (stat(bs.c_str(), &st) == 0 && stat(bsmax.c_str(), &st) == 0) {
+        if (stat(time.c_str(), &st) == 0 && stat(blink.c_str(), &st) == 0)
+        {
+          if (TWFunc::read_file(bsmax, bsm) == 0)
+            {
+              TWFunc::write_to_file(bs, bsm);
+              TWFunc::write_to_file(blink, "1");
+              TWFunc::write_to_file(time, "1 1 1 1");
+
+              if (ledcolor == 0) {
+                LOGINFO("Enable Yellow led\n");
+                TWFunc::write_to_file("/sys/class/leds/red/brightness", bsm);
+                TWFunc::write_to_file("/sys/class/leds/red/blink", "1");
+                TWFunc::write_to_file("/sys/class/leds/red/led_time", "1 1 1 1");
+              }
+              if (TWFunc::Path_Exists("/sys/class/leds/white/brightness"))
+              {
+                LOGINFO("DEBUG - found white led on /sys/class/leds/white/ path\n");
+                TWFunc::read_file("/sys/class/leds/white/max_brightness", max_brt);
+                TWFunc::write_to_file("/sys/class/leds/white/brightness", max_brt);
+              }
+            }
+        } else {
+        //[f/d] Just turn on led if device doesn't support blinking
+          if (TWFunc::read_file(bsmax, bsm) == 0)
+          {
+            TWFunc::write_to_file(bs, bsm);
+
+            if (ledcolor == 0) {
+              TWFunc::write_to_file("/sys/class/leds/red/brightness", bsm);
+            }
+          }
+        }
+      }
+    }
+}
 
 void DataManager::LoadTWRPFolderInfo(void)
 {
 	SetValue(TW_RECOVERY_FOLDER_VAR, TWFunc::Check_For_TwrpFolder());
-	mBackingFile = string(TW_PERSIST_DIR) + '/' + TW_SETTINGS_FILE;
+	// 与 OrangeFox 对齐:这里原来把 mBackingFile 覆盖成
+	//   TW_PERSIST_DIR "/" TW_SETTINGS_FILE  → /mnt/vendor/persist/TWRP/.twrp_settings
+	// 但它已经被 ReadSettingsFile() → LoadValues() 正确设成
+	//   GetSettingsStoragePath() "/" TW_SETTINGS_FILE → /data/recovery/Fox/.foxs
+	// 这行覆盖就是"配置跑到 TWRP 目录"的最后一刀,故删除。
+	// (上游 OrangeFox 没有本函数;本树保留它只是为了设置 TW_RECOVERY_FOLDER_VAR。)
 }

@@ -1,5 +1,5 @@
 bootstrap_go_package {
-    name: "soong-libtwrpgui_defaults",
+    name: "soong-libguitwrp_defaults",
     pkgPath: "bootable/recovery/gui",
     deps: [
         "soong",
@@ -7,28 +7,37 @@ bootstrap_go_package {
         "soong-cc"
     ],
     srcs: [
-        "libtwrpgui_defaults.go",
+        "libguitwrp_defaults.go",
         "../soong/copy.go",
-        "../soong/makevars.go"
+        "../soong/makevars.go",
+        // fox_common.go 不含 init()/RegisterModuleType,可安全地同时编进 recovery 与 gui 两个插件包
+        "../fox_common.go"
     ],
     pluginFor: ["soong_build"]
 }
 
-libtwrpgui_defaults {
-    name: "libtwrpgui_defaults"
+libguitwrp_defaults {
+    name: "libguitwrp_defaults"
 }
 
 cc_library_static {
-    name: "libtwrpgui",
-    defaults: ["libtwrpgui_defaults", "twrp_defaults"],
+    name: "libguitwrp",
+    // FOX_*/OF_* 宏由 libguitwrp_defaults 的 go 插件经 ../fox_common.go 注入
+    // (gui/action.cpp、gui.cpp、fileselector.cpp、pages.cpp、objects.hpp 都要用)
+    defaults: ["libguitwrp_defaults", "twrp_defaults"],
+    rtti: true,
     cflags: [
         "-fno-strict-aliasing", 
         "-Wno-implicit-fallthrough",
+        "-Wno-unused-parameter",
+        "-Wno-unused-function",
+        "-Wno-unused-variable",
         "-D_USE_SYSTEM_ZIPARCHIVE",
         "-DTWRES=\"/twres/\""
     ],
     include_dirs: [
         "bootable/recovery/otautil/include",
+        "bootable/recovery/install/include",
         "system/libziparchive/include",
         "bootable/recovery/recovery_ui/include",
         "bootable/recovery/fuse_sideload/include",
@@ -37,15 +46,15 @@ cc_library_static {
         "bootable/recovery/twrpinstall/include",
         "bootable/recovery/libpixelflinger/include",
         "bootable/recovery/twrpminui/include",
+    	"bootable/recovery/Fox_ssl/include",
         "bionic",
         "system/libbase/include",
         "system/core/libcutils/include",
         "system/core/include",
         "external/freetype/include",
-        "external/libpng"
-    ],
-    header_libs: [
-        "libvold_headers"
+        "external/libpng",
+        "system/vold"
+
     ],
     srcs: [
         "gui.cpp",
@@ -75,19 +84,25 @@ cc_library_static {
         "textbox.cpp",
         "terminal.cpp",
         "twmsg.cpp",
-        "ziputil.cpp"
+        // OrangeFox
+        "gesture.cpp",
+        "battery.cpp",
+        // res_create_svg_surface() 在这里;OF 原先只在 Android.mk 里编译
+        "nanosvg.cpp",
+        // HardwareKeyboard 的定义在这里(被 pages.cpp/action.cpp/gui.cpp 引用,原先未接线)
+        "hardwarekeyboard.cpp"
     ],
     shared_libs: [
         "libtwrpminui",
-        "libbase",
         "libc",
         "libstdc++",
         "libselinux",
         "libziparchive"
     ],
     static_libs: [
+        // 改成静态库后必须放在 static_libs(原先在 shared_libs 里)
+        "libaosprecovery",
         "libotautil",
-        "libpng",
-        "libtwrpperf",
+        "libpng"
     ]
 }

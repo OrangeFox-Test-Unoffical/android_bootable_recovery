@@ -2,6 +2,9 @@
         Copyright 2012 bigbiff/Dees_Troy TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
         TWRP is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -122,7 +125,6 @@ void blanktimer::blank(void) {
  *  2) Assume screen-off causes issues for devices that set
  *     TW_NO_SCREEN_TIMEOUT and do not blank screen here either
  */
-
 #ifndef TW_NO_SCREEN_TIMEOUT
 	pthread_mutex_lock(&mutex);
 	if (state == kOn) {

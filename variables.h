@@ -17,16 +17,192 @@
 #ifndef _VARIABLES_HEADER_
 #define _VARIABLES_HEADER_
 
+/* =====================================================================================
+ * OrangeFox(OFRP)移植段 —— 常量/变量定义
+ *   来源:/orangefox14/bootable/recovery/variables.h (fox_14.1)
+ *   说明:与 TWRP16 重名的定义(如 TW_VERSION_STR / TW_STORAGE_PATH / TW_SETTINGS_FILE)
+ *        保留 TWRP16 原值,不做覆盖;OF 侧改用 FOX_* 名称。
+ * ===================================================================================== */
+#define FOX_RECOVERY_NAME	"OrangeFox"
+#define FOX_MAIN_VERSION_STR    FOX_INTERNAL_RELEASE // defined in orangefox.mk
+#define FOX_BRANCH		"12"
+#define BUILD_TYPE_STR 		FOX_BUILD_TYPE
+
+// OrangeFox - Values
+#define FOX_DEVICE              FOX_DEVICE_MODEL
+#define OF_MAINTAINER_STR	"of_maintainer"
+#define OF_FLASHLIGHT_ENABLE_STR "of_flashlight_enable"
+
+// fordownloads values
+#define OF_SCREEN_H_S              "screen_original_h"
+#define OF_SCREEN_NAV_H_S          "screen_h"
+#define OF_CENTER_Y_S              "center_y"
+
+#define OF_STATUS_H_S              "status_h"
+#define OF_HIDE_NOTCH_S            "allow_hide_notch"
+#define OF_STATUS_INDENT_LEFT_S    "status_indent_left"
+#define OF_STATUS_INDENT_RIGHT_S   "status_indent_right"
+
+#define OF_STATUS_PLACEMENT_S      "status_info_y"
+#define OF_CLOCK_POS_S             "cutout_clock"
+
+#define OF_ALLOW_DISABLE_NAVBAR_S  "allow_disable_nav"
+
+#define OF_SPLASH_MAX_SIZE_STR "of_splash_max_size"
+
+#define OF_STORAGE_PATH             "/sdcard/Fox"
+#define PERSIST_SETTINGS_FILE       "/persist/.foxs"
+
+// *** OrangeFox - Variables ** //
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <unistd.h>
+static const std::string Fox_Bin_Dir = "/system/bin";
+static const std::string Fox_Tmp = "/tmp";
+
+static const std::string Fox_Home =
+#ifdef FOX_MISCELLANEOUS_ROOT_DIRECTORY
+FOX_MISCELLANEOUS_ROOT_DIRECTORY"/Fox";
+#else
+OF_STORAGE_PATH;
+#endif
+
+static const std::string Fox_Settings_Path =
+#ifdef FOX_SETTINGS_ROOT_DIRECTORY
+FOX_SETTINGS_ROOT_DIRECTORY"/Fox";
+#else
+OF_STORAGE_PATH;
+#endif
+
+static const std::string Fox_ResetProp_Bin = "/system/bin/resetprop";
+static const std::string FOX_THEME_PATH = Fox_Settings_Path + "/.theme";
+static const std::string FOX_NAVBAR_PATH =  Fox_Settings_Path + "/.navbar";
+static const std::string Fox_Home_Files = Fox_Home + "/FoxFiles";
+static const std::string Fox_Logs_Dir = Fox_Home + "/logs";
+static const std::string FOX_OTA_PATH =  Fox_Home + "/OTA";
+static const std::string Fox_sdcard_aroma_cfg = Fox_Home + "/aromafm.cfg";
+static const std::string Fox_aroma_cfg = Fox_Home_Files + "/AromaFM/AromaFM.zip.cfg";
+static const std::string FFiles_dir = "/FFiles";
+static const std::string Fox_tmp_dir = Fox_Tmp + "/orangefox";
+static const std::string Fox_ramdisk_dir = Fox_tmp_dir + "/ramdisk"; 
+static const std::string Fox_ramdisk_sbin_dir = Fox_ramdisk_dir + "/sbin"; 
+static const std::string epoch_drift_file = "/persist/.fox_epoch_drift.cfg"; // to cater for any saved epoch_drifts
+static const std::string Fox_OTA_info = "/orangefox.info";
+static std::string Fox_Current_Device = "default";
+static const std::string orangefox_cfg = "/etc/orangefox.cfg";
+static const std::string Fox_Cfg = "/etc/fox.cfg";
+
+static int Fox_Zip_Installer_Code = 0; // 0=standard zip;1=custom ROM;2=miui ROM; 11=custom treble ROM; 22=miui treble ROM
+static int Fox_IsDeactivation_Process_Called = 0; // have we called the deactivation process
+static int Fox_AutoDeactivate_OnReboot = 0;   // call the deactivation process automatically on reboot (if not already called by another thread) ?
+static int Fox_Force_Deactivate_Process = 0;  // for a call to Deactivate_Process()
+static int Fox_Current_ROM_IsMIUI = 0; // is the currently installed ROM a MIUI ROM?
+
+//#define FOX_UPDATE_BINARY		"META-INF/com/google/android/update-binary" // all zip installers must have this
+#define FOX_MIUI_UPDATE_PATH 		"META-INF/com/miui/miui_update" 	// standard MIUI ROMs have this
+#define FOX_MIUI_UPDATE_PATH_EU 	"META-INF/com/xiaomieu/xiaomieu.sh"  // Xiaomi.EU MIUI ROMs have this
+#define FOX_FORCE_DEACTIVATE_PROCESS 	"fox_force_deactivate_process"
+#define FOX_ZIP_INSTALLER_CODE 		"fox_zip_installer_code"
+#define FOX_ZIP_INSTALLER_TREBLE 	"fox_zip_installer_treble"
+#define FOX_DISABLE_OTA_AUTO_REBOOT 	"fox_disable_ota_auto_reboot_check"
+#define FOX_STARTUP_SCRIPT 		"/sbin/foxstart.sh"
+#define FOX_PS_BIN 			"/FFiles/ps"
+#define FOX_MAGISK_ZIP_INSTALLER 	"Magisk.zip"
+
+#define FOX_THEME_VERSION 		"2.0"
+#define FOX_PASS_IN_PERSIST 		"/persist/.fsec"
+#define FOX_PRE_ROM_FLASH_SCRIPT  	"/system/bin/pre_rom_flash.sh"
+#define FOX_POST_ROM_FLASH_SCRIPT 	"/system/bin/post_rom_flash.sh"
+#define FOX_BEFORE_REBOOT_SCRIPT 	"/system/bin/beforereboot.sh"
+#define FOX_AFTER_ROM_FLASH_SCRIPT	"/sbin/afterromflash.sh"
+#define FOX_POST_DATA_FORMAT_SCRIPT 	"/sbin/postformatdata.sh"
+#define TW_FORMAT_DATA_SCRIPT 		"/system/bin/formatdata.sh"
+
+// **** //
+
+#define FOX_SURVIVAL_FOLDER_VAR      	"fox_survival_backup_folder_path"
+#define FOX_SURVIVAL_BACKUP_NAME       	"fox_survival_backup_folder_name"
+#define FOX_FILES_BACKUPS_FOLDER_VAR    "fox_files_backup_folder_var"
+#define FOX_DISABLE_BOOT_CHK       	"fox_disable_boot_check"
+#define FOX_DO_SYSTEM_ON_OTA       	"fox_include_system_survival"
+#define FOX_INSTALL_PREBUILT_ZIP       	"fox_install_built_in_zip"
+#define FOX_DONT_REPLACE_STOCK       	"fox_reboot_dont_disable_stock_recovery"
+#define FOX_ACTUAL_BUILD_VAR            "fox_actual_build"
+#define FOX_INCREMENTAL_PACKAGE         "fox_support_miui_ota"
+#define FOX_ENABLE_SECURE_RO            "fox_reboot_enable_secure_ro"
+#define FOX_DISABLE_SECURE_RO           "fox_reboot_disable_secure_ro"
+#define FOX_ENABLE_ADB_RO             	"fox_reboot_enable_adb_ro"
+#define FOX_DISABLE_ADB_RO             	"fox_reboot_disable_adb_ro"
+#define FOX_ADVANCED_WARN_CHK           "fox_advanced_warning_checkbox"
+#define FOX_DISABLE_MOCK_LOCATION       "fox_reboot_disable_mock_location"
+#define FOX_ENABLE_MOCK_LOCATION        "fox_reboot_enable_mock_location"
+#define FOX_DISABLE_SECURE_BOOT         "fox_reboot_disable_secure_boot"
+#define FOX_ADVANCED_STOCK_REPLACE      "fox_reboot_advanced_stock_recovery_check"
+#define FOX_SAVE_LOAD_AROMAFM           "fox_reboot_saveload_aromafm_check"
+#define FOX_DISABLE_DEBUGGING           "fox_reboot_disable_debugging_check"
+#define FOX_ENABLE_DEBUGGING           	"fox_reboot_forced_debugging_check"
+#define FOX_DISABLE_FORCED_ENCRYPTION   "fox_reboot_forced_encryption_check"
+#define FOX_DISABLE_DM_VERITY           "fox_reboot_dm_verity_check"
+#define FOX_REBOOT_AFTER_RESTORE        "fox_reboot_after_restore"
+#define FOX_COMPATIBILITY_DEVICE        "fox_compatibility_fox_device"
+#define FOX_NO_OS_SEARCH_ENGINE         "fox_noos_engine"
+#define FOX_TMP_SCRIPT_DIR       	"fox_tmp_script_directory"
+#define FOX_STATUSBAR_ON_LOCK       	"fox_statusbar_on_lockpass"
+#define FOX_LED_COLOR       		"fox_led_color"
+#define FOX_BALANCE_CHECK       	"fox_boot_balance_check"
+#define FOX_NOTIFY_AFTER_RESTORE       	"fox_inject_after_restore"
+#define FOX_NOTIFY_AFTER_BACKUP       	"fox_inject_after_backup"
+#define FOX_FLASHLIGHT_VAR     		"flashlight"
+#define FOX_FSYNC_CHECK       		"fox_boot_fsync_check"
+#define FOX_FORCE_FAST_CHARGE_CHECK     "fox_boot_fastcharge_check"
+#define FOX_T2W_CHECK       		"fox_boot_t2w_check"
+#define FOX_PERFORMANCE_CHECK       	"fox_boot_performance_check"
+#define FOX_POWERSAVE_CHECK       	"fox_boot_powersave_check"
+#define FOX_CALL_DEACTIVATION         	"fox_call_deactivation_process"
+#define FOX_GOVERNOR_STABLE         	"governor_stable"
+
+#define FOX_MIUI_ZIP_TMP                "fox_miui_zip_tmp"
+#define FOX_LOADED_FINGERPRINT          "fox_loaded_signature"
+#define FOX_MIN_EXPECTED_FP_SIZE 30
+
+#define FOX_INCREMENTAL_OTA_FAIL        "fox_ota_fail"
+#define FOX_RUN_SURVIVAL_BACKUP         "fox_run_survival_backup"
+#define FOX_METADATA_PRE_BUILD          "fox_pre_build"
+#define FOX_ENCRYPTED_DEVICE		"fox_encrypted_device"
+#define FOX_MEDIA_RW			"media_rw:media_rw"
+#define FOX_MEDIA_RW_DATA_FILE		"u:object_r:media_rw_data_file:s0"
+//
+
+
+/* ===================== OrangeFox 移植段结束 ===================== */
+
 #define TW_MAIN_VERSION_STR       "3.7.1_16"
+// TW_DEVICE_VERSION 由 soong 的 twrp_defaults(vendor/twrp/build/soong/Android.bp 的 twrp 类型)
+// 以 -DTW_DEVICE_VERSION="<...>" 注入;未套 twrp_defaults 的模块(如 orscmd)拿不到它,
+// 宏里会残留裸标识符 -> "expected ')'"。这里给空串兜底(有 -D 时不影响其取值)。
+#ifndef TW_DEVICE_VERSION
+#define TW_DEVICE_VERSION ""
+#endif
 #define TW_VERSION_STR TW_MAIN_VERSION_STR TW_DEVICE_VERSION
 
 #define TW_PERSIST_ROOT             "/mnt/vendor/persist"
 
-#define TW_PERSIST_DIR              TW_PERSIST_ROOT "/TWRP"
-#define TW_SETTINGS_FILE            ".twrp_settings"
+// 说明:persist 侧的设置机制在定义了 FOX_SETTINGS_ROOT_DIRECTORY 时被整体禁用
+// (见 data.cpp 的 LoadPersistValues / SaveValues),而 InfoManager 的
+// twPersistMount()/LoadValues() 也已改为围绕 Fox_Settings_Path 工作
+// (与上游 OrangeFox R11.3 一致)。
+// 因此 TWRP16 的 TW_PERSIST_DIR 已无任何使用者 —— 它曾被 InfoManager 用来
+// mkdir("/mnt/vendor/persist/TWRP"),在 persist 分区里凭空建出 TWRP 目录。
+// 保留定义只为记录历史,不要再在任何写路径上使用它。
+//#define TW_PERSIST_DIR            TW_PERSIST_ROOT "/TWRP"
+// 与 OrangeFox 对齐:设置文件名改用 .foxs(不是 TWRP 的 .twrp_settings),
+// 与 PERSIST_SETTINGS_FILE("/persist/.foxs") 的扩展名一致。
+#define TW_SETTINGS_FILE            ".foxs"
 #define TW_RECOVERY_NAME            "TWRP"
 #define TW_DEFAULT_RECOVERY_FOLDER  "/" TW_RECOVERY_NAME
-#define TW_STORAGE_PATH             "/data/recovery/"
+// OrangeFox 设置根目录。字符串拼接用,结尾不能带 '/'。
+#define TW_STORAGE_PATH             "/data/recovery"
 #define TW_USE_COMPRESSION_VAR      "tw_use_compression"
 #define TW_FILENAME                 "tw_filename"
 #define TW_ZIP_INDEX                "tw_zip_index"
@@ -161,11 +337,19 @@
 #define TW_KEYMASTER_VERSION_PROP     "keymaster_ver"
 
 // Theme versioning
-// version 2 requires theme to handle power button as action togglebacklight
-// version 4 adds listbox support to reboot page
-// version 5 adds File Manager options, nano & Flash Current TWRP
-// version 6 adds support for vendor_ab and recovery_ab, remove htcdumlock & Unmap Super Devices for A devices
-#define TW_THEME_VERSION 6
+// 主题版本:必须与随包发布的主题一致。
+// 可用版 OrangeFox R11.3 是在 gui/pages.cpp 里 #define 这个宏为 3,
+// 其主题 gui/theme/*/ui.xml 也声明 <themeversion>3</themeversion>。
+// 本树原先只有 TWRP16 带进来的 6(pages.cpp 里的定义在移植时丢了),
+// 于是 GUI 期望 6、主题却是 3,启动到 splash 之后加载主主题就失败
+// —— 现象:OF 标志闪一下就黑屏、没有 adb。
+// TWRP 的 v4/v5/v6 描述的是 TWRP 自家主题的特性,OrangeFox 主题不含这些,
+// 故对齐为 3(与 R11.3 相同)。
+// 注意:下面这行是 soong 插件解析版本号的依据
+// (libguitwrp_defaults.go 按空格 split 后取第 3 段),格式不要改。
+//   旧注释:TWRP 的 v4 = reboot 页 listbox;v5 = File Manager options/nano;
+//           v6 = vendor_ab/recovery_ab,去掉 htcdumlock
+#define TW_THEME_VERSION 3
 
 // Also used:
 //   tw_boot_is_mountable
@@ -189,5 +373,15 @@
 
 #define SCRIPT_FILE_TMP "/tmp/openrecoveryscript"
 #define TMP_LOG_FILE "/tmp/recovery.log"
+
+
+/* ===== OrangeFox 移植追加:被 OF 源码引用的其余常量 ===== */
+#define TW_HAS_INJECTTWRP           "tw_has_injecttwrp"
+#define TW_INJECT_AFTER_ZIP         "tw_inject_after_zip"
+#define TW_UNMOUNT_VENDOR           "tw_unmount_vendor"
+#define TW_ERROR_WRONG_DEVICE 7
+#define UPDATER_SCRIPT  	"META-INF/com/google/android/updater-script"
+#define AROMA_CONFIG 		"META-INF/com/google/android/aroma-config"
+
 
 #endif  // _VARIABLES_HEADER_

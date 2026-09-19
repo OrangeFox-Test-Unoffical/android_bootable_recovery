@@ -27,6 +27,8 @@
 #endif
 #include "twrp-functions.hpp"
 #include <time.h>
+#include <format>
+#include "unit_conversion.hpp"
 
 const int32_t update_interval_ms = 200; // Update interval in ms
 
@@ -84,12 +86,15 @@ void ProgressTracking::UpdateDisplayDetails(const bool force) {
 	}
 	clock_gettime(CLOCK_MONOTONIC, &last_update);
 	double display_percent = 0.0, progress_percent;
-	string size_prog = gui_lookup("size_progress", "%lluMB of %lluMB, %i%%");
-	char size_progress[1024];
 
 	if (total_backup_size != 0) // prevent division by 0
 		display_percent = (double)(current_size + previous_partitions_size) / (double)(total_backup_size) * 100;
-	sprintf(size_progress, size_prog.c_str(), (current_size + previous_partitions_size) / 1048576, total_backup_size / 1048576, (int)(display_percent));
+	const std::string current = UnitConversion::FormatBytes(current_size + previous_partitions_size);
+	const std::string total = UnitConversion::FormatBytes(total_backup_size);
+	const int size_percent = static_cast<int>(display_percent);
+	std::string size_progress = std::vformat(
+	    gui_lookup("size_progress", "{} / {}, {}%"),
+	    std::make_format_args(current, total, size_percent));
 	DataManager::SetValue("tw_size_progress", size_progress);
 	progress_percent = (display_percent / 100);
 	DataManager::SetProgress((float)(progress_percent));

@@ -2,6 +2,9 @@
 	Copyright 2017 TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -376,10 +379,15 @@ static int KeyCodeToChar(int key_code, bool shiftkey, bool ctrlkey)
 	return keyboard;
 }
 
-bool HardwareKeyboard::IsKeyDown(int key_code)
+bool HardwareKeyboard::IsKeyDown(int key_code) const
 {
 	std::set<int>::iterator it = mPressedKeys.find(key_code);
 	return (it != mPressedKeys.end());
+}
+
+bool HardwareKeyboard::AreKeysPressed(int key1_code, int key2_code) const
+{
+	return (mPressedKeys.count(key1_code) > 0 && mPressedKeys.count(key2_code) > 0);
 }
 
 int HardwareKeyboard::KeyDown(int key_code)
@@ -429,7 +437,7 @@ int HardwareKeyboard::KeyRepeat()
 #endif
 	if (mLastKeyChar)
 		PageManager::NotifyCharInput(mLastKeyChar);
-	else if (mLastKey)
+	else if (mLastKey && mime > 500)
 		PageManager::NotifyKey(mLastKey, true);
 	return 0;
 }

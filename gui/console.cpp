@@ -1,6 +1,10 @@
 /*
 	Copyright 2012 - 2020 TeamWin
+	
 	This file is part of TWRP/TeamWin Recovery Project.
+
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
 
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -189,6 +193,16 @@ void GUIConsole::Translate_Now()
 			color = "highlight";
 		else if (gMessages[m].GetKind() == msg::kWarning)
 			color = "warning";
+		else if (gMessages[m].GetKind() == msg::kGreen)
+			color = "green";
+		else if (gMessages[m].GetKind() == msg::kBlue)
+			color = "blue";
+		else if (gMessages[m].GetKind() == msg::kBlack)
+			color = "black";
+		else if (gMessages[m].GetKind() == msg::kPink)
+			color = "pink";
+		else if (gMessages[m].GetKind() == msg::kYellow)
+			color = "yellow";
 		gConsole.push_back(message);
 		gConsoleColor.push_back(color);
 	}
@@ -341,7 +355,8 @@ int GUIConsole::Update(void)
 
 	if (mUpdate) {
 		mUpdate = 0;
-		return 2;
+		if (Render() == 0)
+			return 2;
 	}
 	return 0;
 }
@@ -383,7 +398,7 @@ int GUIConsole::NotifyTouch(TOUCH_STATE state, int x, int y)
 	return GUIScrollList::NotifyTouch(state, x, y);
 }
 
-size_t GUIConsole::GetItemCount()
+size_t GUIConsole::GetItemCount() const
 {
 	return rConsole.size();
 }

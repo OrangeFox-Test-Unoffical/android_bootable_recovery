@@ -2,6 +2,9 @@
         Copyright 2015 bigbiff/Dees_Troy/_that TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
 
+        Copyright (C) 2018-2025 OrangeFox Recovery Project
+        This file is part of the OrangeFox Recovery Project.
+
         TWRP is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -68,12 +71,13 @@ int GUITextBox::Update(void)
 
 	if (mUpdate) {
 		mUpdate = 0;
-		return 2;
+		if (Render() == 0)
+			return 2;
 	}
 	return 0;
 }
 
-size_t GUITextBox::GetItemCount()
+size_t GUITextBox::GetItemCount() const
 {
 	return rText.size();
 }

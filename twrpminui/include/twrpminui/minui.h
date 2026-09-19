@@ -19,6 +19,7 @@
 
 #include "gui/placement.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 struct GRSurface {
     int width;
@@ -76,6 +77,7 @@ int gr_free_surface(gr_surface surface);
 
 // Functions in graphics_utils.c
 int gr_save_screenshot(const char *dest);
+void gr_draw_rect(int x, int y, int w, int h, int thickness);
 
 // Transform twrpminui API coordinates into display coordinates,
 // for panels that are hardware-mounted in a rotated manner.
@@ -103,6 +105,7 @@ int ev_has_mouse(void);
 
 // Returns 0 if no error, else negative.
 int res_create_surface(const char* name, gr_surface* pSurface);
+int res_get_pixel_format(void);
 void res_free_surface(gr_surface surface);
 int res_scale_surface(gr_surface source, gr_surface* destination, float scale_w, float scale_h);
 

@@ -33,7 +33,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include <algorithm>
 #include <string>
 
 extern "C" {
@@ -52,11 +51,12 @@ GUIText::GUIText(xml_node<>* node)
 	mIsStatic = 1;
 	mVarChanged = 0;
 	mFontHeight = 0;
-	mLastWidth = 0;
 	maxWidth = 0;
 	scaleWidth = true;
-	isHighlighted = false;
+	mLimit = isHighlighted = false;
+	mLength = 0;
 	mText = "";
+	xml_node<>* child;
 
 	if (!node)
 		return;
@@ -75,8 +75,14 @@ GUIText::GUIText(xml_node<>* node)
 	// Load the placement
 	LoadPlacement(FindNode(node, "placement"), &mRenderX, &mRenderY, &mRenderW, &mRenderH, &mPlacement);
 
-	xml_node<>* child = FindNode(node, "text");
+	child = FindNode(node, "text");
 	if (child)  mText = child->value();
+
+	child = FindNode(node, "limit");
+	if (child) {
+		mLimit = true;
+		mLength = LoadAttrInt(child, "length", mLength);
+	}
 
 	child = FindNode(node, "noscaling");
 	if (child) {
@@ -100,7 +106,6 @@ GUIText::GUIText(xml_node<>* node)
 	if (mLastValue != mText)   mIsStatic = 0;
 
 	mFontHeight = mFont->GetHeight();
-	mLastWidth = twrpTruetype::gr_ttf_measureEx(mLastValue.c_str(), mFont->GetResource());
 }
 
 int GUIText::Render(void)
@@ -115,7 +120,11 @@ int GUIText::Render(void)
 		return -1;
 
 	mLastValue = gui_parse_text(mText);
-	mLastWidth = twrpTruetype::gr_ttf_measureEx(mLastValue.c_str(), fontResource);
+	if (mLimit) {
+		int valLeng = mLastValue.length();
+		if (valLeng > mLength)
+			mLastValue = "..." + mLastValue.substr(valLeng - mLength, valLeng);
+	}
 
 	mVarChanged = 0;
 
@@ -150,10 +159,8 @@ int GUIText::Update(void)
 	std::string newValue = gui_parse_text(mText);
 	if (mLastValue == newValue)
 		return 0;
-	else {
+	else
 		mLastValue = newValue;
-		mLastWidth = twrpTruetype::gr_ttf_measureEx(mLastValue.c_str(), mFont->GetResource());
-	}
 	return 2;
 }
 
@@ -167,41 +174,6 @@ int GUIText::GetCurrentBounds(int& w, int& h)
 	h = mFontHeight;
 	mLastValue = gui_parse_text(mText);
 	w = twrpTruetype::gr_ttf_measureEx(mLastValue.c_str(), fontResource);
-	mLastWidth = w;
-	return 0;
-}
-
-int GUIText::GetRenderPos(int& x, int& y, int& w, int& h)
-{
-	void* fontResource = mFont ? mFont->GetResource() : NULL;
-	if (!fontResource)
-		return -1;
-
-	w = mLastWidth;
-	if (maxWidth && w > static_cast<int>(maxWidth))
-		w = maxWidth;
-	h = mFontHeight;
-	x = mRenderX;
-	y = mRenderY;
-
-	if (mPlacement != TOP_LEFT && mPlacement != BOTTOM_LEFT && mPlacement != TEXT_ONLY_RIGHT) {
-		if (mPlacement == CENTER || mPlacement == CENTER_X_ONLY)
-			x -= w / 2;
-		else
-			x -= w;
-	}
-	if (mPlacement != TOP_LEFT && mPlacement != TOP_RIGHT) {
-		if (mPlacement == CENTER || mPlacement == TEXT_ONLY_RIGHT)
-			y -= h / 2;
-		else if (mPlacement == BOTTOM_LEFT || mPlacement == BOTTOM_RIGHT)
-			y -= h;
-	}
-
-	// Include glyph antialiasing and keep empty text invalidation local.
-	--x;
-	--y;
-	w = std::max(w + 2, 1);
-	h += 2;
 	return 0;
 }
 

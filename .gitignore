@@ -1,4 +1,25 @@
-.*.swp
+# --- clangd ---
+.clangd
+.clangd/
+.cache/clangd/
+compile_commands.json
+compile_commands.json.*
+
+# --- CMake 生成物 ---
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# --- IDE / 编辑器 ---
+.vscode/
+.idea/
+*.swp
 *~
-tags
-.vscode
+
+# --- 系统文件 ---
+.DS_Store
+Thumbs.db

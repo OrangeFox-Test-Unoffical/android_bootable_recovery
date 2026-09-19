@@ -32,6 +32,7 @@
 #include "twrpdigest/twrpMD5.hpp"
 #include "twrpdigest/twrpSHA.hpp"
 
+std::vector<string> PartFilenames;
 
 bool twrpDigestDriver::Check_File_Digest(const string& Filename) {
 	twrpDigest *digest;
@@ -210,4 +211,42 @@ bool twrpDigestDriver::stream_file_to_digest(string filename, twrpDigest* digest
 	}
 	close(fd);
 	return true;
+}
+
+int twrpDigestDriver::Run_Digest() { //translate
+	gui_msg("con_digest_start=[DIGEST CREATION STARTED]");
+
+	if (PartFilenames.empty()) {
+		gui_msg(Msg(msg::kError, "con_digest_error=Partition list is empty!"));
+		return 1;	
+	}
+
+	DataManager::SetValue(TW_ACTION_BUSY, "1");
+	bool ret_val = 0;
+	int vector_size = PartFilenames.size();
+  	time_t total_start, total_stop;
+
+    DataManager::SetValue("ui_progress", 0);
+
+  	time(&total_start);
+
+	for (int i = 0; i < vector_size; i++) {
+		gui_print("%s\n", basename(PartFilenames[i].c_str()));
+        if (!twrpDigestDriver::Make_Digest(PartFilenames[i])) {
+			ret_val = 1;
+			break;
+		}
+
+		int progress = (int) (((float) (vector_size - i) / (float) vector_size) * 100.0);
+    	DataManager::SetValue("ui_progress", progress);
+    }
+	PartFilenames.clear();
+	DataManager::SetValue("fox_show_digest_btn", "0");
+	DataManager::SetValue(TW_ACTION_BUSY, "0");
+
+  	time(&total_stop);
+  	int total_time = (int) difftime(total_stop, total_start);
+	gui_msg(Msg(msg::kHighlight, "con_digest_complete=[DIGEST CREATION COMPLETED IN {1} SECONDS]") (total_time));
+
+	return ret_val;
 }

@@ -2,6 +2,9 @@
     Copyright 2012 to 2020 TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -340,6 +343,11 @@ int GUISliderValue::Render(void)
 		gr_textEx_scaleW(mRenderX + (mRenderW/2 - textW/2), mSliderY+mSliderH, mValueStr, fontResource, mRenderW, TOP_LEFT, 0);
 	}
 
+	if (HasFocus()) {
+		gr_color(mFocusColor.red, mFocusColor.green, mFocusColor.blue, mFocusColor.alpha);
+		gr_draw_rect(mRenderX + 2, mRenderY + 2, mRenderW - 4, mRenderH - 4, 3);
+	}
+
 	mRendered = true;
 	return 0;
 }
@@ -441,4 +449,22 @@ void GUISliderValue::SetPageFocus(int inFocus)
 {
 	if (inFocus)
 		loadValue();
+}
+
+void GUISliderValue::SetCurrentValue(int value)
+{
+	if (value > mMax)
+		mValue = mMax;
+	else if (value < mMin)
+		mValue = mMin;
+	else
+		mValue = value;
+
+	mValuePct = pctFromValue(mValue);
+	mRendered = false;
+
+	if (!mVariable.empty())
+		DataManager::SetValue(mVariable, mValue);
+	if (mAction)
+		mAction->doActions();
 }

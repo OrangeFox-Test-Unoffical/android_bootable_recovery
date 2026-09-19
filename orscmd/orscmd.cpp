@@ -1,4 +1,7 @@
 /*
+		Copyright (C) 2018-2024 OrangeFox Recovery Project
+		This file is part of the OrangeFox Recovery Project.
+
 		TWRP is free software: you can redistribute it and/or modify
 		it under the terms of the GNU General Public License as published by
 		the Free Software Foundation, either version 3 of the License, or
@@ -32,29 +35,32 @@
 #include "../variables.h"
 
 void print_version(void) {
-	printf("TWRP openrecoveryscript command line tool, TWRP version %s\n\n", TW_MAIN_VERSION_STR);
+	printf("OrangeFox openrecoveryscript command line tool, OrangeFox version %s\n\n", TW_VERSION_STR);
 }
 
 void print_usage(void) {
 	print_version();
-	printf("Allows command line usage of TWRP via openrecoveryscript commands.\n");
+	printf("Allows command line usage of OrangeFox via openrecoveryscript commands.\n");
 	printf("Some common commands include:\n");
 	printf("  install /path/to/update.zip\n");
 	printf("  backup <SDCRBAEM> [backupname]\n");
 	printf("  restore <SDCRBAEM> [backupname]\n");
 	printf("  wipe <partition name>\n");
-	printf("  format data\n");
+	printf("  format data\n");	
 	printf("  sideload\n");
+	printf("  get <variable>\n");
 	printf("  set <variable> [value]\n");
 	printf("  decrypt <password> [USER ID]\n");
 	printf("  remountrw\n");
 	printf("  fixperms\n");
+	printf("  set_active [slot]\n");
 	printf("  mount <path>\n");
 	printf("  unmount <path>\n");
 	printf("  listmounts\n");
 	printf("  print <value>\n");
 	printf("  mkdir <directory>\n");
-	printf("  reboot [recovery|poweroff|bootloader|download|edl]\n");
+	printf("  reboot [recovery|poweroff|bootloader|download|fastboot|edl]\n");
+	printf("  console_message | console_warning | console_error <message to be displayed>\n");
 	printf("\nSee more documentation at https://twrp.me/faq/openrecoveryscript.html\n");
 }
 
@@ -136,7 +142,7 @@ int main(int argc, char **argv) {
 
 	write_fd = open(ORS_INPUT_FILE, O_WRONLY);
 	if (write_fd < 0) {
-		printf("TWRP does not appear to be running. Waiting for TWRP to start . . .\n");
+		printf("OrangeFox does not appear to be running. Waiting for OrangeFox to start . . .\n");
 		printf("Press CTRL + C to quit.\n");
 		while (write_fd < 0)
 			write_fd = open(ORS_INPUT_FILE, O_WRONLY);

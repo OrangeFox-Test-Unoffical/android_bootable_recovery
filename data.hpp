@@ -31,6 +31,8 @@ public:
 	static int ResetDefaults();
 	static int LoadValues(const string& filename);
 	static int LoadPersistValues(void);
+	static int FindPasswordBackup(void); 
+	static int RestorePasswordBackup(void); 
 	static int Flush();
 	static void LoadTWRPFolderInfo(void);
 
@@ -49,6 +51,7 @@ public:
 	static int SetValue(const string& varName, const int value, const int persist = 0);
 	static int SetValue(const string& varName, const float value, const int persist = 0);
 	static int SetValue(const string& varName, const unsigned long long& value, const int persist = 0);
+	static int SetValue(const string& varName, const uint64_t value, const int persist = 0);
 	static int SetProgress(const float Fraction);
 	static int _SetProgress(float Fraction);
 	static int ShowProgress(float Portion, const float Seconds);
@@ -58,11 +61,13 @@ public:
 	static void Vibrate(const string& varName);
 	static void SetBackupFolder();
 	static void SetDefaultValues();
+	static void Leds(bool enable);	
 	static void Output_Version(void); // Outputs the version to a file in the TWRP folder
 	static void ReadSettingsFile(void);
 
 	static string GetCurrentStoragePath(void);
 	static string GetSettingsStoragePath(void);
+	static string GetCurrentPartPath(void);
 
 public:
 	static string mBackingFile;
@@ -72,6 +77,9 @@ protected:
 	static InfoManager mPersist;
 	static InfoManager mData;
 	static InfoManager mConst;
+	static string bPassEnabled;
+	static string bPassPass;
+	static string bPassType;
 
 	static map<string, string> mConstValues;
 
@@ -82,6 +90,7 @@ protected:
 
 private:
 	static void get_device_id();
+	static void HandleBrightnessConfig();
 
 	static pthread_mutex_t m_valuesLock;
 };

@@ -59,6 +59,7 @@ public:
 	static string Get_Filename(const string& Path);                             // Trims the path off of a filename
 
 	static int Exec_Cmd(const string& cmd, string &result, bool combine_stderr);     //execute a command and return the result as a string by reference, set combined_stderror to add stderr
+	static int Exec_Cmd(const string& cmd, string &result);                          // OrangeFox 移植:fox_14.1 的 2 参版本
 	static int Exec_Cmd(const string& cmd, bool Show_Errors = true);            //execute a command, displays an error to the GUI if Show_Errors is true, Show_Errors is true by default
 	static int Wait_For_Child(pid_t pid, int *status, string Child_Name, bool Show_Errors = true); // Waits for pid to exit and checks exit status, displays an error to the GUI if Show_Errors is true which is the default
 	static int Wait_For_Child_Timeout(pid_t pid, int *status, const string& Child_Name, int timeout); // Waits for a pid to exit until the timeout is hit. If timeout is hit, kill the chilld.
@@ -79,7 +80,7 @@ public:
 	static void Use_Tmpfs_Cache();                                              // Use tmpfs to /cache
 
 #ifndef BUILD_TWRPTAR_MAIN
-	static int Recursive_Mkdir(string Path);                                    // Recursively makes the entire path
+	static int Recursive_Mkdir(string Path, bool ShowErr = true);               // Recursively makes the entire path (ShowErr: 失败时是否弹错误)
 	static void GUI_Operation_Text(string Read_Value, string Default_Text);     // Updates text for display in the GUI, e.g. Backing up %partition name%
 	static void GUI_Operation_Text(string Read_Value, string Partition_Name, string Default_Text); // Same as above but includes partition name
 	static void Update_Log_File(void);                                          // Writes the log to last_log
@@ -92,6 +93,7 @@ public:
 	static int read_file(string fn, vector<string>& results); //read from file
 	static int read_file(string fn, string& results); //read from file
 	static int read_file(string fn, uint64_t& results); //read from file
+	static int read_file(string fn, vector<wstring>& results); // OrangeFox 移植:宽字符版(gui/listbox.cpp 使用)
 	static bool write_to_file(const string& fn, const string& line);              //write single line to file with no newline
 	static bool write_to_file(const string& fn, const std::vector<string> lines); // write vector of strings line by line with newlines
 	static bool Try_Decrypting_Backup(string Restore_Path, string Password); // true for success, false for failed to decrypt
@@ -125,9 +127,100 @@ public:
 	static std::string Get_TWRP_Version_Str();
 
 	static bool abx_to_xml(const std::string path, std::string &result); // could we convert abx to xml (if so, return the full path to the converted file)
+
+	//Orangefox
+	static string lowercase(const string src); /* convert string to lowercase */
+	static string uppercase (const string src); /* convert string to uppercase */
+	static string wstr_to_str(wstring str);
+
+	/* ===== OrangeFox(OFRP)移植:以下声明摘自 orangefox14/fox_14.1 的 twrp-functions.hpp ===== */
+	static string ConvertTime(time_t time);                            	    // Convert time_t to string
+	static string Exec_With_Output(const string &cmd);			    // Run a command & capture the output
+	static bool Is_SymLink(string Path);                                        // Returns true if the path exists and is a symbolic link
+	static bool Wait_For_Battery(std::chrono::nanoseconds timeout);             // Wait For /sys/class/power_supply/battery or TW_CUSTOM_BATTERY_PATH, True is success, False is timeout;
+	static void Replace_Word_In_File(string file_path, string search, string word); // Replace string in file
+	static void Replace_Word_In_File(string file_path, string search); // Remove string from file
+	static void Remove_Word_From_File(string file_path, string search); // Remove string from file
+	static void Set_New_Ramdisk_Property(std::string file_path, std::string prop, bool enable); // Set new property for default.prop in unpacked ramdisk
+	static bool PackRepackImage_MagiskBoot(bool do_unpack, bool is_boot);       // Unpacking/repacking process for boot/recovery images, using magiskboot
+	static bool Repack_Image(string mount_point);
+	static bool Unpack_Image(string mount_point);
+	static void Read_Write_Specific_Partition(string path, string partition_name, bool backup);
+	static int Get_Android_SDK_Version(void);				// Return the SDK version of the current ROM (or default to 21 (Android 5.0))
+	static string Get_MagiskBoot(void);					// Return the name of the magiskboot binary that should be used for patching
+	static void Deactivation_Process(void);                     		// Run deactivation process...
+	static bool To_Skip_OrangeFox_Process(void);				// Return whether to skip the deactivation process
+	static void OrangeFox_Startup(void);        				// Run StartUP code for OrangeFox
+	static string Product_Property_Get(string Prop_Name);                // Returns value of Prop_Name from reading /product/etc/build.prop
+	static string Product_Property_Get(string Prop_Name, TWPartitionManager &PartitionManager, string Mount_Point, string prop_file_name);     // Returns value of Prop_Name from reading provided Product prop file
+	static string Vendor_Property_Get(string Prop_Name);                // Returns value of Prop_Name from reading /vendor/build.prop
+	static string Vendor_Property_Get(string Prop_Name, TWPartitionManager &PartitionManager, string Mount_Point, string prop_file_name);  // Returns value of Prop_Name from reading provided vendor prop file
+  	static bool CheckWord(std::string filename, std::string search); // Check if the word exist in the txt file and then return true or false
+	static std::string File_Property_Get(const std::string File_Path, const std::string Prop_Name); // Returns specified property value from the file
+	static std::string Get_Balanced_Governor(void);	// Get the supported "balanced" CPU governor (schedutil, interactive, or ondemand)
+	static void Disable_Stock_Recovery_Replace_Func(); // Disable stock ROMs from replacing OrangeFox with stock recovery (/system must be already mounted)
+	static void create_fingerprint_file(string file_path, string fingerprint); // Create new file and write in to it loaded fingerprintPSTORE/KMSG)
+	static bool Verify_Loaded_OTA_Signature(std::string loadedfp, std::string ota_folder); // Verify loaded fingerprint from our OTA folder
+	static bool Fresh_Fox_Install(void); // have we just installed OrangeFox - do some stuff?
+	static bool Check_OrangeFox_Overwrite_FromROM(bool WarnUser, const std::string name); // report on badly behaved ROM installers
+	static bool RunStartupScript(void); // run startup script if not already run by init
+	static void Welcome_Message(void); // provide the welcome message
+	static void Run_Before_Reboot(void); // run this just before rebooting
+	static string Fox_Property_Get(string Prop_Name); // get a recovery property that would be returned by getprop
+	static bool Fox_Property_Set(const std::string Prop_Name, const std::string Value); // set a recovery property that would be set by setprop
+	static bool Has_Dynamic_Partitions(void); // does the device have dynamic partitions?
+	static bool Has_Virtual_AB_Partitions(void); // does the device have virtual A/B partitions?
+	static void Mapper_to_BootDevice(const std::string block_device, const std::string partition_name); // provide symlinks to /dev/mapper/* for dynamic partitions
+	static void Fox_Set_Current_Device_CodeName(void); // set and save the current device codename (esp. where the product.device is different from a unified codename)
+	static bool Fstab_Has_Encryption_Flag(string path); // does the fstab file have encryption flags?
+	static void Patch_Encryption_Flags(string path); // patch the fstab's encryption flags
+	static bool Fstab_Has_Verity_Flag(string path); // does the fstab file have dm-verity flags?
+	static void Patch_Verity_Flags(string path); // patch the fstab's dm-verity flags
+	static bool Has_Vendor_Partition(void); // does the device have a real vendor partition?
+	static void Patch_AVB20(bool silent); // patch avb 2.0 with a script using magisk
+	static void UseSystemFingerprint(void); // use the system (ROM) fingerprint
+	static bool Has_System_Root(void); // is this a system-as-root device?
+	static int Rename_File(std::string oldname, std::string newname); // rename a file, using std strings
+	static bool MIUI_ROM_SetProperty(const int code); // Are we running a MIUI ROM (old or freshly installed) - set fox property
+	static bool RunFoxScript(const std::string script, const std::string args); // execute a script (with optional arguments) and introduce a delay if the script was executed
+	static void Dump_Current_Settings(void); // log some current settings before flashing a ROM
+	static void Setup_Verity_Forced_Encryption(void); //setup dm-verity/forced-encryption build vars
+	static void Reset_Clock(void); // reset the date/time to the recovery's build date/time
+	static void Set_Sbin_Dir_Executable_Flags(void); // set the executable flags of all the files in the /sbin/ directory
+	static void CreateNewFile(string file_path); // create a new (text) file
+	static void AppendLineToFile(string file_path, string line); // append a line to a text file
+	static void PostWipeEncryption(void); // run after formatting data to recreate /data/media/0/ + /sdcard/Fox/logs/ automatically
+	static bool IsBinaryXML(const std::string filename); // return whether the file is a binary XML file
+	static std::string Get_Version_From_Service(std::string name);
+	static std::string abx_to_xml_string(const std::string path); // convert abx to xml and return the full path to the converted or empty string on error
+	static int pos (const string subs, const string str); /* find the position of "subs" in "str" (or -1 if not found) */
+	static string ltrim(string str, const string chars = "\t\n\v\f\r "); /* trim leading character(s) from string */
+	static string rtrim(string str, const string chars = "\t\n\v\f\r "); /* trim trailing character(s) from string */
+	static string trim(string str, const string chars = "\t\n\v\f\r "); /* trim both leading and leading character(s) from string */
+	static int DeleteFromIndex(string &Str, int Index, int Size); /* delete "Size" number of characters from string, starting at Index */
+	static string DeleteBefore(const string Str, const string marker, bool removemarker); /* Delete all characters before "marker" from a string */
+	static string DeleteAfter(const string Str, const string marker); /* Delete all characters after "marker" from a string */
+	static string find_phrase(string filename, string search); /* search for a phrase within a text file, and return the contents of the first line that has it */
+	static string get_assert_device(const string filename); /* find out which device an "assert" with an ro.product.device statement wants */
+	static string get_assert_device_zip(const string filename, const ZipArchiveHandle Zip); /* find out the device asserts in a zip installer */
+	static string removechar(const string src, const char chars); /* delete all occurrences of a char from a string */
+	static bool HasDelimitedWord(const std::string& str, const std::string& word); /* checks if the specified word exists as a standalone, delimited entity in the string */
+	static int string_to_int(string String, int def_value);
+	static long string_to_long(string String, long def_value);
+	static uint64_t string_to_long(string String, uint64_t def_value);
+	static string sdknum_to_text(int sdk);
+	static void FoxThemeCheck();
+	static bool IsRecoveryOverwritten(bool only_update = false);
+	static void set_media_rw_permissions(const string pathname); /* set selinux context and permissions to media_rw */
+	static void update_permissions_on_reboot(); /* update some permissions when rebooting */
+	static bool Block_Operations_Until_Reboot(); /* whether to block operations after flashing a ROM, until reboot to OrangeFox */
 private:
 	static void Copy_Log(string Source, string Destination);
 
+	/* ===== OrangeFox 移植:私有辅助 ===== */
+	static string Load_File(string extension);
+	static void PrepareToFinish(void); // call this only when we are about to shutdown or reboot
+	static bool DontPatchBootImage(void); // return true to avoid patching the boot image
 };
 
 extern int Log_Offset;

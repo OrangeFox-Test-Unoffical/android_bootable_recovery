@@ -45,7 +45,13 @@ namespace msg
 		kNormal,
 		kHighlight,
 		kWarning,
-		kError
+		kError,
+		kProcess,
+		kGreen,
+		kBlue,
+		kYellow,
+		kBlack,
+		kPink
 	};
 
 

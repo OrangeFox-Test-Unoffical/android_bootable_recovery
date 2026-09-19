@@ -404,7 +404,7 @@ static InstallResult TryUpdateBinary(Package* package, bool* wipe_cache,
         package->GetPackageSize() < MEMORY_PACKAGE_LIMIT) {
       std::vector<uint8_t> content(package->GetPackageSize());
       if (package->ReadFullyAtOffset(content.data(), content.size(), 0)) {
-        auto memory_package = Package::CreateMemoryPackage(std::move(content), {});
+        auto memory_package = Package::CreateMemoryPackage(std::move(content));
         return WipeAbDevice(device, memory_package.get()) ? INSTALL_SUCCESS : INSTALL_ERROR;
       }
     }

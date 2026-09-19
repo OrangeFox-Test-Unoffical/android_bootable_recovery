@@ -1398,7 +1398,7 @@ namespace rapidxml
                 RAPIDXML_PARSE_ERROR("ABX Format Unsupported by RapidXML", text);
                 return;
             }
-
+            
             // Parse children
             while (1)
             {

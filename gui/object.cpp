@@ -2,6 +2,9 @@
 	Copyright 2017 TeamWin
 	This file is part of TWRP/TeamWin Recovery Project.
 
+	Copyright (C) 2018-2025 OrangeFox Recovery Project
+	This file is part of the OrangeFox Recovery Project.
+
 	TWRP is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -221,4 +224,12 @@ bool GUIObject::isMounted(string vol)
 	}
 	fclose(fp);
 	return false;
+}
+
+void ActionObject::SetFocus(bool focus)
+{
+	if (DataManager::GetStrValue("of_hw_control_mode") == "1") {
+		mHasFocus = focus;
+		gui_forceRender();
+	}
 }

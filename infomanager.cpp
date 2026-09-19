@@ -64,19 +64,28 @@ void InfoManager::Clear(void) {
 static bool twPersistFirstMounted = false;
 
 void twPersistMount(void) {
-	twPersistFirstMounted = PartitionManager.Is_Mounted_By_Path(TW_PERSIST_DIR);
-	if (!twPersistFirstMounted) PartitionManager.Mount_By_Path(TW_PERSIST_DIR, false);
+	// 与上游 OrangeFox R11.3 对齐:设置存储的挂载/探测目标是【设置目录】
+	// (Fox_Settings_Path = /data/recovery/Fox),而不是 TWRP 的 TW_PERSIST_DIR。
+	// 移植版这里用的是 TW_PERSIST_DIR(/mnt/vendor/persist/TWRP),
+	// 于是每次读写设置都会去挂载/探测 persist 里的 TWRP 位置。
+	twPersistFirstMounted = PartitionManager.Is_Mounted_By_Path(Fox_Settings_Path);
+	if (!twPersistFirstMounted) PartitionManager.Mount_By_Path(Fox_Settings_Path, false);
 }
 
 void twPersistUnMount(void) {
-	if (!twPersistFirstMounted) PartitionManager.UnMount_By_Path(TW_PERSIST_DIR, false);
+	if (!twPersistFirstMounted) PartitionManager.UnMount_By_Path(Fox_Settings_Path, false);
 }
 
 int InfoManager::LoadValues(void) {
 	string str;
 
 	twPersistMount();
-	if (!TWFunc::Path_Exists(string(TW_PERSIST_DIR))) mkdir(TW_PERSIST_DIR, 0777);
+	// 与上游 OrangeFox R11.3 对齐:这里要保证的是【设置目录】存在
+	// (/data/recovery/Fox),不是 TWRP 的 TW_PERSIST_DIR。
+	// 移植版原来是 mkdir(TW_PERSIST_DIR) = mkdir(/mnt/vendor/persist/TWRP),
+	// 会在 persist 分区里凭空建出一个 TWRP 目录 —— 这是不期望的行为。
+	if (!TWFunc::Path_Exists(Fox_Settings_Path))
+		mkdir(Fox_Settings_Path.c_str(), 0777);
 
 	// Read in the file, if possible
 	FILE* in = fopen(File.c_str(), "rb");
