@@ -555,9 +555,7 @@ cc_binary {
         "twrpRepacker.cpp",
         "oaes/oaes.cpp",
         "BasePartition.cpp",
-        // OrangeFox(OFRP)源文件:原先只在 OF 的 Android.mk 里编译,Soong 侧漏接线
         "orangefox.cpp",
-        // TWRP16 的这两个文件在工作树里存在但未接线(链接期 UnitConversion::FormatBytes / abx2xml 未定义)
         "abx.cpp",
         "unit_conversion.cpp",
     ] + select(soong_config_variable("twrpGlobalVars", "exclude_apex"), {
