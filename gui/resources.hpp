@@ -59,7 +59,7 @@ uint32_t* createShape(int w, int h, int radius, int stroke, COLOR color, Rounded
 class Resource
 {
 public:
-	Resource(xml_node<>* node, ZipArchiveHandle pZip);
+	Resource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
 	virtual ~Resource() {}
 
 public:
@@ -77,19 +77,19 @@ protected:
 class FontResource : public Resource
 {
 public:
-	FontResource(xml_node<>* node, ZipArchiveHandle pZip);
+	FontResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
 	virtual ~FontResource();
 
 public:
 	void* GetResource() { return mFont; }
 	int GetHeight() { return twrpTruetype::gr_ttf_getMaxFontHeight(mFont); }
-	void Override(xml_node<>* node, ZipArchiveHandle pZip);
+	void Override(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
 
 protected:
 	void* mFont;
 
 private:
-	void LoadFont(xml_node<>* node, ZipArchiveHandle pZip);
+	void LoadFont(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
 	void DeleteFont();
 
 private:
@@ -100,8 +100,8 @@ private:
 class ImageResource : public Resource
 {
 public:
-	ImageResource(xml_node<>* node, ZipArchiveHandle pZip);
-	ImageResource(xml_node<>* node);
+	ImageResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
+	ImageResource(rapidxml::xml_node<>* node);
 	virtual ~ImageResource();
 
 public:
@@ -116,7 +116,7 @@ protected:
 class AnimationResource : public Resource
 {
 public:
-	AnimationResource(xml_node<>* node, ZipArchiveHandle pZip);
+	AnimationResource(rapidxml::xml_node<>* node, ZipArchiveHandle pZip);
 	virtual ~AnimationResource();
 
 public:
@@ -136,7 +136,7 @@ public:
 	ResourceManager();
 	virtual ~ResourceManager();
 	void AddStringResource(std::string resource_source, std::string resource_name, std::string value);
-	void LoadResources(xml_node<>* resList, ZipArchiveHandle pZip, std::string resource_source);
+	void LoadResources(rapidxml::xml_node<>* resList, ZipArchiveHandle pZip, std::string resource_source);
 
 public:
 	FontResource* FindFont(const std::string& name) const;

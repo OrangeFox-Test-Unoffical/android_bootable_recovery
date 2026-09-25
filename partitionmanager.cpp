@@ -3552,18 +3552,18 @@ bool TWPartitionManager::Decrypt_Adopted()
   LOGINFO("Decrypt adopted storage starting\n");
   char *xmlFile =
     PageManager::LoadFileToBuffer(path, NULL);
-  xml_document <> *doc = NULL;
-  xml_node <> *volumes = NULL;
+  rapidxml::xml_document <> *doc = NULL;
+  rapidxml::xml_node <> *volumes = NULL;
   string Primary_Storage_UUID = "";
   if (xmlFile != NULL)
     {
       LOGINFO("successfully loaded %s\n", path.c_str());
-      doc = new xml_document <> ();
+      doc = new rapidxml::xml_document <> ();
       doc->parse < 0 > (xmlFile);
       volumes = doc->first_node("volumes");
       if (volumes)
 	{
-	  xml_attribute <> *psuuid =
+	  rapidxml::xml_attribute <> *psuuid =
 	    volumes->first_attribute("primaryStorageUuid");
 	  if (psuuid)
 	    {
@@ -3597,10 +3597,10 @@ bool TWPartitionManager::Decrypt_Adopted()
 	      ret = true;
 	      if (volumes)
 		{
-		  xml_node <> *volume = volumes->first_node("volume");
+		  rapidxml::xml_node <> *volume = volumes->first_node("volume");
 		  while (volume)
 		    {
-		      xml_attribute <> *guid =
+		      rapidxml::xml_attribute <> *guid =
 			volume->first_attribute("partGuid");
 		      if (guid)
 			{
@@ -3612,7 +3612,7 @@ bool TWPartitionManager::Decrypt_Adopted()
 
 			  if (strcasecmp(GUID.c_str(), guid->value()) == 0)
 			    {
-			      xml_attribute <> *attr =
+			      rapidxml::xml_attribute <> *attr =
 				volume->first_attribute("nickname");
 			      if (attr && attr->value()
 				  && strlen(attr->value()) > 0)

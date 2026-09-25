@@ -67,7 +67,7 @@
 
 // ---- OrangeFox(OFRP)移植所需 ----
 #include "orangefox.hpp"
-#include "abx-functions.hpp"
+#include "abx.hpp"
 #include "twinstall.h"
 #include <private/android_filesystem_config.h>
 #include <locale>

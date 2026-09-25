@@ -3,6 +3,7 @@
 #include <sys/mount.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <filesystem>
 #include <format>
 #include <string>
@@ -116,7 +117,9 @@ bool KernelModuleLoader::Load_Vendor_Modules() {
     /* Always release whatever we mounted, even on an early return below. */
     auto mount_guard = android::base::make_scope_guard([&] {
         unmount_with_kill(ven_dlkm, MNT_DETACH);
-        unmount_with_kill(ven, 0);
+        // ven 也用 MNT_DETACH:普通 umount(flags=0) 遇到任何残留子挂载都会 EBUSY 失败,
+        // 真机 vendor 就会长期挂在 /vendor 上。
+        unmount_with_kill(ven, MNT_DETACH);
     });
 
     for (const auto& module_dir : vendor_module_dirs) Try_And_Load_Modules(module_dir, true);
@@ -146,7 +149,12 @@ bool KernelModuleLoader::Try_And_Load_Modules(std::string module_dir, bool vendo
     if (mount(dest_module_dir.c_str(), module_dir.c_str(), nullptr, MS_BIND, nullptr) == 0) {
         Modprobe m({ module_dir }, "modules.load.twrp", false);
         const bool loaded = m.LoadListedModules(false);
-        PartitionManager.UnMount_By_Path(module_dir.c_str(), false, MNT_DETACH);
+        // module_dir(通常是 /vendor/lib/modules;未挂 /vendor 时是重映射的 /lib/modules)只是这里刚建的
+        // bind 目标,并不是 TWPartition —— UnMount_By_Path() 是按挂载点精确匹配分区表的,对它静默 no-op,
+        // 于是 bind 会残留,导致之后 umount /vendor 永远 EBUSY(真机 vendor 长期盖住 ramdisk 的 /vendor)。
+        // 所以这里必须直接 umount2 卸掉这个 bind。
+        if (umount2(module_dir.c_str(), MNT_DETACH) != 0)
+            LOGINFO("Unable to un-bind %s (errno %d)\n", module_dir.c_str(), errno);
         LOGINFO("libmodprobe processed %d modules from %s\n", m.GetModuleCount(),
                 module_dir.c_str());
         return loaded;

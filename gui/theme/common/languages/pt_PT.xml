@@ -46,7 +46,6 @@
 		<string name="install_zip_hdr">Instalar ZIP</string>
 		<string name="install_zip_btn">Instalar ZIP</string>
 		<string name="install_image_hdr">Instalar Imagem</string>
-<<<<<<< HEAD
 		<string name="install_image_btn">Instalar IMAGE</string>
 		<string name="install_select_file_hdr">Selecionar Ficheiro</string>
 		<string name="install_select_file_btn">Selecionar Ficheiro</string>
@@ -62,28 +61,6 @@
 		<string name="zip_sig_chk">Verificação de assinatura ZIP</string>
 		<string name="inject_twrp_chk">Injetar OrangeFox após instalação</string>
 		<string name="install_reboot_chk">Reiniciar após a instalação ser concluída</string>
-=======
-		<string name="install_image_btn">Instalar Imagem</string>
-		<string name="install_select_file_hdr">Selecione o ficheiro</string>
-		<string name="file_selector_folders_hdr">Pastas</string>
-		<string name="select_file_from_storage">Selecione o ficheiro do %tw_storage_display_name% (%tw_storage_free_size%)</string>
-		<string name="adb_sideload_btn">ADB Sideload</string>
-		<string name="install_hdr">Instalar</string>
-		<string name="select_storage_hdr">Escolher armazenamento</string>
-		<string name="select_storage_btn">Armazenamento</string>
-		<string name="queue_hdr">Lista</string>
-		<string name="zip_queue_count">%tw_zip_queue_count% do máximo de 10 ficheiros na fila</string>
-		<string name="zip_queue_count_s">ficheiro %tw_zip_queue_count% de 10:</string>
-		<string name="zip_warn1">Esta operação poderá instalar software</string>
-		<string name="zip_warn2">incompatível e tornar o seu aparelho inutilizável.</string>
-		<string name="zip_back_cancel">Pressione o botão voltar para cancelar a instalação.</string>
-		<string name="zip_back_clear">Pressione o botão voltar para limpar a fila.</string>
-		<string name="folder">Origem:</string>
-		<string name="file">Ficheiro:</string>
-		<string name="zip_sig_chk">Verificação de assinatura do ficheiro zip</string>
-		<string name="inject_twrp_chk">Injetar a TWRP após a instalação</string>
-		<string name="install_reboot_chk">Reiniciar após concluir a instalação</string>
->>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="options_hdr">Opções</string>
 		<string name="zip_queue">Fila de espera</string>
 		<string name="install_zip_count_hdr">A instalar ficheiro %tw_zip_index% de %tw_zip_queue_count%</string>
@@ -134,7 +111,6 @@
 		<string name="format_data_undo">Isto não pode ser desfeito.</string>
 		<string name="format_data_complete">Formatação de dados concluída</string>
 		<!-- Translator note: the word "yes" must remain English! -->
-<<<<<<< HEAD
 		<string name="yes_continue">Digite "yes" para confirmar.</string>
 		<string name="part_opt_hdr">Informações da Partição</string>
 		<string name="file_sys_opt">Opções da Partição</string>
@@ -152,28 +128,6 @@
 		<string name="resize_confirm">Redimensionar partição</string>
 		<string name="resizing">Redimensionar...</string>
 		<string name="resize_complete">Redimensionamento concluído</string>
-=======
-		<string name="yes_continue">Escreva yes para continuar.  Cancele com o botão voltar.</string>
-		<string name="part_opt_hdr">Opções de partição para: %tw_partition_name%</string>
-		<string name="sel_act_hdr">Escolher ação</string>
-		<string name="file_sys_opt">Opções de sistema de ficheiros</string>
-		<string name="partition">Partição: %tw_partition_name%</string>
-		<string name="part_mount_point">Ponto de montagem: %tw_partition_mount_point%</string>
-		<string name="part_curr_fs">Sistema de ficheiros: %tw_partition_file_system%</string>
-		<string name="part_present_yes">Presente: Sim</string>
-		<string name="part_present_no">Presente: Não</string>
-		<string name="part_removable_yes">Removível: Sim</string>
-		<string name="part_removable_no">Removível: Não</string>
-		<string name="part_size">Tamanho: %tw_partition_size%</string>
-		<string name="part_used">Ocupado: %tw_partition_used%</string>
-		<string name="part_free">Livre: %tw_partition_free%</string>
-		<string name="part_backup_size">Tamanho do backup: %tw_partition_backup_size%</string>
-		<string name="resize_btn">Redimensionar sistema de ficheiros</string>
-		<string name="resize_btn_s">Redimensionar</string>
-		<string name="resize_confirm">Redimensionar %tw_partition_name%?</string>
-		<string name="resizing">A redimensionar...</string>
-		<string name="resize_complete">Redimensionamento completo</string>
->>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="swipe_resize">Deslize para redimensionar</string>
 		<string name="repair_btn">Reparar FS</string>
 		<string name="repair_confirm">Reparar partição</string>
@@ -188,7 +142,6 @@
 		<string name="format_complete">Formatação concluída</string>
 		<string name="swipe_change_fs">Deslize para alterar</string>
 		<string name="back_btn">Voltar</string>
-<<<<<<< HEAD
 		<string name="wipe_enc_btn">Apagar Criptografia</string>
 		<string name="swipe_factory_reset">Deslize para fazer o Restauro de Fábrica</string>
 		<string name="backup_hdr">Cópia de Segurança</string>
@@ -215,61 +168,6 @@
 		<string name="restore_backup_date">Data do Backup</string>
 		<string name="restore_md5_chk">Verificar MD5 dos ficheiros de backup</string>
 		<string name="restore_enable_md5_chk">Ativar a verificação MD5 dos ficheiros de backup</string>
-=======
-		<string name="wipe_enc_btn">Apagar encriptação</string>
-		<string name="swipe_factory_reset">   Deslize para fazer reset</string>
-		<string name="repair_change_btn">Reparar ou alterar sistema de ficheiros</string>
-		<string name="storage_hdr">Armazenamento: %tw_storage_display_name% (%tw_storage_free_size%)</string>
-		<string name="backup_hdr">Backup</string>
-		<string name="backup_confirm_hdr">Confirmar o Backup</string>
-		<string name="encryption_tab">ENCRIPTAÇÃO</string>
-		<string name="encryption">Encriptação:</string>
-		<string name="name">Nome:</string>
-		<string name="sel_part_backup">Selecione as partições para o Backup:</string>
-		<string name="storage">Armazenamento:</string>
-		<string name="enc_disabled">desativado - definir uma palavra-passe para ativar</string>
-		<string name="enc_enabled">ativado</string>
-		<string name="enable_backup_comp_chk">Ativar a compactação</string>
-		<string name="skip_digest_backup_chk" version="2">Não gerar MD5 durante o Backup</string>
-		<string name="disable_backup_space_chk" version="2">Desativar a verificação do espaço livre</string>
-		<string name="current_boot_slot">Slot atual: %tw_active_slot%</string>
-		<string name="boot_slot_a">Slot A</string>
-		<string name="boot_slot_b">Slot B</string>
-		<string name="changing_boot_slot">A alterar o Slot de Arranque</string>
-		<string name="changing_boot_slot_complete">Alteração efetuada com sucesso</string>
-		<string name="refresh_sizes_btn">Atualizar ocupação</string>
-		<string name="swipe_backup"> Deslize para fazer Backup</string>
-		<string name="append_date_btn">Acrescentar data</string>
-		<string name="backup_name_exists">Já existe um Backup com esse nome!</string>
-		<string name="encrypt_backup">Encriptar o Backup?</string>
-		<string name="enter_pass">Defina uma palavra-passe:</string>
-		<string name="enter_pass2">Digite a palavra-passe novamente:</string>
-		<string name="pass_not_match">As palavra-passes não coincidem!</string>
-		<string name="partitions">Partições:</string>
-		<string name="disabled">Desativado</string>
-		<string name="enabled">Ativado</string>
-		<string name="backup_name_hdr">Definir um nome para o Backup</string>
-		<string name="progress">Progresso:</string>
-		<string name="backup_complete">Backup concluído</string>
-		<string name="restore_hdr">Restaurar</string>
-		<string name="sel_backup_hdr">Selecione o Backup</string>
-		<string name="restore_sel_store_hdr">Selecione o Backup do %tw_storage_display_name% (%tw_storage_free_size%)</string>
-		<string name="restore_sel_pack_fs">Selecione o Backup a restaurar:</string>
-		<string name="restore_enc_backup_hdr">Backup encriptado</string>
-		<string name="restore_dec_fail">Palavra-passe incorrecta, por favor tente novamente!</string>
-		<string name="del_backup_btn">Apagar Backup</string>
-		<string name="del_backup_confirm">Apagar o Backup?</string>
-		<string name="del_backup_confirm2">Não será possível reverter!</string>
-		<string name="deleting_backup">A apagar o Backup...</string>
-		<string name="backup_deleted">Backup apagado</string>
-		<string name="swipe_delete">        Deslize para apagar</string>
-		<string name="swipe_delete_s">   Apagar</string>
-		<string name="restore_try_decrypt">Backup encriptado - a tentar desencriptar</string>
-		<string name="restore_try_decrypt_s">A tentar desencriptar</string>
-		<string name="restore_backup_date">Backup executado a %tw_restore_file_date%</string>
-		<string name="restore_sel_part">Selecione as partições a restaurar:</string>
-		<string name="restore_enable_digest_chk" version="2">Ativar a verificação de MD5 dos ficheiros de Backup</string>
->>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="restore_complete">Restauro completo</string>
 		<string name="swipe_restore">Deslize para Restaurar</string>
 		<string name="rename_backup_hdr">Renomeie o Backup</string>
