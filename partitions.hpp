@@ -459,6 +459,10 @@ public:
 	bool is_MTP_Enabled(void);						  // returns whether MTP is already enabled
 #endif
 private:
+	std::vector<TWPartition*> Partitions;                                     // Vector list of all partitions
+	string Active_Slot_Display;                                               // Current Active Slot (A or B) for display purposes
+	std::vector<users_struct> Users_List;                                     // List of FBE users
+	std::vector<std::string> Super_Partition_List;                            // Display value for super partitions
 	void Setup_Settings_Storage_Partition(TWPartition* Part);                 // Sets up settings storage
 	void Setup_Android_Secure_Location(TWPartition* Part);                    // Sets up .android_secure if needed
 	bool Backup_Partition(struct PartitionSettings *part_settings);           // Backup the partitions based on type
@@ -470,7 +474,9 @@ private:
 	void Coldboot_Scan(std::vector<string> *sysfs_entries, const string& Path, int depth); // Scans subfolders to find matches to the paths stored in sysfs_entries so we can trigger the uevent system to "re-add" devices
 	void Coldboot();                                                          // Starts the scan of the /sys/block folder
 	bool Prepare_Empty_Folder(const std::string& Folder);                     // Creates an empty folder at Folder. If the folder already exists, the folder is deleted, then created
-	pid_t mtppid;
+#ifdef TW_HAS_MTP
+    pid_t mtppid;
+#endif
 	bool mtp_was_enabled;
 	int mtp_write_fd;
 	pid_t tar_fork_pid;                                                       // PID of twrpTar fork
@@ -479,12 +485,6 @@ private:
 	std::string repacked_ramdisk_format;                                      // Ramdisk format of boot image to repack from
 	void Mark_User_Decrypted(int userID);                                     // Marks given user ID in Users_List as decrypted
 	void Check_Users_Decryption_Status();                                      // Checks to see if all users are decrypted
-
-private:
-	std::vector<TWPartition*> Partitions;                                     // Vector list of all partitions
-	string Active_Slot_Display;                                               // Current Active Slot (A or B) for display purposes
-	std::vector<users_struct> Users_List;                                     // List of FBE users
-	std::vector<std::string> Super_Partition_List;                            // Display value for super partitions
 };
 
 extern TWPartitionManager PartitionManager;

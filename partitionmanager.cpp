@@ -4741,9 +4741,15 @@ bool TWPartitionManager::Prepare_All_Super_Volumes() {
 }
 
 std::string TWPartitionManager::Get_Super_Partition() {
-	int slot_number = Get_Active_Slot_Display() == "A" ? 0 : 1;
-	std::string super_device = fs_mgr_get_super_partition_name(slot_number);
-	return "/dev/block/by-name/" + super_device;
+    const auto module = BootControlClient::WaitForService();
+    if (module == nullptr) {
+        // No boot control HAL is available.
+        LOGINFO("Boot control HAL unavailable, using static super partition path\n");
+        return "/dev/block/by-name/super";
+    }
+    int32_t slot = module->GetCurrentSlot();
+    std::string super_device = fs_mgr_get_super_partition_name(slot);
+    return std::format("/dev/block/by-name/{}", super_device);
 }
 
 void TWPartitionManager::Setup_Super_Devices() {
