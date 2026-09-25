@@ -27,6 +27,7 @@
 #include <cutils/properties.h>
 #include <fstab/fstab.h>
 #include <unistd.h>
+#include <fstream>
 
 #include "variables.h"
 #include "data.hpp"
