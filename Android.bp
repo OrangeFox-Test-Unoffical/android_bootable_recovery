@@ -575,7 +575,8 @@ cc_binary {
     ],
 
     header_libs: [
-        "libvold_headers"
+        "libupdate_engine_headers",
+        "libvold_headers",
     ] + select(soong_config_variable("twrpGlobalVars", "include_libresetprop"), {
         true: [
             "resetprop_headers",
@@ -830,6 +831,7 @@ cc_binary {
     }) + select(soong_config_variable("twrpGlobalVars", "exclude_nano"), {
         false: [
             "nano_recovery",
+            "nano.rc",
         ],
         default: [],
     }) + select(soong_config_variable("twrpGlobalVars", "include_resetprop"), {

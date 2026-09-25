@@ -4699,32 +4699,41 @@ bool TWPartitionManager::Prepare_Super_Volume(TWPartition* twrpPart) {
 		usleep(100);
 	}
 
-	twrpPart->Set_Block_Device(fstabEntry.blk_device);
-	twrpPart->Update_Size(true);
-	twrpPart->Set_Can_Be_Backed_Up(false);
-	twrpPart->Set_Can_Be_Wiped(false);
-
-	TWFunc::Mapper_to_BootDevice(fstabEntry.blk_device, bare_partition_name);
-	property_set("twrp.super.symlinks_created", "true");
+    twrpPart->Set_Block_Device(fstabEntry.blk_device);
+    // The inactive slot was just updated. Its filesystems may not be mountable
+    // until recovery is restarted, so do not report this expected probe failure.
+    twrpPart->Update_Size(false);
+    twrpPart->Set_Can_Be_Backed_Up(false);
+    twrpPart->Set_Can_Be_Wiped(false);
+    std::string bare_partition = std::format("/dev/block/bootdevice/by-name/{}", bare_partition_name);
+    if (access(bare_partition.c_str(), F_OK) == -1) {
+        LOGINFO("Symlinking %s => %s \n", fstabEntry.blk_device.c_str(), bare_partition.c_str());
+        symlink(fstabEntry.blk_device.c_str(), bare_partition.c_str());
+        android::base::SetProperty("twrp.super.symlinks_created", "true");
+    }
 
     return true;
 }
 
 bool TWPartitionManager::Prepare_All_Super_Volumes() {
 	bool status = true;
-	std::vector<TWPartition*>::iterator iter;
 
-	for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
-		if ((*iter)->Is_Super) {
-			if (!Prepare_Super_Volume(*iter)) {
-				status = false;
-				Partitions.erase(iter--);
-			}
-			PartitionManager.Output_Partition(*iter);
-		}
-	}
-	Update_System_Details();
-	return status;
+    // 快照 super 分区指针:遍历独立容器,杜绝边遍历边 erase 的迭代器失效。
+    std::vector<TWPartition *> supers;
+    for (TWPartition *p: Partitions)
+        if (p->Is_Super) supers.push_back(p);
+
+    for (TWPartition *part: supers) {
+        if (Prepare_Super_Volume(part)) {
+            PartitionManager.Output_Partition(part); // 仅成功才输出(修复 (B) 误输出前一个分区)
+        } else {
+            status = false;
+            std::erase(Partitions, part); // 按指针值移除;vector 不释放对象,与原版一致
+        }
+    }
+
+    Update_System_Details(false, false);
+    return status;
 }
 
 std::string TWPartitionManager::Get_Super_Partition() {
