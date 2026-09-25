@@ -57,6 +57,8 @@
 #include "unit_conversion.hpp"
 #include "gui/gui.hpp"
 #include "twrpadbbu/libtwrpadbbu.hpp"
+#include "unit_conversion.hpp"
+
 #ifdef TW_INCLUDE_CRYPTO
 	#include "cryptfs.h"
 	#include "Decrypt.h"
@@ -3310,7 +3312,7 @@ void TWPartition::Apply_Async_Data_Size() {
 	Used = size;
 	Backup_Size = size;
 	Backup_Size_Provisional = false;
-	// 本树沿用 OF 的 MB 约定(主题里 %tw_storage_free_size% MB 等);TWRP16 上游此处写字节
+	//OF使用MB，TWRP这里使用的是字节
 	DataManager::SetValue(TW_BACKUP_DATA_SIZE, (unsigned long long)(size / 1048576LLU));
 	LOGINFO("Data backup size is %s.\n", UnitConversion::FormatBytes(size).c_str());
 }

@@ -416,16 +416,16 @@
 		<string name="unable_to_locate_partition">A mentési számításokhoz a(z) {1}-partíció helye nem határozható meg.</string>
 		<string name="no_partition_selected">Nincs partíció kiválasztva a mentéshez.</string>
 		<string name="total_partitions_backup"> * Összes mentésre kijelölt partíciók száma: {1}</string>
-		<string name="total_backup_size"> * A teljes adatmennyiség: {1}MB</string>
-		<string name="available_space"> * Rendelkezésre álló hely: {1}MB</string>
+		<string name="total_backup_size"> * A teljes adatmennyiség: {1}</string>
+		<string name="available_space"> * Rendelkezésre álló hely: {1}</string>
 		<string name="unable_locate_storage">A tárhely nem található.</string>
 		<string name="no_space">Nincs elegendő szabad hely a tárhelyen.</string>
 		<string name="backup_started">[MENTÉS ELINDÍTVA]</string>
 		<string name="backup_folder"> * Mentés helye: {1}</string>
 		<string name="fail_backup_folder">A mentési könyvtár létrehozása sikertelen.</string>
-		<string name="avg_backup_fs">A fájlrendszerek átlagos mentési sebessége: {1} MB/sec</string>
-		<string name="avg_backup_img">A képfájl-meghajtók átlagos mentési sebessége: {1} MB/sec</string>
-		<string name="total_backed_size">[{1} MB MENTVE ÖSSZESEN]</string>
+		<string name="avg_backup_fs">A fájlrendszerek átlagos mentési sebessége: {1} /sec</string>
+		<string name="avg_backup_img">A képfájl-meghajtók átlagos mentési sebessége: {1} /sec</string>
+		<string name="total_backed_size">[{1}  MENTVE ÖSSZESEN]</string>
 		<string name="backup_completed">[A MENTÉS {1} MÁSODPERC ALATT KÉSZÜLT EL]</string>
 		<string name="restore_started">[A VISSZAÁLLÍTÁS ELKEZDVE]</string>
 		<string name="restore_folder">Mappa visszaállítása: '{1}'</string>
@@ -438,7 +438,7 @@
 		<string name="restore_unable_locate">A {1} partíció helyének meghatározása sikertelen a visszaállításhoz.</string>
 		<string name="no_part_restore">Nincs a visszaállításhoz partíció kijelölve.</string>
 		<string name="restore_part_count">A(z) {1} partíció visszaállítása...</string>
-		<string name="total_restore_size">A teljes visszaállítási méret {1}MB</string>
+		<string name="total_restore_size">A teljes visszaállítási méret {1}</string>
 		<string name="updating_system_details">A rendszer adatainak frissítése</string>
 		<string name="restore_completed">[A VISSZAÁLLÍTÁS {1} MÁSODPERC ALATT ELKÉSZÜLT]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -564,7 +564,7 @@
 		<string name="split_thread">{1} szál felosztása {2} fileba.</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu az %llu fájlból, %i%%</string>
-		<string name="size_progress">%lluMB az %lluMB-ból, %i%%</string>
+		<string name="size_progress">%llu az %llu-ból, %i%%</string>
 		<string name="decrypt_cmd">Kísérlet a /data dekódolására parancssorból.</string>
 		<string name="base_pkg_err">Nem sikerült betölteni az alapcsomagokat.</string>
 		<string name="simulating">MŰVELET-SZIMULÁCIÓK</string>
@@ -1055,7 +1055,7 @@
 		<string name="files_auto_open">Fájltípus automatikus felismerése</string>
 		<string name="file_read">Fájl olvasása: {1}</string>
 		<string name="file_read_error">A fájlt nem lehet megnyitni!</string>
-		<string name="file_read_error_size">A fájl nagyobb, mint 1.5MB!</string>
+		<string name="file_read_error_size">A fájl nagyobb, mint 1.5!</string>
 		<string name="file_read_error_bin">Nem olvasható bináris fájl!</string>
 		<string name="subs_wipe">Substratum fedőrétegek törlése</string>
 		<string name="sort_ex_all">Az összes fájl</string>
@@ -1118,9 +1118,9 @@
 		<string name="digest_btn">Digest készítése</string>
 		<string name="digest_creating">Digest készítése...</string>
 		
-		<!-- 124/14354 files, 20/5412MB (5%)  -->
+		<!-- 124/14354 files, 20/5412 (5%)  -->
 		<string name="file_progress_v2">%llu/%llu fájlok,</string>
-		<string name="size_progress_v2">%llu/%llu MB (%i%%)</string>
+		<string name="size_progress_v2">%llu/%llu  (%i%%)</string>
 
 		<string name="navpan_new_design">Új navigációs panel dizájn</string>
 		<string name="full_partition_list">További partíciók mutatása mentéshez</string>
@@ -1144,8 +1144,8 @@
 
 		<string name="backup_quick_info1">Ezek a partíciók lesznek kiválasztva</string>
 		<string name="backup_quick_info2">a "Gyors Mentés" gomb megérintése után</string>
-		<string name="mbyte">MB</string>
-		<string name="mbytesec">MB/mp</string>
+		<string name="mbyte"></string>
+		<string name="mbytesec">/mp</string>
 		<string name="backup_av_files">Fájl</string>
 		<string name="backup_av_img">Kép</string>
 		<string name="backup_exp_size">Várható méret</string>

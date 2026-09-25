@@ -50,10 +50,19 @@
 		<string name="install_image_hdr">Установка IMG</string>
 		<string name="install_image_btn">Установка IMG</string>
 		<string name="install_select_file_hdr">Выбор файла</string>
+<<<<<<< HEAD
 		<string name="install_select_file_btn">Выбрать файл</string>
 		<string name="adb_sideload_btn">ADB и Sideload</string>
 		<string name="select_storage_hdr">Накопитель</string>
 		<string name="select_storage_btn">Накопитель</string>
+=======
+		<string name="file_selector_folders_hdr">Папки</string>
+		<string name="select_file_from_storage">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
+		<string name="adb_sideload_btn">ADB Sideload</string>
+		<string name="install_hdr">Установка</string>
+		<string name="select_storage_hdr">Выберите накопитель</string>
+		<string name="select_storage_btn">Выбор накопителя</string>
+>>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="queue_hdr">Очередь</string>
 		<string name="raised_clearqueue_btn">Очистить</string>
 		<string name="raised_viewqueue_btn">Очередь</string>
@@ -113,6 +122,7 @@
 		<string name="format_data_undo">Это не может быть отменено.</string>
 		<string name="format_data_complete">Форматирование данных завершено</string>
 		<!-- Translator note: the word "yes" must remain English! -->
+<<<<<<< HEAD
 		<string name="yes_continue">Введите "yes" для продолжения...</string>
 		<string name="part_opt_hdr">Информация о разделе</string>
 		<string name="file_sys_opt">Дополнительно</string>
@@ -133,6 +143,33 @@
 		<string name="swipe_resize">Проведите для исправления размера</string>
 		<string name="repair_btn">Восстановить</string>
 		<string name="repair_confirm">Восстановить</string>
+=======
+		<string name="yes_continue">Введите yes для продолжения.  Нажмите назад для отмены.</string>
+		<string name="part_opt_hdr">Опции для раздела %tw_partition_name%</string>
+		<string name="sel_act_hdr">Выбор действия</string>
+		<string name="file_sys_opt">Опции файловой системы</string>
+		<string name="partition">Раздел: %tw_partition_name%</string>
+		<string name="part_mount_point">Точка монтирования: %tw_partition_mount_point%</string>
+		<string name="part_curr_fs">Файловая система: %tw_partition_file_system%</string>
+		<string name="part_present_yes">Присутствует: да</string>
+		<string name="part_present_no">Присутствует: нет</string>
+		<string name="part_removable_yes">Съёмное: да</string>
+		<string name="part_removable_no">Съёмное: нет</string>
+		<string name="part_size">Размер: %tw_partition_size%</string>
+		<string name="part_used">Использовано: %tw_partition_used%</string>
+		<string name="part_free">Свободно: %tw_partition_free%</string>
+		<string name="part_backup_size">Размер резервных копий: %tw_partition_backup_size%</string>
+		<string name="resize_btn">Измен. размер</string>
+		<string name="resize_btn_s">Изм. размер</string>
+		<string name="resize_confirm">Изменить размер %tw_partition_name%?</string>
+		<string name="resizing">Изменение размера...</string>
+		<string name="resize_complete">Размер раздела изменён</string>
+		<string name="swipe_resize">Свайп для изменения размера</string>
+		<string name="swipe_resize_s">   Измен. размер</string>
+		<string name="repair_btn">Восст-ть файл. систему</string>
+		<string name="repair_btn_s">Восстановление</string>
+		<string name="repair_confirm">Восстановить %tw_partition_name%?</string>
+>>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="repairing">Восстановление...</string>
 		<string name="repair_complete">Восстановление завершено</string>
 		<string name="swipe_repair">Проведите для восстановления</string>
@@ -145,10 +182,25 @@
 		<string name="swipe_change_fs">Проведите для изменения</string>
 		<string name="back_btn">Назад</string>
 		<string name="wipe_enc_btn">Стереть шифрование</string>
+<<<<<<< HEAD
 		<string name="swipe_factory_reset">Проведите для подтверждения</string>
 		<string name="backup_hdr">Резервная копия</string>
 		<string name="encryption_hdr">Шифрование</string>
 		<string name="name">Имя</string>
+=======
+		<string name="swipe_factory_reset">Свайп для подтверждения</string>
+		<string name="repair_change_btn">Восстановить или изменить файловую систему</string>
+		<string name="storage_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
+		<string name="backup_hdr">Резервное копирование</string>
+		<string name="backup_confirm_hdr">Подтверждение резервного копирования</string>
+		<string name="encryption_tab">ШИФРОВАНИЕ</string>
+		<string name="encryption">Шифрование:</string>
+		<string name="name">Имя:</string>
+		<string name="sel_part_backup">Выберите разделы для резервного копирования:</string>
+		<string name="storage">Хранилище:</string>
+		<string name="enc_disabled">выключено - установите пароль для включения</string>
+		<string name="enc_enabled">включено</string>
+>>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="enable_backup_comp_chk">Использовать сжатие</string>
 		<string name="skip_md5_backup_chk">Пропустить вычисление MD5</string>
 		<string name="disable_backup_space_chk">Отключить проверку свободного места</string>
@@ -161,6 +213,12 @@
 		<string name="restore_hdr">Резервные копии</string>
 		<string name="restore_backup_hdr">Воосстановить копию</string>
 		<string name="sel_backup_hdr">Выбор резервной копии</string>
+<<<<<<< HEAD
+=======
+		<string name="restore_sel_store_hdr">Текущий накопитель: %tw_storage_display_name% (%tw_storage_free_size%)</string>
+		<string name="restore_sel_pack_fs">Выбор резервной копии для восстановления:</string>
+		<string name="restore_enc_backup_hdr">Зашифрованная резервная копия</string>
+>>>>>>> 802a772620dd95b276a27e5a79d9d61c995c729c
 		<string name="restore_dec_fail">Пароль неверный, попробуйте снова!</string>
 		<string name="del_backup_confirm">Удалить копию</string>
 		<string name="del_backup_confirm2">Это не может быть отменено!</string>
@@ -390,16 +448,16 @@
 		<string name="unable_to_locate_partition">Не удаётся найти '{1}' раздел для расчёта копирования.</string>
 		<string name="no_partition_selected">Не выбраны разделы для резервного копирования.</string>
 		<string name="total_partitions_backup"> * Общее количество разделов для резервного копирования: {1}</string>
-		<string name="total_backup_size"> * Общий объем данных: {1}МБ</string>
-		<string name="available_space"> * Доступный объем: {1}МБ</string>
+		<string name="total_backup_size"> * Общий объем данных: {1}</string>
+		<string name="available_space"> * Доступный объем: {1}</string>
 		<string name="unable_locate_storage">Не удается найти накопитель для хранения.</string>
 		<string name="no_space">В накопителе для хранения недостаточно свободного места.</string>
 		<string name="backup_started">[РЕЗЕРВНОЕ КОПИРОВАНИЕ НАЧАТО]</string>
 		<string name="backup_folder"> * Папка для резервной копии: {1}</string>
 		<string name="fail_backup_folder">Не удается создать папку для резервной копии.</string>
-		<string name="avg_backup_fs">Средняя скорость копирования для файлов: {1} МБ/сек.</string>
-		<string name="avg_backup_img">Средняя скорость копирования для образов: {1} МБ/сек.</string>
-		<string name="total_backed_size">[{1} МБ ВСЕГО СКОПИРОВАНО]</string>
+		<string name="avg_backup_fs">Средняя скорость копирования для файлов: {1}/сек.</string>
+		<string name="avg_backup_img">Средняя скорость копирования для образов: {1}/сек.</string>
+		<string name="total_backed_size">[{1} ВСЕГО СКОПИРОВАНО]</string>
 		<string name="backup_completed">[КОПИРОВАНИЕ ЗАВЕРШЕНО ЗА {1} СЕКУНД]</string>
 		<string name="restore_started">[ВОССТАНОВЛЕНИЕ НАЧАТО]</string>
 		<string name="restore_folder">Папка для восстановления: '{1}'</string>
@@ -412,7 +470,7 @@
 		<string name="restore_unable_locate">Не удаётся найти '{1}' раздел для восстановления.</string>
 		<string name="no_part_restore">Не выбраны разделы для восстановления.</string>
 		<string name="restore_part_count">Восстановление {1} разделов...</string>
-		<string name="total_restore_size">Общий размер для восстановления: {1}МБ</string>
+		<string name="total_restore_size">Общий размер для восстановления: {1}</string>
 		<string name="updating_system_details">Обновление информации о системе</string>
 		<string name="restore_completed">[ВОССТАНОВЛЕНИЕ ЗАВЕРШЕНО ЗА {1} СЕКУНД]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -538,8 +596,8 @@
 		<string name="split_thread">Разделение идентификатора потока {1} в архив {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu из %llu файлов, %i%%</string>
-		<string name="size_progress">%lluМБ из %lluМБ, %i%%</string>
-		<string name="decrypt_cmd">Попытка расшифровать раздел данных с помощью командной строки.</string>
+		<string name="size_progress">{} / {}, {}%</string>
+		<string name="decrypt_cmd" version="2">Попытка расшифровать раздел данных или пользовательских данных с помощью командной строки.</string>
 		<string name="base_pkg_err">Неудача при загрузке базовых пакетов.</string>
 		<string name="simulating">Имитация действий...</string>
 		<string name="backup_cancel">Резервное копирование отменено</string>

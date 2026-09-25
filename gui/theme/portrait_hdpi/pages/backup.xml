@@ -50,7 +50,7 @@
 
 			<text style="text_ab_subtitle">
 				<placement x="%col1_x%" y="%row1_2_y%"/>
-				<text>{@part_free}: %tw_storage_free_size%{@mbyte}</text>
+				<text>{@part_free}: %tw_storage_free_size%</text>
 			</text>
 
 			<button style="actionbar">
@@ -178,7 +178,7 @@
 
 			<text style="text_body1_dark">
 				<placement x="%col1_x%" y="%part_backup_info_y%" />
-				<text>{@backup_exp_size}:  %fox_total_backup%{@mbyte}</text>
+				<text>{@backup_exp_size}:  %fox_total_backup</text>
 			</text>
 			
 			<text style="text_body1_dark">

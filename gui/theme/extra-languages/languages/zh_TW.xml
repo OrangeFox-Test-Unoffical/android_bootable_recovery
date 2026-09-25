@@ -409,16 +409,16 @@
         <string name="unable_to_locate_partition">無法定位 '{1}' 分區進行備份計算。</string>
         <string name="no_partition_selected">沒有選擇要備份的分區。</string>
         <string name="total_partitions_backup">* 要備份的分區數量: {1}</string>
-        <string name="total_backup_size">* 資料總大小: {1}MB</string>
-        <string name="available_space">* 可用空間: {1}MB</string>
+        <string name="total_backup_size">* 資料總大小: {1}</string>
+        <string name="available_space">* 可用空間: {1}</string>
         <string name="unable_locate_storage">無法定位儲存裝置。</string>
         <string name="no_space">可用的儲存空間不足。</string>
         <string name="backup_started">[開始備份]</string>
         <string name="backup_folder">警告: 此 /Data 備份是使用 {1} 檔案系統進行的！</string>
         <string name="fail_backup_folder">建立備份資料夾失敗。</string>
-        <string name="avg_backup_fs">檔案系統的平均備份速度: {1} MB/s</string>
-        <string name="avg_backup_img">映像裝置的平均備份速度: {1} MB/s</string>
-        <string name="total_backed_size">[總計備份{1} MB]</string>
+        <string name="avg_backup_fs">檔案系統的平均備份速度: {1}/s</string>
+        <string name="avg_backup_img">映像裝置的平均備份速度: {1}/s</string>
+        <string name="total_backed_size">[總計備份{1} ]</string>
         <string name="backup_completed">[備份完成，用時 {1} s]</string>
         <string name="restore_started">[開始恢復]</string>
         <string name="restore_folder">還原資料夾: '{1}'</string>
@@ -431,7 +431,7 @@
         <string name="restore_unable_locate">無法定位要還原的 '{1}' 分區。</string>
         <string name="no_part_restore">沒有選擇要還原的分區。</string>
         <string name="restore_part_count">正在還原 {1} 分區...</string>
-        <string name="total_restore_size">總計還原大小 {1}MB</string>
+        <string name="total_restore_size">總計還原大小 {1}</string>
         <string name="updating_system_details">正在更新系統詳情</string>
         <string name="restore_completed">[還原完成，用時 {1} 秒]</string>
         <!-- {1} is the path we could not open, {2} is strerror output -->
@@ -557,7 +557,7 @@
         <string name="split_thread">將線程 ID {1} 拆分為封存 {2}</string>
         <!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
         <string name="file_progress">已完成 %llu , 共 %llu 個檔案 , 進度 %i%%</string>
-        <string name="size_progress">已完成 %lluMB , 共 %lluMB , 進度 %i%%</string>
+        <string name="size_progress">已完成 %llu , 共 %llu , 進度 %i%%</string>
         <string name="decrypt_cmd">正在嘗試透過指令列解密資料分區。</string>
         <string name="base_pkg_err">載入基本包失敗。</string>
         <string name="simulating">模擬操作</string>
@@ -986,7 +986,7 @@
         <string name="files_auto_open">自動偵測檔案類型</string>
         <string name="file_read">讀取檔案: {1}</string>
         <string name="file_read_error">無法開啟檔案!</string>
-        <string name="file_read_error_size">檔案大小超過1.5MB！</string>
+        <string name="file_read_error_size">檔案大小超過1.5！</string>
         <string name="file_read_error_bin">無法讀取二進位檔案！</string>
         <string name="subs_wipe">清除 Substratum 疊加層</string>
         <string name="sort_ex_all">所有檔案</string>
@@ -1041,9 +1041,9 @@
         <string name="con_digest_complete">[Digest建立完成，用時 {1} 秒]</string>
         <string name="digest_btn">建立 Digest</string>
         <string name="digest_creating">正在建立 Digest...</string>
-        <!-- 124/14354 files, 20/5412MB (5%)  -->
+        <!-- 124/14354 files, 20/5412 (5%)  -->
         <string name="file_progress_v2">%llu/%llu 檔案，</string>
-        <string name="size_progress_v2">%llu/%llu MB (%i%%)</string>
+        <string name="size_progress_v2">%llu/%llu  (%i%%)</string>
         <string name="navpan_new_design">使用新的導覽面板設計</string>
         <string name="full_partition_list">顯示額外可供備份的分區</string>
         <string name="data_decrypted_reload">解密成功！</string>
@@ -1063,8 +1063,8 @@
         <string name="accent_in_titles">標題中突出文字顏色</string>
         <string name="backup_quick_info1">點擊“快速備份”按鈕後，</string>
         <string name="backup_quick_info2">這些分區將被選擇</string>
-        <string name="mbyte">MB</string>
-        <string name="mbytesec">MB/s</string>
+        <string name="mbyte"></string>
+        <string name="mbytesec">/s</string>
         <string name="backup_av_files">檔案</string>
         <string name="backup_av_img">圖片</string>
         <string name="backup_exp_size">預計大小</string>

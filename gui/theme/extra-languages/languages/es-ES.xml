@@ -416,16 +416,16 @@
 		<string name="unable_to_locate_partition">No se puede encontrar la partición '{1}' para realizar los cálculos de espacio para la copia de seguridad.</string>
 		<string name="no_partition_selected">No se ha seleccionado ninguna partición para la copia de seguridad.</string>
 		<string name="total_partitions_backup"> * Número total de particiones a copiar: {1}</string>
-		<string name="total_backup_size"> * Tamaño total de todos los datos: {1}MB</string>
-		<string name="available_space"> * Espacio disponible: {1}MB</string>
+		<string name="total_backup_size"> * Tamaño total de todos los datos: {1}</string>
+		<string name="available_space"> * Espacio disponible: {1}</string>
 		<string name="unable_locate_storage">No se encuentra el dispositivo de almacenamiento.</string>
 		<string name="no_space">No hay suficiente espacio libre.</string>
 		<string name="backup_started">[COPIA DE SEGURIDAD INICIADA]</string>
 		<string name="backup_folder"> * Carpeta de copia de seguridad: {1}</string>
 		<string name="fail_backup_folder">No se pudo crear la carpeta para la copia de seguridad.</string>
-		<string name="avg_backup_fs">Tasa de transferencia media para la copia de seguridad del sistema de archivos: {1} MB/s</string>
-		<string name="avg_backup_img">Tasa de transferencia media para unidades clonadas: {1} MB/s</string>
-		<string name="total_backed_size">[{1} MB COPIADOS EN TOTAL]</string>
+		<string name="avg_backup_fs">Tasa de transferencia media para la copia de seguridad del sistema de archivos: {1} /s</string>
+		<string name="avg_backup_img">Tasa de transferencia media para unidades clonadas: {1} /s</string>
+		<string name="total_backed_size">[{1}  COPIADOS EN TOTAL]</string>
 		<string name="backup_completed">[COPIA DE SEGURIDAD TERMINADA EN {1} SEGUNDOS]</string>
 		<string name="restore_started">[INICIADA LA RESTAURACIÓN]</string>
 		<string name="restore_folder">Carpeta de restauración: '{1}'</string>
@@ -438,7 +438,7 @@
 		<string name="restore_unable_locate">No se puede encontrar la partición '{1}' para realizar la restauración.</string>
 		<string name="no_part_restore">No se ha seleccionado ninguna partición para restaurar.</string>
 		<string name="restore_part_count">Restaurando {1} particiones...</string>
-		<string name="total_restore_size">El tamaño total de restauración es de {1}MB</string>
+		<string name="total_restore_size">El tamaño total de restauración es de {1}</string>
 		<string name="updating_system_details">Actualizando los detalles del sistema</string>
 		<string name="restore_completed">[RESTAURACIÓN TERMINADA EN {1} SEGUNDOS]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -564,7 +564,7 @@
 		<string name="split_thread">División del ID de hilo {1} en el archivo {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu de %llu archivos, %i%%</string>
-		<string name="size_progress">%lluMB de %lluMB, %i%%</string>
+		<string name="size_progress">%llu de %llu, %i%%</string>
 		<string name="decrypt_cmd">Intentando desencriptar partición de datos vía línea de comandos.</string>
 		<string name="base_pkg_err">No se pudo cargar paquetes base.</string>
 		<string name="simulating">Simulando acciones.</string>
@@ -782,9 +782,9 @@
 		<string name="password">Contraseña</string>
 		<string name="boot_slot">Slot de arranque</string>
 		<string name="boot_slot_a">SLOT A</string>
-		<string name="boot_slot_use_a">CAMBIAR A SLOT A</string>
+		<string name="boot_slot_use_a">CAIAR A SLOT A</string>
 		<string name="boot_slot_b">SLOT B</string>
-		<string name="boot_slot_use_b">CAMBIAR A SLOT B</string>
+		<string name="boot_slot_use_b">CAIAR A SLOT B</string>
 		<string name="changing_boot_slot">Cambiar slot de arranque</string>
 		<string name="changing_boot_slot_complete">Cambio de Slot de inicio completado</string>
 		<string name="unable_set_boot_slot">Error al cambiar el slot del gestor de arranque a {1}</string>
@@ -1055,7 +1055,7 @@
 		<string name="files_auto_open">Detectar tipo de archivo automáticamente</string>
 		<string name="file_read">Leyendo archivo: {1}</string>
 		<string name="file_read_error">¡No se puede abrir el archivo!</string>
-		<string name="file_read_error_size">¡El archivo es más grande que 1.5MB!</string>
+		<string name="file_read_error_size">¡El archivo es más grande que 1.5!</string>
 		<string name="file_read_error_bin">¡No se puede leer el archivo binario!</string>
 		<string name="subs_wipe">Borrar capas de Substratum</string>
 		<string name="sort_ex_all">Todos los archivos</string>
@@ -1118,9 +1118,9 @@
 		<string name="digest_btn">Crear Digesto</string>
 		<string name="digest_creating">Creando Digesto...</string>
 
-		<!-- 124/14354 files, 20/5412MB (5%)  -->
+		<!-- 124/14354 files, 20/5412 (5%)  -->
 		<string name="file_progress_v2">%llu/%llu archivos,</string>
-		<string name="size_progress_v2">%llu/%llu MB (%i%%)</string>
+		<string name="size_progress_v2">%llu/%llu  (%i%%)</string>
 
 		<string name="navpan_new_design">Nuevo diseño de panel de navegación</string>
 		<string name="full_partition_list">Mostrar particiones adicionales para respaldar</string>
@@ -1144,8 +1144,8 @@
 
 		<string name="backup_quick_info1">Estas particiones serán seleccionadas</string>
 		<string name="backup_quick_info2">después de pulsar el botón "Copia de seguridad rápida"</string>
-		<string name="mbyte">MB</string>
-		<string name="mbytesec">MB/s</string>
+		<string name="mbyte"></string>
+		<string name="mbytesec">/s</string>
 		<string name="backup_av_files">Archivo</string>
 		<string name="backup_av_img">Imagen</string>
 		<string name="backup_exp_size">Tamaño esperado</string>

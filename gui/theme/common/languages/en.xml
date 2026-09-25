@@ -389,16 +389,16 @@
 		<string name="unable_to_locate_partition">Unable to locate '{1}' partition for backup calculations.</string>
 		<string name="no_partition_selected">No partitions selected for backup.</string>
 		<string name="total_partitions_backup"> * Total number of partitions to back up: {1}</string>
-		<string name="total_backup_size"> * Total size of all data: {1}MB</string>
-		<string name="available_space"> * Available space: {1}MB</string>
+		<string name="total_backup_size"> * Total size of all data: {1}</string>
+		<string name="available_space"> * Available space: {1}</string>
 		<string name="unable_locate_storage">Unable to locate storage device.</string>
 		<string name="no_space">Not enough free space on storage.</string>
 		<string name="backup_started">[BACKUP STARTED]</string>
 		<string name="backup_folder"> * Backup Folder: {1}</string>
 		<string name="fail_backup_folder">Failed to make backup folder.</string>
-		<string name="avg_backup_fs">Average backup rate for file systems: {1} MB/sec</string>
-		<string name="avg_backup_img">Average backup rate for imaged drives: {1} MB/sec</string>
-		<string name="total_backed_size">[{1} MB TOTAL BACKED UP]</string>
+		<string name="avg_backup_fs">Average backup rate for file systems: {1}/s</string>
+		<string name="avg_backup_img">Average backup rate for imaged drives: {1}/s</string>
+		<string name="total_backed_size">[{1} TOTAL BACKED UP]</string>
 		<string name="backup_completed">[BACKUP COMPLETED IN {1} SECONDS]</string>
 		<string name="restore_started">[RESTORE STARTED]</string>
 		<string name="restore_folder">Restore folder: '{1}'</string>
@@ -411,7 +411,7 @@
 		<string name="restore_unable_locate">Unable to locate '{1}' partition for restoring.</string>
 		<string name="no_part_restore">No partitions selected for restore.</string>
 		<string name="restore_part_count">Restoring {1} partitions...</string>
-		<string name="total_restore_size">Total restore size is {1}MB</string>
+		<string name="total_restore_size">Total restore size is {1}</string>
 		<string name="updating_system_details">Updating System Details</string>
 		<string name="restore_completed">[RESTORE COMPLETED IN {1} SECONDS]</string>
 		<!-- {1} is the path we could not open, {2} is strerror output -->
@@ -537,7 +537,7 @@
 		<string name="split_thread">Splitting thread ID {1} into archive {2}</string>
 		<!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
 		<string name="file_progress">%llu of %llu files, %i%%</string>
-		<string name="size_progress">%lluMB of %lluMB, %i%%</string>
+		<string name="size_progress">{}/{} , {}%</string>
 		<string name="decrypt_cmd">Attempting to decrypt data partition via command line.</string>
 		<string name="base_pkg_err">Failed to load base packages.</string>
 		<string name="simulating">SIMULATING ACTIONS</string>
@@ -1093,8 +1093,8 @@
 		<string name="digest_creating">Creating Digest...</string>
 		
 		<!-- 124/14354 files, 20/5412MB (5%)  -->
-		<string name="file_progress_v2">%llu/%llu files,</string>
-		<string name="size_progress_v2">%llu/%llu MB (%i%%)</string>
+		<string name="file_progress_v2">{}/{} files,</string>
+		<string name="size_progress_v2">{}/{} ({}%)</string>
 
 		<string name="navpan_new_design">New navigation panel design</string>
 		<string name="full_partition_list">Show additional partitions to backup</string>

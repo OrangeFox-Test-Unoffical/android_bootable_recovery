@@ -36,6 +36,7 @@ cc_library_static {
         "-DTWRES=\"/twres/\""
     ],
     include_dirs: [
+        "bootable/recovery",
         "bootable/recovery/otautil/include",
         "bootable/recovery/install/include",
         "system/libziparchive/include",

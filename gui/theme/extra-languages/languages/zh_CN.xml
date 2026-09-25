@@ -420,16 +420,16 @@
         <string name="unable_to_locate_partition">无法定位 '{1}' 分区进行备份计算。</string>
         <string name="no_partition_selected">没有选择要备份的分区。</string>
         <string name="total_partitions_backup">* 要备份的分区数量: {1}</string>
-        <string name="total_backup_size">* 数据总大小: {1}MB</string>
-        <string name="available_space">* 可用空间: {1}MB</string>
+        <string name="total_backup_size">* 数据总大小: {1}</string>
+        <string name="available_space">* 可用空间: {1}</string>
         <string name="unable_locate_storage">无法定位存储设备。</string>
         <string name="no_space">可用的存储空间不足。</string>
         <string name="backup_started">[开始备份]</string>
         <string name="backup_folder">警告: 此 /Data 备份是使用 {1} 文件系统进行的！</string>
         <string name="fail_backup_folder">建立备份文件夹失败。</string>
-        <string name="avg_backup_fs">文件系统的平均备份速度: {1} MB/s</string>
-        <string name="avg_backup_img">镜像设备的平均备份速度: {1} MB/s</string>
-        <string name="total_backed_size">[总计备份{1} MB]</string>
+        <string name="avg_backup_fs">文件系统的平均备份速度: {1}/s</string>
+        <string name="avg_backup_img">镜像设备的平均备份速度: {1}/s</string>
+        <string name="total_backed_size">[总计备份{1}]</string>
         <string name="backup_completed">[备份完成，用时 {1} s]</string>
         <string name="restore_started">[开始恢复]</string>
         <string name="restore_folder">恢复文件夹: '{1}'</string>
@@ -442,7 +442,7 @@
         <string name="restore_unable_locate">无法定位要恢复的 '{1}' 分区。</string>
         <string name="no_part_restore">没有选择要恢复的分区。</string>
         <string name="restore_part_count">正在恢复 {1} 分区...</string>
-        <string name="total_restore_size">总计恢复大小 {1}MB</string>
+        <string name="total_restore_size">总计恢复大小 {1}</string>
         <string name="updating_system_details">正在更新系统详情</string>
         <string name="restore_completed">[恢复完成，用时 {1} 秒]</string>
         <!-- {1} is the path we could not open, {2} is strerror output -->
@@ -568,7 +568,7 @@
         <string name="split_thread">将线程 ID {1} 拆分为存档 {2}</string>
         <!-- These 2 items are saved in the data manager instead of resource manager, so %llu, etc is correct instead of {1} -->
         <string name="file_progress">已完成 %llu , 共 %llu 个文件 , 进度 %i%%</string>
-        <string name="size_progress">已完成 %lluMB , 共 %lluMB , 进度 %i%%</string>
+        <string name="size_progress">已完成 {} , 共 {} , 进度 {}%</string>
         <string name="decrypt_cmd">正在尝试通过命令行解密数据分区。</string>
         <string name="base_pkg_err">加载基本包失败。</string>
         <string name="simulating">模拟操作</string>
@@ -1054,7 +1054,7 @@
         <string name="digest_creating">正在创建 Digest...</string>
         <!-- 124/14354 files, 20/5412MB (5%)  -->
         <string name="file_progress_v2">%llu/%llu 文件，</string>
-        <string name="size_progress_v2">%llu/%llu MB (%i%%)</string>
+        <string name="size_progress_v2">{}/{}  ({}%)</string>
         <string name="navpan_new_design">使用新的导航面板设计</string>
         <string name="full_partition_list">显示额外可供备份的分区</string>
         <string name="data_decrypted_reload">解密成功！</string>

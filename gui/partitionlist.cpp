@@ -32,6 +32,7 @@ extern "C" {
 #include "objects.hpp"
 #include "../data.hpp"
 #include "../partitions.hpp"
+#include "../unit_conversion.hpp"
 
 GUIPartitionList::GUIPartitionList(xml_node<>* node) : GUIScrollList(node)
 {
@@ -229,10 +230,8 @@ void GUIPartitionList::MatchList(void) {
 	}
 
 	if (countTotal) {
-		char formatSize[255];
 		totalSize = imgSize + fileSize;
-		sprintf(formatSize, totalSize % 1048576 == 0 ? "%.0lf" : "%.2lf", (double)totalSize / 1048576);
-		DataManager::SetValue("fox_total_backup", formatSize);
+		DataManager::SetValue("fox_total_backup", UnitConversion::FormatBytes(totalSize));
 		CalculateTime(fileSize, imgSize);
 	}
 }
