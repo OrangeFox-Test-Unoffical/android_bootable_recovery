@@ -21,28 +21,24 @@
 
 // terminal.cpp - GUITerminal object
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <termio.h>
-
-#include <string>
-#include <cctype>
 #include <linux/input.h>
 #include <sys/wait.h>
+#include <termio.h>
+#include <unistd.h>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-#include "twrpminui/truetype.hpp"
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
 
 #include "gui.hpp"
-
-#include "rapidxml.hpp"
 #include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrpminui/minui.h"
+#include "twrpminui/truetype.hpp"
 
 #if 0
 #define debug_printf printf
@@ -793,7 +789,7 @@ void terminal_pty_read()
 }
 
 
-GUITerminal::GUITerminal(xml_node<>* node) : GUIScrollList(node)
+GUITerminal::GUITerminal(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
 	allowSelection = false; // terminal doesn't support list item selections
 	lastCondition = false;

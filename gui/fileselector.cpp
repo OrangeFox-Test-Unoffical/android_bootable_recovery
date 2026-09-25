@@ -19,36 +19,29 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
-#include <sys/stat.h>
 #include <dirent.h>
-#include <algorithm>
-#ifdef __ANDROID_API_M__
-#include <vector>
-#ifdef __ANDROID_API_N__
-#include <android-base/strings.h>
-#else
-#include <base/strings.h>
-#endif
-#else
-#endif
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
+#include <sys/stat.h>
 
-#include "rapidxml.hpp"
+#include <algorithm>
+#include <cstring>
+#include <vector>
+
+#include <android-base/strings.h>
+
+#include "data.hpp"
 #include "objects.hpp"
-#include "../data.hpp"
-#include "../twrp-functions.hpp"
-#include "../twrpadbbu/libtwrpadbbu.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "twrp-functions.hpp"
+#include "twrpadbbu/libtwrpadbbu.hpp"
+#include "twrpminui/minui.h"
 
 int GUIFileSelector::mSortOrder = 0;
 
-GUIFileSelector::GUIFileSelector(xml_node<>* node) : GUIScrollList(node)
+GUIFileSelector::GUIFileSelector(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mFolderIcon = mFileIcon = mUpIcon = mExZipIcon = mExImgIcon = mExTxtIcon = mExUnselectedIcon = mExSelectedIcon = mExPngIcon = mExLinkIcon = mExBlockIcon = NULL;
 	mIconBg = NULL;
@@ -213,7 +206,7 @@ int GUIFileSelector::Update(void)
 
 	// Update the file list if needed
 	if (updateFileList) {
-		string value;
+		std::string value;
 		DataManager::GetValue(mPathVar, value);
 		if (GetFileList(value) == 0) {
 			updateFileList = false;
@@ -315,8 +308,8 @@ int GUIFileSelector::GetFileList(const std::string folder)
 		if (folder != "/" && (mShowNavFolders != 0 || mShowFiles != 0)) {
 			size_t found;
 			found = folder.find_last_of('/');
-			if (found != string::npos) {
-				string new_folder = folder.substr(0, found);
+			if (found != std::string::npos) {
+				std::string new_folder = folder.substr(0, found);
 
 				if (new_folder.length() < 2)
 					new_folder = "/";

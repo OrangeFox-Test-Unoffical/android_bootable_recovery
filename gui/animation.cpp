@@ -18,35 +18,26 @@
 
 // animation.cpp - GUIAnimation object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
-#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-
-GUIAnimation::GUIAnimation(xml_node<>* node) : GUIObject(node)
+GUIAnimation::GUIAnimation(rapidxml::xml_node<>* node) : GUIObject(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	mAnimation = NULL;
 	mFrame = 1;
@@ -73,7 +64,7 @@ GUIAnimation::GUIAnimation(xml_node<>* node) : GUIObject(node)
 	child = FindNode(node, "loop");
 	if (child)
 	{
-		xml_attribute<>* attr = child->first_attribute("frame");
+		rapidxml::xml_attribute<>* attr = child->first_attribute("frame");
 		if (attr)
 			mLoop = atoi(attr->value()) - 1;
 		mFrame = LoadAttrInt(child, "start", mFrame);

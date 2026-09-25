@@ -21,28 +21,21 @@
 
 // hardwarekeyboard.cpp - HardwareKeyboard object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
+#include <linux/input.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
 #include "common.h"
-}
-
-#include "../twcommon.h"
 #include "objects.hpp"
-#include <linux/input.h>
+#include "twcommon.h"
 
 HardwareKeyboard::HardwareKeyboard()
  : mLastKeyChar(0)

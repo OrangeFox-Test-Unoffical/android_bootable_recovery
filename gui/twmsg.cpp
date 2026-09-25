@@ -16,12 +16,12 @@
 	along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../data.hpp"
+#include <cctype>
+
+#include "data.hpp"
 #include "pages.hpp"
 #include "resources.hpp"
-
 #include "twmsg.h"
-#include <cctype>
 
 std::string Message::GetFormatString(const std::string& name) const
 {

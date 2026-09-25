@@ -21,36 +21,28 @@
 
 // checkbox.cpp - GUICheckbox object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUICheckbox::GUICheckbox(xml_node<>* node)
+GUICheckbox::GUICheckbox(rapidxml::xml_node<>* node)
 	: GUIObject(node)
 {
-	xml_attribute<>* attr;
-	xml_node<>* child;
+	rapidxml::xml_attribute<>* attr;
+	rapidxml::xml_node<>* child;
 
 	mChecked = NULL;
 	mUnchecked = NULL;

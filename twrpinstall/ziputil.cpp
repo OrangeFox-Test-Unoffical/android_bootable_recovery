@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include "ZipUtil.h"
+#include "ziputil.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <utime.h>
 
+#include <cerrno>
 #include <string>
 
 #include <android-base/logging.h>

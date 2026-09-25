@@ -19,20 +19,20 @@
         along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string>
 #include <pthread.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include "pages.hpp"
+
+#include <string>
+
 #include "blanktimer.hpp"
-#include "../data.hpp"
-extern "C" {
-#include "../twcommon.h"
-}
+#include "data.hpp"
+#include "pages.hpp"
+#include "twcommon.h"
+#include "twrp-functions.hpp"
 #include "twrpminui/minui.h"
-#include "../twrp-functions.hpp"
-#include "../variables.h"
+#include "variables.h"
 
 blanktimer::blanktimer(void) {
 	pthread_mutex_init(&mutex, NULL);
@@ -82,8 +82,8 @@ void blanktimer::checkForTimeout() {
 #endif
 }
 
-string blanktimer::getBrightness(void) {
-	string result;
+std::string blanktimer::getBrightness(void) {
+	std::string result;
 
 	if (DataManager::GetIntValue("tw_has_brightnesss_file")) {
 		DataManager::GetValue("tw_brightness", result);

@@ -18,34 +18,26 @@
 
 // progressbar.cpp - GUIProgressBar object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdlib.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twrpminui/minui.h"
 
-#include "rapidxml.hpp"
-#include "objects.hpp"
-
-GUIProgressBar::GUIProgressBar(xml_node<>* node) : GUIObject(node)
+GUIProgressBar::GUIProgressBar(rapidxml::xml_node<>* node) : GUIObject(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	mEmptyBar = NULL;
 	mFullBar = NULL;

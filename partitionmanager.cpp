@@ -2280,13 +2280,13 @@ void TWPartitionManager::Parse_Users() {
 					user.userName = to_string(userId);
 				}
 				else {
-					xml_document<> *userXml = new xml_document<>();
+					rapidxml::xml_document<> *userXml = new rapidxml::xml_document<>();
 					userXml->parse<0>(userFile);
-					xml_node<>* userNode = userXml->first_node("user");
+					rapidxml::xml_node<>* userNode = userXml->first_node("user");
 					if (userNode == nullptr) {
 						user.userName = to_string(userId);
 					} else {
-						xml_node<>* nameNode = userNode->first_node("name");
+						rapidxml::xml_node<>* nameNode = userNode->first_node("name");
 						if (nameNode == nullptr)
 							user.userName = to_string(userId);
 						else {

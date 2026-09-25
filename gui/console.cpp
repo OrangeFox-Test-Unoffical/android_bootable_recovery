@@ -22,26 +22,23 @@
 
 // console.cpp - GUIConsole object
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
+#include <pthread.h>
+#include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
-#include <pthread.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-}
-#include "twrpminui/minui.h"
-
-#include "rapidxml.hpp"
-#include "objects.hpp"
 #include "gui.hpp"
+#include "objects.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
 #include "twmsg.h"
+#include "twrpminui/minui.h"
 
 #define GUI_CONSOLE_BUFFER_SIZE 512
 
@@ -99,7 +96,7 @@ static void internal_gui_print(const char *color, char *buf)
 	pthread_mutex_unlock(&console_lock);
 }
 
-extern "C" void gui_print(const char *fmt, ...)
+void gui_print(const char *fmt, ...)
 {
 	char buf[GUI_CONSOLE_BUFFER_SIZE];		// We're going to limit a single request to 512 bytes
 
@@ -111,7 +108,7 @@ extern "C" void gui_print(const char *fmt, ...)
 	internal_gui_print("normal", buf);
 }
 
-extern "C" void gui_print_color(const char *color, const char *fmt, ...)
+void gui_print_color(const char *color, const char *fmt, ...)
 {
 	char buf[GUI_CONSOLE_BUFFER_SIZE];		// We're going to limit a single request to 512 bytes
 
@@ -123,7 +120,7 @@ extern "C" void gui_print_color(const char *color, const char *fmt, ...)
 	internal_gui_print(color, buf);
 }
 
-extern "C" void gui_set_FILE(FILE* f)
+void gui_set_FILE(FILE* f)
 {
 	ors_file = f;
 }
@@ -219,9 +216,9 @@ void GUIConsole::Clear_For_Retranslation()
 	pthread_mutex_unlock(&console_lock);
 }
 
-GUIConsole::GUIConsole(xml_node<>* node) : GUIScrollList(node)
+GUIConsole::GUIConsole(rapidxml::xml_node<>* node) : GUIScrollList(node)
 {
-	xml_node<>* child;
+	rapidxml::xml_node<>* child;
 
 	mLastCount = 0;
 	scrollToEnd = true;

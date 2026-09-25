@@ -45,7 +45,7 @@
 
 
 #include <ziparchive/zip_archive.h>
-#include "ZipUtil.h"
+#include "ziputil.h"
 
 extern "C" {
 #include "../twcommon.h"

@@ -21,30 +21,28 @@
 
 // object.cpp - GUIObject base class
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
+
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 
-extern "C" {
-#include "../twcommon.h"
-#include "../variables.h"
-}
-
-#include "rapidxml.hpp"
+#include "data.hpp"
 #include "objects.hpp"
-#include "../data.hpp"
+#include "rapidxml.hpp"
+#include "twcommon.h"
+#include "variables.h"
 
-GUIObject::GUIObject(xml_node<>* node)
+GUIObject::GUIObject(rapidxml::xml_node<>* node)
 {
 	mConditionsResult = true;
 	if (node)
 		LoadConditions(node, mConditions);
 }
 
-void GUIObject::LoadConditions(xml_node<>* node, std::vector<Condition>& conditions)
+void GUIObject::LoadConditions(rapidxml::xml_node<>* node, std::vector<Condition>& conditions)
 {
-	xml_node<>* condition = FindNode(node, "conditions");
+	rapidxml::xml_node<>* condition = FindNode(node, "conditions");
 	if (condition)  condition = FindNode(condition, "condition");
 	else			condition = FindNode(node, "condition");
 
@@ -54,7 +52,7 @@ void GUIObject::LoadConditions(xml_node<>* node, std::vector<Condition>& conditi
 
 		cond.mCompareOp = "=";
 
-		xml_attribute<>* attr;
+		rapidxml::xml_attribute<>* attr;
 		attr = condition->first_attribute("var1");
 		if (attr)   cond.mVar1 = attr->value();
 
@@ -109,7 +107,7 @@ bool GUIObject::isConditionTrue(Condition* condition)
 		return !bTrue;
 	}
 
-	string var1, var2;
+	std::string var1, var2;
 	if (DataManager::GetValue(condition->mVar1, var1))
 		var1 = condition->mVar1;
 	if (DataManager::GetValue(condition->mVar2, var2))
@@ -136,13 +134,13 @@ bool GUIObject::isConditionTrue(Condition* condition)
 			var2 = "FAILED";
 	}
 
-	if (condition->mCompareOp.find('=') != string::npos && var1 == var2)
+	if (condition->mCompareOp.find('=') != std::string::npos && var1 == var2)
 		return bTrue;
 
-	if (condition->mCompareOp.find('>') != string::npos && (atof(var1.c_str()) > atof(var2.c_str())))
+	if (condition->mCompareOp.find('>') != std::string::npos && (atof(var1.c_str()) > atof(var2.c_str())))
 		return bTrue;
 
-	if (condition->mCompareOp.find('<') != string::npos && (atof(var1.c_str()) < atof(var2.c_str())))
+	if (condition->mCompareOp.find('<') != std::string::npos && (atof(var1.c_str()) < atof(var2.c_str())))
 		return bTrue;
 
 	if (condition->mCompareOp == "modified")
@@ -182,7 +180,7 @@ bool GUIObject::UpdateConditions(std::vector<Condition>& conditions, const std::
 	{
 		if (varNameEmpty && iter->mCompareOp == "modified")
 		{
-			string val;
+			std::string val;
 
 			// If this fails, val will not be set, which is perfect
 			if (DataManager::GetValue(iter->mVar1, val))
@@ -202,7 +200,7 @@ bool GUIObject::UpdateConditions(std::vector<Condition>& conditions, const std::
 	return result;
 }
 
-bool GUIObject::isMounted(string vol)
+bool GUIObject::isMounted(std::string vol)
 {
 	FILE *fp;
 	char tmpOutput[255];
