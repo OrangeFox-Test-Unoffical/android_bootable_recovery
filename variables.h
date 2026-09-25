@@ -50,8 +50,8 @@
 
 #define OF_SPLASH_MAX_SIZE_STR "of_splash_max_size"
 
-#define OF_STORAGE_PATH             "/sdcard/Fox"
-#define PERSIST_SETTINGS_FILE       "/persist/.foxs"
+#define OF_STORAGE_PATH             "/mnt/vendor/persist"
+#define PERSIST_SETTINGS_FILE       OF_STORAGE_PATH "/Fox/.foxs"
 
 // *** OrangeFox - Variables ** //
 #include <stdio.h>
@@ -65,14 +65,14 @@ static const std::string Fox_Home =
 #ifdef FOX_MISCELLANEOUS_ROOT_DIRECTORY
 FOX_MISCELLANEOUS_ROOT_DIRECTORY"/Fox";
 #else
-OF_STORAGE_PATH;
+OF_STORAGE_PATH"/Fox";
 #endif
 
 static const std::string Fox_Settings_Path =
 #ifdef FOX_SETTINGS_ROOT_DIRECTORY
 FOX_SETTINGS_ROOT_DIRECTORY"/Fox";
 #else
-OF_STORAGE_PATH;
+OF_STORAGE_PATH"/Fox";
 #endif
 
 static const std::string Fox_ResetProp_Bin = "/system/bin/resetprop";
@@ -87,7 +87,7 @@ static const std::string FFiles_dir = "/FFiles";
 static const std::string Fox_tmp_dir = Fox_Tmp + "/orangefox";
 static const std::string Fox_ramdisk_dir = Fox_tmp_dir + "/ramdisk"; 
 static const std::string Fox_ramdisk_sbin_dir = Fox_ramdisk_dir + "/sbin"; 
-static const std::string epoch_drift_file = "/persist/.fox_epoch_drift.cfg"; // to cater for any saved epoch_drifts
+static const std::string epoch_drift_file = "/mnt/vendor/persist/.fox_epoch_drift.cfg"; // to cater for any saved epoch_drifts
 static const std::string Fox_OTA_info = "/orangefox.info";
 static std::string Fox_Current_Device = "default";
 static const std::string orangefox_cfg = "/etc/orangefox.cfg";
@@ -111,7 +111,7 @@ static int Fox_Current_ROM_IsMIUI = 0; // is the currently installed ROM a MIUI 
 #define FOX_MAGISK_ZIP_INSTALLER 	"Magisk.zip"
 
 #define FOX_THEME_VERSION 		"2.0"
-#define FOX_PASS_IN_PERSIST 		"/persist/.fsec"
+#define FOX_PASS_IN_PERSIST 		"/mnt/vendor/persist/Fox/.fsec"
 #define FOX_PRE_ROM_FLASH_SCRIPT  	"/system/bin/pre_rom_flash.sh"
 #define FOX_POST_ROM_FLASH_SCRIPT 	"/system/bin/post_rom_flash.sh"
 #define FOX_BEFORE_REBOOT_SCRIPT 	"/system/bin/beforereboot.sh"
@@ -193,16 +193,14 @@ static int Fox_Current_ROM_IsMIUI = 0; // is the currently installed ROM a MIUI 
 // twPersistMount()/LoadValues() 也已改为围绕 Fox_Settings_Path 工作
 // (与上游 OrangeFox R11.3 一致)。
 // 因此 TWRP16 的 TW_PERSIST_DIR 已无任何使用者 —— 它曾被 InfoManager 用来
-// mkdir("/mnt/vendor/persist/TWRP"),在 persist 分区里凭空建出 TWRP 目录。
+// mkdir("/mnt/vendor/mnt/TWRP"),在 persist 分区里凭空建出 TWRP 目录。
 // 保留定义只为记录历史,不要再在任何写路径上使用它。
 //#define TW_PERSIST_DIR            TW_PERSIST_ROOT "/TWRP"
 // 与 OrangeFox 对齐:设置文件名改用 .foxs(不是 TWRP 的 .twrp_settings),
-// 与 PERSIST_SETTINGS_FILE("/persist/.foxs") 的扩展名一致。
+// 与 PERSIST_SETTINGS_FILE("/mnt/vendor/persist/.foxs") 的扩展名一致。
 #define TW_SETTINGS_FILE            ".foxs"
 #define TW_RECOVERY_NAME            "TWRP"
 #define TW_DEFAULT_RECOVERY_FOLDER  "/" TW_RECOVERY_NAME
-// OrangeFox 设置根目录。字符串拼接用,结尾不能带 '/'。
-#define TW_STORAGE_PATH             "/data/recovery"
 #define TW_USE_COMPRESSION_VAR      "tw_use_compression"
 #define TW_FILENAME                 "tw_filename"
 #define TW_ZIP_INDEX                "tw_zip_index"

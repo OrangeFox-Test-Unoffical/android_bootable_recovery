@@ -77,7 +77,7 @@ int tw_set_default_metadata(const char* filename) {
 
 	if (android::base::GetProperty("ro.orangefox.substitute_permissions", "") == "1") {
 		if (strstr(filename, "/sdcard/Fox") || strstr(filename, "/data/media/0/Fox") || strstr(filename, "recovery/Fox")
-		|| strstr(filename, "/persist/Fox") || strstr(filename, "/Fox/BACKUPS")) {
+		|| strstr(filename, "/mnt/vendor/persist/Fox") || strstr(filename, "/Fox/BACKUPS")) {
 			selinux_context_needs_substitution = true;
 		}
 	}

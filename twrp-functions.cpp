@@ -1849,7 +1849,7 @@ void TWFunc::Run_Before_Reboot(void)
 #if defined(FOX_USE_DATA_RECOVERY_FOR_SETTINGS) || !defined(FOX_MISCELLANEOUS_ROOT_DIRECTORY)
     // check whether decryption failed, and, if so, store the lastrecovery log under /data/recovery/
     if (failed_decryption) {
-    	Logs_Dir = TW_STORAGE_PATH;
+    	Logs_Dir = OF_STORAGE_PATH;
     	Logs_Dir += "/Fox/logs";
     }
 #endif

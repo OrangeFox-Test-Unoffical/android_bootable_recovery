@@ -931,7 +931,7 @@ int TWPartitionManager::Mount_By_Path(string Path, bool Display_Error) {
 		return true;
 
   	#ifdef OF_DEVICE_WITHOUT_PERSIST
-  	if (Local_Path == "/persist")
+  	if (Local_Path == "/mnt/vendor/persist")
       		return false;
   	#endif
 
@@ -962,7 +962,7 @@ int TWPartitionManager::UnMount_By_Path(string Path, bool Display_Error, int fla
 	string Local_Path = TWFunc::Get_Root_Path(Path);
 
   	#ifdef OF_DEVICE_WITHOUT_PERSIST
-  	if (Local_Path == "/persist")
+  	if (Local_Path == "/mnt/vendor/persist")
       		return false;
   	#endif
 
@@ -1016,7 +1016,7 @@ TWPartition* TWPartitionManager::Find_Partition_By_Path(const string& Path) {
 	string Local_Path = TWFunc::Get_Root_Path(Path);
 
   	#ifdef OF_DEVICE_WITHOUT_PERSIST
-  	if (Local_Path == "/persist")
+  	if (Local_Path == "/mnt/vendor/persist")
       		return NULL;
   	#endif
 

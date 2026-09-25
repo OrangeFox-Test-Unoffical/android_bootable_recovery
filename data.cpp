@@ -130,7 +130,7 @@ int DataManager::LoadValues(const string& filename)
 	return 0;
 }
 
-// Executed when /persist is mounted
+// Executed when /mnt/vendor/persist is mounted
 int DataManager::FindPasswordBackup(void) {
   #ifndef OF_DEVICE_WITHOUT_PERSIST
   if (TWFunc::Path_Exists(FOX_PASS_IN_PERSIST)) {
@@ -159,7 +159,7 @@ int DataManager::RestorePasswordBackup(void) {
 int DataManager::LoadPersistValues(void)
 {
 #if defined(OF_DEVICE_WITHOUT_PERSIST) || defined(FOX_SETTINGS_ROOT_DIRECTORY)
-	//LOGINFO("OF_DEVICE_WITHOUT_PERSIST is set - avoiding /persist...\n");
+	//LOGINFO("OF_DEVICE_WITHOUT_PERSIST is set - avoiding /mnt/vendor/persist...\n");
 	return -1;
 #endif
   static bool loaded = false;
@@ -170,7 +170,7 @@ int DataManager::LoadPersistValues(void)
       || !TWFunc::Path_Exists(PERSIST_SETTINGS_FILE))
     return -1;
 
-  LOGINFO("Attempt to load settings from /persist settings file...\n");
+  LOGINFO("Attempt to load settings from /mnt/vendor/persist settings file...\n");
 
   if (!mInitialized)
     SetDefaultValues();
@@ -209,10 +209,10 @@ int DataManager::SaveValues()
 #ifndef TW_OEM_BUILD
 
 	// 与 OrangeFox 对齐:persist 侧只在【没有】定义 FOX_SETTINGS_ROOT_DIRECTORY 时
-	// 才作为设置存储;本树定义了它,所以这里只写密码备份(/persist/.fsec),
+	// 才作为设置存储;本树定义了它,所以这里只写密码备份(/mnt/vendor/persist/.fsec),
 	// 设置本身一律写到 GetSettingsStoragePath()。
 #ifndef OF_DEVICE_WITHOUT_PERSIST
-	if (PartitionManager.Mount_By_Path("/persist", false))
+	if (PartitionManager.Mount_By_Path("/mnt/vendor/persist", false))
 	{
 #ifndef FOX_SETTINGS_ROOT_DIRECTORY
 		mPersist.SetFile(PERSIST_SETTINGS_FILE);
